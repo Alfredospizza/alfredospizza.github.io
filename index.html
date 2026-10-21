@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eros C. · Python & AI developer</title>
+<meta name="description" content="AI agents and RAG chatbots, Telegram bots and Mini Apps, Python scrapers and Linux deployment. Working demos, clean code you own.">
+<meta property="og:title" content="Eros C. · Python & AI developer">
+<meta property="og:description" content="AI agents, Telegram bots, scrapers and Linux deployment. Every project here is a working demo.">
+<meta property="og:image" content="assets/chatbot-cover.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1620;
+    --panel: #121e2a;
+    --panel-2: #172533;
+    --line: #22313f;
+    --text: #e9eef3;
+    --muted: #94a3b2;
+    --accent: #f5a524;
+    --accent-ink: #1a1203;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  img, video { display: block; max-width: 100%; }
+  .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+
+  /* header */
+  header.top {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(13, 22, 32, .85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; height: 60px; gap: 16px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; }
+  .brand img { width: 32px; height: 32px; border-radius: 50%; }
+  nav.links { display: flex; gap: 22px; font-size: 14px; color: var(--muted); }
+  nav.links a { text-decoration: none; }
+  nav.links a:hover { color: var(--text); }
+  @media (max-width: 720px) { nav.links { display: none; } }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 18px; border-radius: 999px;
+    font-weight: 600; font-size: 15px; text-decoration: none;
+    border: 1px solid var(--line); background: var(--panel);
+    transition: border-color .15s, transform .15s;
+  }
+  .btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+  /* hero */
+  .hero { padding: 88px 0 64px; }
+  .eyebrow {
+    font: 800 13px/1 Archivo, sans-serif; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 18px;
+  }
+  h1, h2, h3 { font-family: Archivo, sans-serif; margin: 0; line-height: 1.08; }
+  h1 { font-size: clamp(36px, 6vw, 64px); font-weight: 800; max-width: 15ch; }
+  h1 em { font-style: normal; color: var(--accent); }
+  .lead { font-size: clamp(17px, 2vw, 20px); color: var(--muted); max-width: 60ch; margin: 22px 0 32px; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; }
+  .facts { display: flex; flex-wrap: wrap; gap: 10px 28px; margin-top: 40px; color: var(--muted); font-size: 14px; }
+  .facts b { color: var(--text); font-weight: 600; }
+
+  /* sections */
+  section { padding: 56px 0; border-top: 1px solid var(--line); }
+  .section-head { margin-bottom: 32px; }
+  h2 { font-size: clamp(28px, 3.6vw, 40px); font-weight: 800; }
+  .section-head p { color: var(--muted); margin: 10px 0 0; max-width: 62ch; }
+
+  /* services */
+  .services { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .service {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 22px; display: flex; flex-direction: column; gap: 10px; text-decoration: none;
+    transition: border-color .15s;
+  }
+  .service:hover { border-color: var(--accent); }
+  .service h3 { font-size: 19px; font-weight: 600; font-family: Inter, sans-serif; line-height: 1.3; }
+  .service p { margin: 0; color: var(--muted); font-size: 14.5px; flex: 1; }
+  .price { font-size: 14px; color: var(--muted); }
+  .price b { color: var(--accent); font-size: 18px; }
+
+  /* case studies */
+  .case {
+    display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 36px;
+    padding: 40px 0; border-bottom: 1px solid var(--line); align-items: start;
+  }
+  .case:last-child { border-bottom: 0; }
+  .case.flip .media { order: 2; }
+  @media (max-width: 860px) {
+    .case { grid-template-columns: 1fr; gap: 22px; }
+    .case.flip .media { order: 0; }
+  }
+  .media video {
+    width: 100%; border-radius: var(--radius); border: 1px solid var(--line); background: #000;
+    aspect-ratio: 16 / 9; object-fit: contain;
+  }
+  .thumbs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .thumbs a { display: block; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+  .thumbs img { width: 100%; aspect-ratio: 5 / 3; object-fit: cover; object-position: left top; transition: transform .2s; }
+  .thumbs a:hover img { transform: scale(1.03); }
+  .tag { font: 800 12px/1 Archivo, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  .case h3 { font-size: clamp(24px, 2.8vw, 30px); font-weight: 800; margin: 10px 0 14px; }
+  .case p { color: var(--muted); margin: 0 0 16px; }
+  .case ul { margin: 0 0 18px; padding: 0; list-style: none; display: grid; gap: 8px; }
+  .case li { padding-left: 26px; position: relative; }
+  .case li::before {
+    content: ""; position: absolute; left: 4px; top: .62em; width: 10px; height: 10px;
+    border-radius: 3px; background: var(--accent);
+  }
+  .stack { display: flex; flex-wrap: wrap; gap: 8px; }
+  .stack span {
+    font-size: 13px; padding: 5px 11px; border-radius: 999px;
+    background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+  }
+  .note { font-size: 13px; color: var(--muted); margin-top: 14px; }
+
+  /* how I work */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; counter-reset: s; }
+  .step { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+  .step::before {
+    counter-increment: s; content: counter(s, decimal-leading-zero);
+    font: 800 14px/1 Archivo, sans-serif; color: var(--accent); display: block; margin-bottom: 12px;
+  }
+  .step h3 { font: 600 17px/1.3 Inter, sans-serif; margin-bottom: 6px; }
+  .step p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+  /* hire */
+  .hire { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .platform {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 24px; text-decoration: none; display: flex; flex-direction: column; gap: 8px;
+    transition: border-color .15s;
+  }
+  .platform:hover { border-color: var(--accent); }
+  .platform b { font: 800 22px/1.1 Archivo, sans-serif; }
+  .platform span { color: var(--muted); font-size: 14.5px; }
+  .platform i { font-style: normal; color: var(--accent); font-weight: 600; font-size: 14px; margin-top: 6px; }
+
+  footer { border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--muted); font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="assets/eros.jpg" alt="">Eros C.</a>
+    <nav class="links">
+      <a href="#services">Services</a>
+      <a href="#work">Work</a>
+      <a href="#process">How I work</a>
+      <a href="#hire">Hire me</a>
+    </nav>
+    <a class="btn primary" href="#hire">Hire me</a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <p class="eyebrow">Python &amp; AI developer · Italy</p>
+    <h1>AI tools that do <em>real work</em> for your business</h1>
+    <p class="lead">I build AI agents and chatbots trained on your documents, Telegram bots and Mini Apps, Python scrapers that deliver clean data, and the Linux setup that keeps it all running 24/7. Every project on this page is a working demo I built.</p>
+    <div class="cta">
+      <a class="btn primary" href="#work">See the demos</a>
+      <a class="btn" href="#hire">Where to hire me</a>
+    </div>
+    <div class="facts">
+      <span><b>Python</b> · FastAPI · SQLite / PostgreSQL</span>
+      <span><b>Claude</b> · GPT · Gemini</span>
+      <span><b>Linux</b> · systemd · Nginx</span>
+      <span>English &amp; Italian</span>
+    </div>
+  </div>
+
+  <section id="services">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>What I build</h2>
+        <p>Four fixed-scope services. Prices start from the smallest package; bigger packages are described on each platform.</p>
+      </div>
+      <div class="services">
+        <a class="service" href="#chatbot">
+          <h3>AI chatbots &amp; agents</h3>
+          <p>RAG chatbots that answer from your PDFs and FAQs, and agents that call APIs within limits you set.</p>
+          <span class="price">from <b>$100</b></span>
+        </a>
+        <a class="service" href="#telegram">
+          <h3>Telegram bots &amp; Mini Apps</h3>
+          <p>Commands, menus, bookings, payments with Stars, admin alerts and a web app inside Telegram.</p>
+          <span class="price">from <b>$80</b></span>
+        </a>
+        <a class="service" href="#scraper">
+          <h3>Web scraping &amp; data pipelines</h3>
+          <p>Scrapers and APIs to clean data in Excel, Google Sheets, a database or your own API.</p>
+          <span class="price">from <b>$55</b></span>
+        </a>
+        <a class="service" href="#deploy">
+          <h3>Linux VPS deployment</h3>
+          <p>Your app or bot as a service with auto-restart, Nginx, HTTPS and checked backups.</p>
+          <span class="price">from <b>$65</b></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section id="work">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Working demos</h2>
+        <p>Built for a fictional e-bike rental shop and a public practice catalog, so you can see the real thing without anyone's private data.</p>
+      </div>
+
+      <article class="case" id="chatbot">
+        <div class="media">
+          <video controls preload="none" playsinline poster="assets/chatbot-poster.jpg" src="assets/chatbot.mp4"></video>
+          <div class="thumbs">
+            <a href="assets/chatbot-demo.jpg" target="_blank" rel="noopener"><img src="assets/chatbot-demo.jpg" alt="Three questions, three honest answers" loading="lazy"></a>
+            <a href="assets/chatbot-how.jpg" target="_blank" rel="noopener"><img src="assets/chatbot-how.jpg" alt="From your files to answers your customers trust" loading="lazy"></a>
+          </div>
+        </div>
+        <div>
+          <span class="tag">AI chatbot · RAG</span>
+          <h3>A chatbot that answers only from the shop's own guide</h3>
+          <p>Customers ask in chat; the bot answers from the shop's guide, in the customer's language, and shows which section it used. When the answer isn't in the guide, it says so and hands the question to staff instead of guessing.</p>
+          <ul>
+            <li>Retrieval over the shop guide (BM25), answers written by Claude</li>
+            <li>Daily cap on AI calls and rate limiting, so costs stay predictable</li>
+            <li>Covered by 15 automated tests</li>
+          </ul>
+          <div class="stack"><span>Python</span><span>FastAPI</span><span>Claude API</span><span>RAG</span></div>
+        </div>
+      </article>
+
+      <article class="case flip" id="telegram">
+        <div class="media">
+          <video controls preload="none" playsinline poster="assets/telegram-poster.jpg" src="assets/telegram.mp4"></video>
+          <div class="thumbs">
+            <a href="assets/telegram-features.jpg" target="_blank" rel="noopener"><img src="assets/telegram-features.jpg" alt="Everything a business bot needs" loading="lazy"></a>
+            <a href="assets/telegram-cover.jpg" target="_blank" rel="noopener"><img src="assets/telegram-cover.jpg" alt="Telegram bots that take bookings" loading="lazy"></a>
+          </div>
+        </div>
+        <div>
+          <span class="tag">Telegram bot · Mini App</span>
+          <h3>Bookings inside Telegram, with instant quotes</h3>
+          <p>A Telegram bot with a Mini App where customers pick a bike, a duration and a pickup time, and get a price straight away. The shop owner gets a Telegram message for every new booking.</p>
+          <ul>
+            <li>Prices, opening hours and holidays checked on the server, not in the browser</li>
+            <li>Telegram login data verified with HMAC</li>
+            <li>Bookings stored in SQLite, visible to customers with /mybookings</li>
+          </ul>
+          <div class="stack"><span>Python</span><span>python-telegram-bot</span><span>FastAPI</span><span>SQLite</span></div>
+        </div>
+      </article>
+
+      <article class="case" id="scraper">
+        <div class="media">
+          <video controls preload="none" playsinline poster="assets/scraper-poster.jpg" src="assets/scraper.mp4"></video>
+          <div class="thumbs">
+            <a href="assets/scraper-run.jpg" target="_blank" rel="noopener"><img src="assets/scraper-run.jpg" alt="1,000 products in 59 seconds, straight to Excel" loading="lazy"></a>
+            <a href="assets/scraper-pipeline.jpg" target="_blank" rel="noopener"><img src="assets/scraper-pipeline.jpg" alt="One pipeline, from website to spreadsheet" loading="lazy"></a>
+          </div>
+        </div>
+        <div>
+          <span class="tag">Web scraping · Data pipeline</span>
+          <h3>1,000 products to Excel in 59 seconds</h3>
+          <p>A scraper for a public practice catalog (books.toscrape.com) that collects every product, keeps a price history and produces files a team can read.</p>
+          <ul>
+            <li>Polite delays, retries and limited concurrency</li>
+            <li>SQLite with price history, so each run shows what changed</li>
+            <li>Formatted Excel with tables and charts, CSV and an HTML report</li>
+          </ul>
+          <div class="stack"><span>Python</span><span>httpx async</span><span>selectolax</span><span>openpyxl</span><span>SQLite</span></div>
+        </div>
+      </article>
+
+      <article class="case flip" id="deploy">
+        <div class="media">
+          <video controls preload="none" playsinline poster="assets/deploy-poster.jpg" src="assets/deploy.mp4"></video>
+          <div class="thumbs">
+            <a href="assets/deploy-log.jpg" target="_blank" rel="noopener"><img src="assets/deploy-log.jpg" alt="From a fresh server to live HTTPS in about 1 minute" loading="lazy"></a>
+            <a href="assets/deploy-setup.jpg" target="_blank" rel="noopener"><img src="assets/deploy-setup.jpg" alt="A production setup, not just it runs" loading="lazy"></a>
+          </div>
+        </div>
+        <div>
+          <span class="tag">Linux VPS · DevOps</span>
+          <h3>From a fresh Ubuntu server to live HTTPS in about a minute</h3>
+          <p>One script takes an empty Ubuntu 24.04 server to a running app, and ends with a crash test: the app is killed on purpose and systemd brings it back.</p>
+          <ul>
+            <li>Dedicated user and a sandboxed systemd service with auto-restart</li>
+            <li>Nginx reverse proxy, secrets kept in a protected file</li>
+            <li>Daily backups with an integrity check and 14-day rotation</li>
+          </ul>
+          <div class="stack"><span>Ubuntu</span><span>systemd</span><span>Nginx</span><span>Bash</span></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="process">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>How I work</h2>
+      </div>
+      <div class="steps">
+        <div class="step"><h3>Clear scope</h3><p>You tell me what you need; I confirm what's included before you order.</p></div>
+        <div class="step"><h3>Early demo</h3><p>You see a working version early, not just promises.</p></div>
+        <div class="step"><h3>Code you own</h3><p>Clean, tested Python with a README to run and update it yourself.</p></div>
+        <div class="step"><h3>Clear updates</h3><p>Written updates in English or Italian, through the platform you hire me on.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="hire">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Hire me</h2>
+        <p>Orders and payments go through these platforms, so you're protected on both sides.</p>
+      </div>
+      <div class="hire">
+        <a class="platform" href="https://www.fiverr.com/eroscastagna" target="_blank" rel="noopener">
+          <b>Fiverr</b><span>Fixed-price packages for all four services.</span><i>View gigs →</i>
+        </a>
+        <a class="platform" href="https://www.upwork.com/freelancers/~0138825b03a288eecf" target="_blank" rel="noopener">
+          <b>Upwork</b><span>Project catalog and hourly work.</span><i>View profile →</i>
+        </a>
+        <a class="platform" href="https://contra.com/eros_juwisatv" target="_blank" rel="noopener">
+          <b>Contra</b><span>Services and case studies, commission-free.</span><i>View profile →</i>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Eros C. · Python &amp; AI developer, Italy</span>
+    <span>Demos use fictional or public practice data.</span>
+  </div>
+</footer>
+
+</body>
+</html>

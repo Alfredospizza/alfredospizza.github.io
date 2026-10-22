@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eros C. · Python &amp; AI developer · Don't watch a demo, run one</title>
+<meta name="description" content="Eros C., Python & AI developer in Italy. AI chatbots that answer from your documents, Telegram bots and Mini Apps that take bookings, scrapers that deliver clean data, and apps that restart by themselves on your Linux server. Try the demos right on the page.">
+<meta name="theme-color" content="#070b11">
+<meta property="og:title" content="Eros C. · Answered. Booked. Measured. Always on.">
+<meta property="og:description" content="AI chatbots, Telegram bots and Mini Apps, Python scrapers and Linux deployment. Don't watch a demo, run one.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://alfredospizza.github.io/upwork/">
+<meta name="robots" content="noindex">
+<!-- share previews need an absolute URL: the published site's copy of one of the demo images -->
+<meta property="og:image" content="https://alfredospizza.github.io/assets/chatbot-poster.jpg">
+<meta property="og:image:width" content="1920">
+<meta property="og:image:height" content="1154">
+<meta property="og:image:alt" content="Eros C.: an AI assistant that answers from the shop's guide, shows its source and is built to hand off what the guide doesn't cover">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23070b11'/%3E%3Cpath d='M17 15h27v8H26v6h15v8H26v6h18v8H17z' fill='%23edf2f7'/%3E%3Crect x='46' y='43' width='8' height='8' fill='%23f5a524'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" as="font" type="font/woff2" crossorigin href="https://cdn.jsdelivr.net/npm/@fontsource-variable/archivo@5.2.8/files/archivo-latin-wdth-normal.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5.2.8/files/inter-latin-wght-normal.woff2">
+<script>
+  /* The ONE asset prefix. At publish time replace every '../assets/' in this file with '../assets/'
+     (one find/replace: this line, the img src / source srcset attributes and the <noscript> video tags,
+     which all spell it exactly like this; style.css and app.js never contain it). */
+  window.ASSET_BASE = '../assets/';
+  document.documentElement.className += ' js' + (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches ? ' rm' : '');
+</script>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .platforms { grid-template-columns: minmax(0, 1fr); }
+  .platform { min-height: 0; flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: 18px; }
+  .platform .pl-go { margin-left: auto; }
+  .pl-up { background: var(--amber); border-color: var(--amber); color: var(--amber-ink); }
+  .pl-up .pl-sub { color: rgba(28, 19, 4, .78); }
+  .pl-up .pl-go { color: var(--amber-ink); }
+  .pl-up:hover { border-color: var(--amber-hi); background: var(--amber-hi); }
+  .hb-up { background: var(--amber); border-color: var(--amber); color: var(--amber-ink); }
+  .hb-up:hover { background: var(--amber-hi); }
+</style>
+</head>
+<body data-world="answered">
+<a class="skip" href="#lab-chat">Skip to the live demo</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v6M12 7.5v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-bike" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="16" r="3.5"/><circle cx="18.5" cy="16" r="3.5"/><path d="M5.5 16l4-7h6l3 7M9.5 9L8 6H6M15.5 9l-3.5 7h-6.5M14 6h2.5"/></g></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></g></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z M14 3v4h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13.5 2.5L5 13.5h6l-1.5 8 8.5-11h-6z" fill="currentColor"/></symbol>
+    <symbol id="i-revive" viewBox="0 0 24 24"><path d="M20 12a8 8 0 11-2.4-5.7M20 4v4.5h-4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-replay" viewBox="0 0 24 24"><path d="M4 12a8 8 0 102.4-5.7M4 4v4.5h4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-tg" viewBox="0 0 24 24"><path d="M20.5 4.5L3.8 11c-.9.4-.9 1.3 0 1.6l4.2 1.3 1.6 5c.2.6.9.8 1.4.4l2.3-2 4.4 3.2c.6.4 1.4.1 1.6-.6l2.9-13.4c.2-.9-.8-1.6-1.7-1z" fill="currentColor"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M6 12h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 6v12M6 12h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="progress" aria-hidden="true"><i id="progress"></i></div>
+
+<header class="nav" id="nav">
+  <a class="brand" href="#top" aria-label="Eros C., back to top">
+    <img src="../assets/eros.jpg" data-asset="eros.jpg" alt="" width="38" height="38">
+    <span class="brand-txt"><b>Eros C.</b><small>Python &amp; AI developer · Italy</small></span>
+  </a>
+  <nav class="nav-links" aria-label="Chapters">
+    <a href="#top" data-nav="answered"><i>01</i>Answered<b class="pd" data-proof="answered" aria-hidden="true"></b></a>
+    <a href="#booked" data-nav="booked"><i>02</i>Booked<b class="pd" data-proof="booked" aria-hidden="true"></b></a>
+    <a href="#measured" data-nav="measured"><i>03</i>Measured<b class="pd" data-proof="measured" aria-hidden="true"></b></a>
+    <a href="#always-on" data-nav="alwayson"><i>04</i>Always on<b class="pd" data-proof="alwayson" aria-hidden="true"></b></a>
+    <a href="#prices" data-nav="hire" class="nl-prices">Prices</a>
+  </nav>
+  <div class="nav-right">
+    <span class="clock" title="Local time in Italy"><span class="pulse"></span>Italy <time id="clock">--:--</time></span>
+    <a class="btn btn-amber btn-sm" id="nav-hire" href="#hire"><span>Hire me</span><svg><use href="#i-arrow"/></svg></a>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ================================================================ HERO -->
+<section class="hero" data-world="answered" aria-labelledby="hero-title">
+  <div class="hero-bg" aria-hidden="true">
+    <div class="plane"><canvas class="plane-doc" id="plane-doc" width="1400" height="900"></canvas></div>
+    <div class="hero-light"></div>
+  </div>
+  <svg class="proof-beam" id="proof-beam" aria-hidden="true"><path/><circle r="4"/></svg>
+
+  <div class="wrap hero-inner">
+    <div class="hero-copy">
+      <h1 class="kicker" id="hero-title"><span class="k-name">Eros C.</span><em>Python &amp; AI developer, Italy</em><span class="k-sub">Four things I build for businesses</span></h1>
+
+      <ul class="words" aria-label="Services and starting prices">
+        <li class="word" data-ch="answered" data-preview="chatbot-cover.jpg" data-cap="AI chatbot · recorded demo 0:30">
+          <a href="#answered">
+            <span class="w"><span class="w-in">Answered<i class="dot" aria-hidden="true"></i></span></span>
+            <span class="meta"><i>01</i><b>AI chatbots &amp; agents</b><em>from $100</em></span>
+          </a>
+        </li>
+        <li class="word" data-ch="booked" data-preview="telegram-cover.jpg" data-cap="Telegram Mini App · recorded demo 0:10">
+          <a href="#booked">
+            <span class="w"><span class="w-in">Booked<i class="dot" aria-hidden="true"></i></span></span>
+            <span class="meta"><i>02</i><b>Telegram bots &amp; Mini Apps</b><em>from $80</em></span>
+          </a>
+        </li>
+        <li class="word" data-ch="measured" data-preview="scraper-cover.jpg" data-cap="Python scraper · recorded demo 0:30">
+          <a href="#measured">
+            <span class="w"><span class="w-in">Measured<i class="dot" aria-hidden="true"></i></span></span>
+            <span class="meta"><i>03</i><b>Web scraping &amp; data pipelines</b><em>from $55</em></span>
+          </a>
+        </li>
+        <li class="word" data-ch="alwayson" data-preview="deploy-cover.jpg" data-cap="Linux VPS deploy · recorded demo 0:29">
+          <a href="#always-on">
+            <span class="w"><span class="w-in">Always on<i class="dot" aria-hidden="true"></i></span></span>
+            <span class="meta"><i>04</i><b>Linux VPS deployment</b><em>from $65</em></span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- phones and small laptops: the plain-English promise sits right under the four words (on wide screens it opens the lead below) -->
+      <p class="promise">Software that answers your customers, takes their bookings, collects your data and restarts by itself.</p>
+
+      <!-- phones and small laptops: the console is further down, so a strip of it answers live right here -->
+      <div class="tz-wrap">
+        <a class="teaser" id="teaser" href="#lab-chat">
+          <span class="tz-head"><span class="pulse" aria-hidden="true"></span><span class="tz-live">Live demo</span><span class="tz-src" id="tz-src">Opening hours</span><span class="tz-go">Try it<svg><use href="#i-arrow"/></svg></span></span>
+          <span class="tz-row tz-q"><b aria-hidden="true">You</b><span id="tz-q">Open on Sunday?</span></span>
+          <span class="tz-row tz-a"><b aria-hidden="true">Bot</b><span id="tz-a">Sunday: 10:00 to 17:00</span><i class="tz-dots" aria-hidden="true"><i></i><i></i><i></i></i></span>
+        </a>
+        <!-- outside the link, so a tap pauses the strip instead of following it -->
+        <button class="tz-pause" type="button" id="tz-pause" aria-label="Pause the live strip" hidden><svg aria-hidden="true"><use href="#i-pause"/></svg></button>
+      </div>
+
+      <p class="hero-lead"><span class="lead-promise">Software that answers your customers, takes their bookings, collects your data and restarts by itself. </span><span class="js-only"><strong>Don't watch a demo. Run one:</strong> the shop assistant <span class="lead-where">on the right</span><span class="lead-below">below</span> works right here, in your browser.</span><span class="no-js">The live demos on this page need JavaScript, which is off in your browser: <strong>the recorded demos below show each one running.</strong></span></p>
+
+      <div class="hire-row" id="hero-hire">
+        <a class="btn btn-amber btn-lg" data-link="upwork" href="https://www.upwork.com/freelancers/~0138825b03a288eecf" target="_blank" rel="noopener">Hire me on Upwork<svg><use href="#i-arrow"/></svg></a>
+      </div>
+      <p class="hire-note"><span class="hn">Fixed-price packages</span><span class="hn-sep">·</span> <span class="hn">scope confirmed before you order</span><span class="hn-sep">·</span> <span class="hn">English &amp; Italian</span></p>
+    </div>
+
+    <!-- ---------- the live assistant ---------- -->
+    <div class="console" id="lab-chat" role="region" aria-label="Demo you can use: the NordLight Bikes shop assistant">
+      <div class="win-bar">
+        <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="win-title"><b>Try it</b> · shop assistant demo</span>
+        <button class="auto-btn" type="button" id="auto-btn" hidden><svg><use href="#i-pause"/></svg><span>Pause</span></button>
+        <span class="badge-live"><span class="pulse"></span>Runs in your browser</span>
+      </div>
+      <div class="console-body">
+        <div class="chat">
+          <div class="chat-head">
+            <span class="avatar" aria-hidden="true"><svg><use href="#i-bike"/></svg></span>
+            <span class="chat-who"><b>NordLight Bikes assistant</b><small>Fictional e-bike rental shop · Verona</small></span>
+          </div>
+          <div class="chat-log" id="chat-log" role="log" aria-live="polite" aria-label="Conversation">
+            <div class="sys" id="chat-sys">reading the shop's guide…</div>
+            <div class="msg bot hello">Hi! Ask me about prices, opening hours, bookings, batteries, damage or tours. I only quote the shop's guide, and when I can't find the answer there, I say so.</div>
+            <noscript><div class="msg bot miss">This demo runs on JavaScript, which is off in your browser. The recorded demo of the real assistant is just below, and the whole guide is in the source of this page.</div></noscript>
+          </div>
+          <div class="chips" id="chips" role="group" aria-label="Suggested questions"></div>
+          <form class="ask" id="ask-form" method="dialog" autocomplete="off">
+            <label class="sr-only" for="ask">Ask the demo shop assistant a question</label>
+            <input id="ask" name="q" type="text" maxlength="140" placeholder="Ask about prices, hours, tours…" enterkeyhint="send">
+            <button type="submit" aria-label="Ask"><svg><use href="#i-send"/></svg></button>
+          </form>
+        </div>
+        <aside class="paper" id="paper" aria-label="The shop's guide the assistant answers from">
+          <div class="paper-head">
+            <span class="paper-file"><svg><use href="#i-doc"/></svg>nordlight_bikes.md</span>
+            <button class="hood-btn" type="button" id="hood-btn" aria-pressed="false">Under the hood</button>
+          </div>
+          <p class="paper-title">The shop's guide<em>everything it knows</em></p>
+          <div class="terms" id="terms"><span class="terms-empty">Type, and watch the search weigh every section.</span></div>
+          <!-- the guide's sections, so the sheet is complete without JavaScript too (app.js rebuilds this list from the guide) -->
+          <ol class="sections" id="sections">
+            <li><span class="nm">Description</span><span class="sc"><span class="lead">§1</span></span></li>
+            <li><span class="nm">Opening hours</span><span class="sc"><span class="lead">§2</span></span></li>
+            <li><span class="nm">Prices</span><span class="sc"><span class="lead">§3</span></span></li>
+            <li><span class="nm">Booking and payment</span><span class="sc"><span class="lead">§4</span></span></li>
+            <li><span class="nm">Cancellation policy</span><span class="sc"><span class="lead">§5</span></span></li>
+            <li><span class="nm">Battery and range</span><span class="sc"><span class="lead">§6</span></span></li>
+            <li><span class="nm">Damage and theft</span><span class="sc"><span class="lead">§7</span></span></li>
+            <li><span class="nm"><small>FAQ</small>Do I need a driving licence?</span><span class="sc"><span class="lead">§8</span></span></li>
+            <li><span class="nm"><small>FAQ</small>Can I return the bike to another location?</span><span class="sc"><span class="lead">§9</span></span></li>
+            <li><span class="nm"><small>FAQ</small>Do you offer guided tours?</span><span class="sc"><span class="lead">§10</span></span></li>
+          </ol>
+          <p class="hood-note">BM25 keyword search · <span id="idx-stats">10 sections</span></p>
+          <p class="paper-foot">If it isn't on this page, it's built to say so, not guess.</p>
+          <button class="link-btn" type="button" id="open-guide"><svg><use href="#i-doc"/></svg>Read the whole guide</button>
+        </aside>
+      </div>
+      <div class="win-foot">
+        <p class="honest"><svg><use href="#i-info"/></svg><span>Fictional demo shop. <span class="js-only">This page searches the shop's guide in your browser: </span><span class="no-js">There is </span><b>no AI model on this page</b>. In the real assistant, Claude writes the reply from the section it finds.</span></p>
+      </div>
+    </div>
+  </div>
+
+  <a class="scroll-cue" href="#answered"><i aria-hidden="true"></i><span>Three more demos below</span></a>
+  <div class="preview" id="preview" aria-hidden="true"><div class="preview-img"></div><span class="preview-cap"></span></div>
+</section>
+
+<!-- ================================================================ 01 ANSWERED -->
+<section class="chapter ch-answered" id="answered" data-world="answered" aria-labelledby="an-title">
+  <div class="wrap">
+    <div class="notes">
+      <div class="notes-main" data-reveal>
+        <p class="ch-kicker"><span>01</span>AI chatbots &amp; agents<em>from $100</em></p>
+        <h2 id="an-title">Built to quote your guide or hand&nbsp;off, <span class="hl">not&nbsp;to&nbsp;guess.</span></h2>
+        <p class="sub">Search decides which part of your guide the bot may use. In the real assistant, an AI model then writes a friendly reply from that section, in the customer's language, and it is set up to pass the question to your staff when the guide has no answer.</p>
+        <ol class="flow" aria-label="How the real assistant answers a question">
+          <li class="here"><i>1</i><b>Customer asks</b><span>in the chat, in their language</span></li>
+          <li class="here"><i>2</i><b>Find the section</b><span>search over your documents</span></li>
+          <li class="real"><i>3</i><b>AI writes the reply</b><span>from the section it found</span></li>
+          <li class="here"><i>4</i><b>Answer + source</b><span>or a hand-off to staff</span></li>
+        </ol>
+        <p class="flow-key"><span class="fk"><span class="k k-here"></span><span class="js-only">you just saw this run on the page</span><span class="no-js">runs on this page, with JavaScript on</span></span> <span class="fk"><span class="k k-real"></span>only in the real assistant</span></p>
+      </div>
+      <div class="dailies" data-reveal>
+        <figure class="rec" data-video="chatbot">
+          <button class="rec-play" type="button" aria-label="Play the recorded demo of the real assistant, 30 seconds">
+            <picture>
+              <source media="(max-width: 720px)" srcset="../assets/chatbot-cover.jpg" data-asset="chatbot-cover.jpg" width="1600" height="1200">
+              <img src="../assets/chatbot-poster.jpg" data-asset="chatbot-poster.jpg" alt="The real NordLight assistant answering a price question, an Italian question and one it cannot answer" loading="lazy" width="1920" height="1154" style="object-position:86% 50%">
+            </picture>
+            <span class="rec-btn"><svg><use href="#i-play"/></svg></span>
+            <span class="rec-time">0:30</span>
+          </button>
+          <noscript><video controls playsinline preload="none" poster="../assets/chatbot-poster.jpg" src="../assets/chatbot.mp4" aria-label="Recorded demo of the real assistant, 30 seconds"></video></noscript>
+          <figcaption><b>Recorded demo</b>The real assistant, with Claude writing the replies: a price, a question in Italian, and one the guide can't answer.</figcaption>
+        </figure>
+        <aside class="sheet" aria-label="AI chatbots and agents: packages">
+          <p class="sheet-k">Packages · USD</p>
+          <div class="pk"><span><small>from</small><b>$100</b></span><span><b>$320</b></span><span><b>$750</b></span></div>
+          <ul class="sheet-list">
+            <li>RAG chatbots that answer from your PDFs and FAQs</li>
+            <li>Agents that call APIs within limits you set</li>
+            <li>Claude, GPT or Gemini, with spend caps and guardrails</li>
+            <li>Clean, documented code and a handover guide</li>
+          </ul>
+          <p class="sheet-stack">This demo: Python · FastAPI · Claude API · BM25 retrieval · daily cap on AI calls · rate limiting · 15 automated tests</p>
+          <div class="sheet-cta">
+            <a class="btn btn-amber" href="https://www.upwork.com/freelancers/~0138825b03a288eecf" target="_blank" rel="noopener">Hire me on Upwork<svg><use href="#i-arrow"/></svg></a>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ 02 BOOKED -->
+<section class="chapter has-giant ch-booked" id="booked" data-world="booked" aria-labelledby="tg-title">
+  <div class="giant" aria-hidden="true" data-w="Booked"><i class="gdot"></i></div>
+  <div class="wrap">
+    <header class="ch-head" data-reveal>
+      <p class="ch-kicker"><span>02</span>Telegram bots &amp; Mini Apps<em>from $80</em></p>
+      <h2 id="tg-title">Book a bike without leaving <span class="hl-tg">Telegram</span>.</h2>
+      <p class="sub">A Mini App is a small web app that opens inside a Telegram chat. Tap through this one: every price, opening hour and holiday comes from the same shop guide the assistant just read.</p>
+      <ul class="stats" aria-label="What the real bot does">
+        <li><b>Instant</b><span>quote in the chat</span></li>
+        <li><b>Server</b><span>checks prices &amp; hours</span></li>
+        <li><b>HMAC</b><span>verified login</span></li>
+        <li><b>Owner</b><span>alerted on Telegram</span></li>
+      </ul>
+    </header>
+
+    <div class="bench bench-tg" data-reveal>
+      <div class="stage tg-phone">
+        <div class="phone" id="phone">
+          <div class="phone-notch" aria-hidden="true"></div>
+          <div class="tg-top" aria-hidden="true">
+            <span class="tg-close">Close</span>
+            <span class="tg-who"><b>NordLight Bikes</b><small>mini app</small></span>
+            <span class="tg-more">•••</span>
+          </div>
+          <form class="mini" id="mini" method="dialog" aria-label="Booking Mini App demo">
+            <div class="mini-title">
+              <div><h3>Book an e-bike</h3><p>NordLight Bikes · Verona · helmet &amp; lock included</p></div>
+              <span class="demo-pill">Demo</span>
+            </div>
+            <noscript><p class="m-noscript">This booking demo runs on JavaScript, which is off in your browser. The recording below shows the real Mini App.</p></noscript>
+            <fieldset class="m-group">
+              <legend>Bike</legend>
+              <div class="bike-cards" id="m-bikes"></div>
+            </fieldset>
+            <fieldset class="m-group">
+              <legend>Duration</legend>
+              <div class="seg" id="m-dur"></div>
+            </fieldset>
+            <fieldset class="m-group">
+              <legend>Pickup day</legend>
+              <div class="days" id="m-days"></div>
+            </fieldset>
+            <fieldset class="m-group">
+              <legend>Pickup time <span class="m-hint" id="m-return"></span></legend>
+              <div class="times" id="m-times"></div>
+            </fieldset>
+            <div class="m-group m-steps">
+              <div class="stepper" data-step="bikes">
+                <span class="st-lbl"><b>Bikes</b><small>Up to 6 per booking</small></span>
+                <button type="button" data-d="-1" aria-label="One bike less"><svg><use href="#i-minus"/></svg></button>
+                <output id="m-n-bikes">2</output>
+                <button type="button" data-d="1" aria-label="One bike more"><svg><use href="#i-plus"/></svg></button>
+              </div>
+              <div class="stepper" data-step="seats">
+                <span class="st-lbl"><b>Child seats</b><small id="m-seat-price">add-on</small></span>
+                <button type="button" data-d="-1" aria-label="One child seat less"><svg><use href="#i-minus"/></svg></button>
+                <output id="m-n-seats">1</output>
+                <button type="button" data-d="1" aria-label="One child seat more"><svg><use href="#i-plus"/></svg></button>
+              </div>
+            </div>
+            <button class="main-btn" type="submit" id="m-book">Book</button>
+          </form>
+          <div class="mini-done" id="mini-done" hidden>
+            <div class="done-check"><svg><use href="#i-check"/></svg></div>
+            <h3>Booking request ready</h3>
+            <p class="done-note">Demo only: nothing was booked or sent.</p>
+            <dl class="done-list" id="done-list"></dl>
+            <button class="main-btn ghost" type="button" id="m-again">Change booking</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel quote-panel tg-quote">
+        <div class="panel-head"><span class="eyebrow-s">Instant quote</span><span class="mono-s">every rule shows its source</span></div>
+        <div class="quote-total"><b id="q-total">€106</b><small id="q-sub">pay at pickup</small></div>
+        <ul class="rules" id="q-rules"></ul>
+        <p class="sr-only" id="q-say" role="status" aria-live="polite"></p>
+      </div>
+      <div class="tg-owner">
+        <div class="owner" id="owner">
+          <div class="owner-head"><svg><use href="#i-tg"/></svg><span>Shop owner's Telegram</span><span class="mono-s" id="owner-state">preview</span></div>
+          <div class="owner-body" id="owner-body"></div>
+        </div>
+        <ol class="tg-flow" aria-label="What happens in the real bot when a customer books">
+          <li><b>Customer taps Book</b> inside Telegram</li>
+          <li><b>Server checks</b> the price, hours and holidays again</li>
+          <li><b>Saved in SQLite</b>, visible with /mybookings</li>
+          <li><b>Owner gets a message</b><span class="js-only"> like the one above</span><span class="no-js"> with the booking</span></li>
+        </ol>
+      </div>
+    </div>
+    <p class="honest honest-lab"><svg><use href="#i-info"/></svg><span><span class="js-only">Runs in your browser with the guide's prices. Nothing is booked or sent to anyone. </span>In the real bot, the server recomputes the price and checks the hours before it saves a booking.</span></p>
+
+    <div class="dailies dailies-wide" data-reveal>
+      <figure class="rec" data-video="telegram">
+        <button class="rec-play" type="button" aria-label="Play the recorded demo of the real Telegram bot and Mini App, 10 seconds">
+          <picture>
+            <source media="(max-width: 720px)" srcset="../assets/telegram-cover.jpg" data-asset="telegram-cover.jpg" width="1600" height="1200">
+            <img src="../assets/telegram-poster.jpg" data-asset="telegram-poster.jpg" alt="The real Mini App: two trekking e-bikes for a full day with one child seat, total 106 euros, then the confirmation" loading="lazy" width="1920" height="1154" style="object-position:84% 12%">
+          </picture>
+          <span class="rec-btn"><svg><use href="#i-play"/></svg></span>
+          <span class="rec-time">0:10</span>
+        </button>
+        <noscript><video controls playsinline preload="none" poster="../assets/telegram-poster.jpg" src="../assets/telegram.mp4" aria-label="Recorded demo of the real Telegram bot and Mini App, 10 seconds"></video></noscript>
+        <figcaption><b>Recorded demo</b>The real Mini App: 2 trekking e-bikes, full day, 1 child seat, €106, then the confirmation. The demo above starts from the same booking.</figcaption>
+      </figure>
+      <aside class="sheet" aria-label="Telegram bots and Mini Apps: packages">
+        <p class="sheet-k">Packages · USD</p>
+        <div class="pk"><span><small>from</small><b>$80</b></span><span><b>$240</b></span><span><b>$570</b></span></div>
+        <ul class="sheet-list">
+          <li>Commands, menus, admin tools, multilingual replies</li>
+          <li>Payments with Telegram Stars</li>
+          <li>Mini Apps with a backend API, scheduled jobs</li>
+          <li>Deployment on a VPS</li>
+        </ul>
+        <p class="sheet-stack">This demo: Python · python-telegram-bot · FastAPI · SQLite · customers see their bookings with /mybookings</p>
+        <div class="sheet-cta">
+          <a class="btn btn-amber" href="https://www.upwork.com/freelancers/~0138825b03a288eecf" target="_blank" rel="noopener">Hire me on Upwork<svg><use href="#i-arrow"/></svg></a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ 03 MEASURED -->
+<section class="chapter has-giant ch-measured" id="measured" data-world="measured" aria-labelledby="sc-title">
+  <div class="giant" aria-hidden="true" data-w="Measured"><i class="gdot"></i></div>
+  <div class="wrap">
+    <header class="ch-head" data-reveal>
+      <p class="ch-kicker"><span>03</span>Web scraping &amp; data pipelines<em>from $55</em></p>
+      <h2 id="sc-title"><span class="hl">1,000</span> products to Excel in 59&nbsp;seconds.</h2>
+      <p class="sub">My scraper read a whole public practice catalog, books.toscrape.com, and delivered it as Excel, CSV and an HTML report. Below, its real run log replays in your browser.</p>
+      <ul class="stats" aria-label="The real run">
+        <li><b>1,000</b><span>books</span></li>
+        <li><b>1,081</b><span>requests</span></li>
+        <li><b>0</b><span>retries, 0 errors</span></li>
+        <li><b>59 s</b><span>start to Excel</span></li>
+      </ul>
+    </header>
+
+    <div class="bench win win-scraper" id="scraper" data-reveal>
+      <div class="win-bar">
+        <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="win-title"><b>Replay</b><span class="hide-sm"> · the real scraper run</span></span>
+        <span class="speed" role="group" aria-label="Replay speed" data-speeds="1,5,20" data-default="5"></span>
+      </div>
+      <div class="run-row">
+        <code class="cmd"><span class="ps">PS&gt;</span> python -m scraper --out output</code>
+        <button class="run-btn" type="button" id="sc-run"><svg><use href="#i-replay"/></svg><span>Replay the run</span></button>
+      </div>
+      <div class="counters" id="sc-counters">
+        <div class="ctr ctr-main"><span class="ctr-label">Books</span><b data-k="books">1,000</b><small>of 1,000</small></div>
+        <div class="ctr"><span class="ctr-label">Requests</span><b data-k="requests">1,081</b><small>polite, limited concurrency</small></div>
+        <div class="ctr"><span class="ctr-label">Seconds</span><b data-k="seconds">59</b><small>real log time</small></div>
+        <div class="ctr ctr-ok"><span class="ctr-label">Retries</span><b data-k="retries">0</b><small>&nbsp;</small></div>
+        <div class="ctr ctr-ok"><span class="ctr-label">Errors</span><b data-k="errors">0</b><small>&nbsp;</small></div>
+      </div>
+      <div class="sc-grid">
+        <div class="sc-log-wrap">
+          <div class="pane-label"><span>scraper_run_log.txt</span><span id="sc-phase">done in 59 s</span></div>
+          <div class="term sc-log" id="sc-log" aria-live="off"><noscript>
+            <p class="ns-note">The replay runs on JavaScript, which is off in your browser. Here are the last lines of the real run log; the recorded demo below this window shows the whole run.</p>
+            <div class="ln ln-parse"><span class="ts">[20:06:43]</span> parsed 900/1000 books</div>
+            <div class="ln ln-parse"><span class="ts">[20:06:48]</span> parsed 1000/1000 books</div>
+            <div class="ln ln-ok"><span class="ts">[20:06:48]</span> database: 1000 new books, 0 price changes since last run</div>
+            <div class="ln ln-ok"><span class="ts">[20:06:48]</span> saved books.xlsx, books.csv and report.html to output/</div>
+            <div class="ln ln-ok"><span class="ts">[20:06:48]</span> done: 1000 books, 1081 requests, 0 retries, 0 errors, 59 s</div>
+          </noscript></div>
+        </div>
+        <div class="sc-right">
+          <div class="hist-wrap">
+            <div class="pane-label"><span>Books per category</span><span id="sc-cat">50 categories</span></div>
+            <div class="hist" id="sc-hist" aria-hidden="true"></div>
+          </div>
+          <div class="table-wrap">
+            <div class="pane-label"><span>books.csv · sample rows</span><span id="sc-rows">40 / 40</span></div>
+            <div class="tscroll" id="sc-tscroll" tabindex="0" role="region" aria-label="Sample rows from the scraped catalog">
+              <table class="books">
+                <thead><tr><th>#</th><th>Title</th><th class="num">Price</th><th>Rating</th><th class="num">Stock</th></tr></thead>
+                <tbody id="sc-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="files" id="sc-files">
+        <span class="files-label">Output</span>
+        <span class="file on" data-file="xlsx"><svg><use href="#i-file"/></svg>books.xlsx</span>
+        <span class="file on" data-file="csv"><svg><use href="#i-file"/></svg>books.csv</span>
+        <span class="file on" data-file="html"><svg><use href="#i-file"/></svg>report.html</span>
+        <button class="dl-btn" type="button" id="sc-download"><svg><use href="#i-download"/></svg>Download the 40 sample rows (.csv)</button>
+      </div>
+    </div>
+    <p class="honest honest-lab"><svg><use href="#i-info"/></svg><span><span class="js-only">A replay of the real run log. Every log line and the final counts are from the real run; the live book and request counters between log lines are derived from it. </span><span class="no-js">The log lines and the counts above are from the real run. </span>This page downloads nothing from any website.</span></p>
+
+    <div class="dailies dailies-wide" data-reveal>
+      <figure class="rec" data-video="scraper">
+        <button class="rec-play" type="button" aria-label="Play the recorded demo of the real scraper run, 30 seconds">
+          <picture>
+            <source media="(max-width: 720px)" srcset="../assets/scraper-cover.jpg" data-asset="scraper-cover.jpg" width="1600" height="1200">
+            <img src="../assets/scraper-poster.jpg" data-asset="scraper-poster.jpg" alt="The automatic HTML report of the real run: 1,000 books in 50 categories" loading="lazy" width="1920" height="1154" style="object-position:86% 12%">
+          </picture>
+          <span class="rec-btn"><svg><use href="#i-play"/></svg></span>
+          <span class="rec-time">0:30</span>
+        </button>
+        <noscript><video controls playsinline preload="none" poster="../assets/scraper-poster.jpg" src="../assets/scraper.mp4" aria-label="Recorded demo of the real scraper run, 30 seconds"></video></noscript>
+        <figcaption><b>Recorded demo</b>The real run in the terminal, then the HTML report it writes by itself, next to the Excel and CSV files.</figcaption>
+      </figure>
+      <aside class="sheet" aria-label="Web scraping and data pipelines: packages">
+        <p class="sheet-k">Packages · USD</p>
+        <div class="pk"><span><small>from</small><b>$55</b></span><span><b>$175</b></span><span><b>$460</b></span></div>
+        <ul class="sheet-list">
+          <li>Static and dynamic sites, public APIs</li>
+          <li>AI extraction from PDFs, checked against the source text</li>
+          <li>Cleaning, dedup and scheduled runs</li>
+          <li>CSV, Excel, Google Sheets, PostgreSQL or a REST API</li>
+        </ul>
+        <p class="sheet-stack">This demo: Python · httpx async · selectolax · openpyxl · SQLite with price history</p>
+        <div class="sheet-cta">
+          <a class="btn btn-amber" href="https://www.upwork.com/freelancers/~0138825b03a288eecf" target="_blank" rel="noopener">Hire me on Upwork<svg><use href="#i-arrow"/></svg></a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ 04 ALWAYS ON -->
+<section class="chapter has-giant ch-alwayson" id="always-on" data-world="alwayson" aria-labelledby="dp-title">
+  <div class="giant" aria-hidden="true" data-w="Always on"><i class="gdot"></i></div>
+  <div class="wrap">
+    <header class="ch-head" data-reveal>
+      <p class="ch-kicker"><span>04</span>Linux VPS deployment<em>from $65</em></p>
+      <h2 id="dp-title">Fresh server. <span class="hl-red">Crash&nbsp;test.</span> Live&nbsp;HTTPS.</h2>
+      <p class="sub">One script takes a fresh Ubuntu 24.04 machine to a running app behind Nginx, with daily backups. Then it kills the app on purpose, systemd brings it back, and HTTPS goes live.</p>
+      <ul class="stats" aria-label="The real deploy">
+        <li><b>9</b><span>steps, one script</span></li>
+        <li><b>67 s</b><span>to deployed</span></li>
+        <li><b>88 s</b><span>to live HTTPS</span></li>
+        <li><b>5 s</b><span>later: back by itself, checked</span></li>
+      </ul>
+    </header>
+
+    <div class="bench win win-deploy" id="deploy" data-reveal>
+      <div class="win-bar">
+        <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="win-title"><b>Replay</b><span class="hide-sm"> · the real deploy, fresh Ubuntu 24.04</span></span>
+        <span class="speed" role="group" aria-label="Replay speed" data-speeds="1,6,15" data-default="15"></span>
+      </div>
+      <div class="run-row">
+        <div class="cmds">
+          <code class="cmd"><span class="ps">#</span> bash deploy/deploy.sh ./nordlight ./nordlight/.env</code>
+          <code class="cmd cmd-then"><span class="then">then</span><span class="ps">#</span> bash deploy/https_tunnel.sh</code>
+        </div>
+        <button class="run-btn" type="button" id="dp-run"><svg><use href="#i-replay"/></svg><span>Replay the deploy</span></button>
+      </div>
+      <div class="monitor ok" id="dp-monitor">
+        <div class="mon-status"><span class="mon-dot"></span><span><small>nordlight.service</small><b id="dp-status">live on HTTPS · all services up</b></span></div>
+        <canvas class="ecg" id="dp-ecg" aria-hidden="true"></canvas>
+        <div class="mon-meta"><span><small>restarts</small><b id="dp-restarts">1</b></span><span><small>elapsed</small><b id="dp-elapsed">88 s</b></span></div>
+      </div>
+      <div class="dp-grid">
+        <ol class="steps" id="dp-steps" aria-label="Deploy steps"></ol>
+        <div class="term dp-term" id="dp-term" aria-live="off"><noscript>
+          <p class="ns-note">The replay runs on JavaScript, which is off in your browser. Here are the crash test and the last steps of the real logs (“…” marks the lines left out); the recorded demo below this window shows the whole deploy.</p>
+          <div class="ln ln-o">…</div>
+          <div class="ln ln-h">== 9/9 Crash test: kill the app, systemd brings it back</div>
+          <div class="ln ln-c ln-kill"><span class="pr">$</span> systemctl kill -s KILL nordlight; sleep 5</div>
+          <div class="ln ln-c"><span class="pr">$</span> systemctl is-active nordlight &amp;&amp; systemctl show nordlight -p NRestarts</div>
+          <div class="ln ln-j">active</div>
+          <div class="ln ln-j">NRestarts=1</div>
+          <div class="ln ln-c"><span class="pr">$</span> curl -s http://localhost/health; echo</div>
+          <div class="ln ln-j">{"ok":true,"llm":"anthropic","bot":true}</div>
+          <div class="ln ln-live">== Deployed: app on 127.0.0.1:8000 behind Nginx on :80</div>
+          <div class="ln ln-run"><span class="pr">#</span> bash deploy/https_tunnel.sh</div>
+          <div class="ln ln-o">…</div>
+          <div class="ln ln-h">== HTTPS 3/3 Point the Mini App to the public address</div>
+          <div class="ln ln-c"><span class="pr">$</span> sed -i 's|^PUBLIC_URL=.*|PUBLIC_URL=https://demo.trycloudflare.com|' /etc/nordlight/nordlight.env &amp;&amp; systemctl restart nordlight</div>
+          <div class="ln ln-c"><span class="pr">$</span> curl -s https://demo.trycloudflare.com/health; echo</div>
+          <div class="ln ln-j">{"ok":true,"llm":"anthropic","bot":true}</div>
+          <div class="ln ln-o">…</div>
+        </noscript></div>
+      </div>
+      <!-- polite, and app.js turns it off for the replay that starts by itself: only a replay the visitor starts is announced -->
+      <div class="crash" id="dp-crash" aria-live="polite">
+        <div class="crash-card">
+          <svg aria-hidden="true"><use id="dp-crash-icon" href="#i-zap"/></svg>
+          <div><b id="dp-crash-title">App killed on purpose</b><span id="dp-crash-sub">systemctl kill -s KILL nordlight</span></div>
+          <span class="crash-count" id="dp-count" aria-hidden="true">5</span>
+        </div>
+      </div>
+    </div>
+    <p class="honest honest-lab"><svg><use href="#i-info"/></svg><span><span class="js-only">A replay of the real deploy and HTTPS logs, sped up; the crash test plays at real speed. </span><span class="no-js">The log lines above are from the real deploy and HTTPS logs. </span>The demo ran on a fresh Ubuntu 24.04 test machine, with HTTPS through a temporary Cloudflare quick tunnel.</span></p>
+
+    <div class="dailies dailies-wide" data-reveal>
+      <figure class="rec" data-video="deploy">
+        <button class="rec-play" type="button" aria-label="Play the recorded demo of the real deploy, 29 seconds">
+          <picture>
+            <source media="(max-width: 720px)" srcset="../assets/deploy-cover.jpg" data-asset="deploy-cover.jpg" width="1600" height="1200">
+            <img src="../assets/deploy-poster.jpg" data-asset="deploy-poster.jpg" alt="The real deploy: the app, Nginx, the tunnel and the backup timer all active on the server" loading="lazy" width="1920" height="1154" style="object-position:92% 12%">
+          </picture>
+          <span class="rec-btn"><svg><use href="#i-play"/></svg></span>
+          <span class="rec-time">0:29</span>
+        </button>
+        <noscript><video controls playsinline preload="none" poster="../assets/deploy-poster.jpg" src="../assets/deploy.mp4" aria-label="Recorded demo of the real deploy, 29 seconds"></video></noscript>
+        <figcaption><b>Recorded demo</b>The real deploy on a fresh Ubuntu 24.04 machine, then the live app answering a customer over HTTPS.</figcaption>
+      </figure>
+      <aside class="sheet" aria-label="Linux VPS deployment: packages">
+        <p class="sheet-k">Packages · USD</p>
+        <div class="pk"><span><small>from</small><b>$65</b></span><span><b>$185</b></span><span><b>$430</b></span></div>
+        <ul class="sheet-list">
+          <li>Your app or bot as an auto-restarting systemd service</li>
+          <li>Nginx, HTTPS, firewall and SSH keys</li>
+          <li>Test and live versions, checked backups</li>
+          <li>Health checks, Telegram alerts and a short runbook</li>
+        </ul>
+        <p class="sheet-stack">This demo: Bash · systemd · Nginx · daily backups with integrity check and 14-day rotation · secrets in a protected file</p>
+        <div class="sheet-cta">
+          <a class="btn btn-amber" href="https://www.upwork.com/freelancers/~0138825b03a288eecf" target="_blank" rel="noopener">Hire me on Upwork<svg><use href="#i-arrow"/></svg></a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ HOW I WORK -->
+<section class="process" id="process" data-world="hire" aria-labelledby="pr-title">
+  <div class="wrap">
+    <div class="process-head" data-reveal>
+      <p class="ch-kicker"><span>05</span>How we'll work</p>
+      <h2 id="pr-title">Same rule as this page: <span class="hl">see it run first.</span></h2>
+    </div>
+    <ol class="golist" id="golist">
+      <li><span class="g-n">01</span><b>Clear scope</b><p>You tell me what you need. I confirm what's included before you order.</p><span class="g-st" aria-hidden="true"><i></i><em>Go</em></span></li>
+      <li><span class="g-n">02</span><b>Early demo</b><p>You see a working version early, not just promises.</p><span class="g-st" aria-hidden="true"><i></i><em>Go</em></span></li>
+      <li><span class="g-n">03</span><b>Code you own</b><p>Clean, tested Python with a README, so you can run and update it yourself.</p><span class="g-st" aria-hidden="true"><i></i><em>Go</em></span></li>
+      <li><span class="g-n">04</span><b>Clear updates</b><p>Written updates in English or Italian, through the platform you hire me on.</p><span class="g-st" aria-hidden="true"><i></i><em>Go</em></span></li>
+    </ol>
+    <div class="go-cta" data-reveal><a class="btn btn-amber btn-lg" href="#hire">Start a project<svg><use href="#i-arrow"/></svg></a><span>Yours could be demo number five.</span></div>
+  </div>
+</section>
+
+<!-- ================================================================ HIRE -->
+<section class="hire" id="hire" data-world="hire" aria-labelledby="hire-title">
+  <div class="wrap">
+    <div class="hire-head" data-reveal>
+      <p class="ch-kicker ch-kicker-c">Your turn</p>
+      <h2 id="hire-title">Four demos, all real.<br><span class="hl">Let's build yours.</span></h2>
+      <ul class="proofs" id="proofs" aria-label="The demos on this page">
+        <li data-proof="answered"><a href="#lab-chat"><i aria-hidden="true"></i>Answered</a></li>
+        <li data-proof="booked"><a href="#booked"><i aria-hidden="true"></i>Booked</a></li>
+        <li data-proof="measured"><a href="#measured"><i aria-hidden="true"></i>Measured</a></li>
+        <li data-proof="alwayson"><a href="#always-on"><i aria-hidden="true"></i>Always on</a></li>
+        <li class="yours"><span><i aria-hidden="true"></i>Yours</span></li>
+      </ul>
+      <p class="sub">Orders, messages and payments go through Upwork. Tell me what you need there, and I'll confirm the scope before you order.</p>
+    </div>
+    <div class="platforms" data-reveal>
+      <a class="platform pl-up" data-link="upwork" href="https://www.upwork.com/freelancers/~0138825b03a288eecf" target="_blank" rel="noopener">
+        <span class="pl-name">Upwork</span><span class="pl-sub">Fixed-price projects, the same packages as below</span><span class="pl-go">See my profile<svg><use href="#i-ext"/></svg></span>
+      </a>
+    </div>
+    <div class="hire-grid">
+      <div class="prices" id="prices" data-reveal>
+        <table>
+          <caption>Fixed-scope packages · USD</caption>
+          <thead><tr><th scope="col">Service</th><th scope="col">Packages</th><th scope="col"><span class="sr-only">Demo</span></th></tr></thead>
+          <tbody>
+            <tr><th scope="row"><i>01</i>AI chatbots &amp; agents</th><td class="pp"><b>$100</b><span>$320</span><span>$750</span></td><td class="pt"><a href="#lab-chat">Try it<svg><use href="#i-arrow"/></svg></a></td></tr>
+            <tr><th scope="row"><i>02</i>Telegram bots &amp; Mini Apps</th><td class="pp"><b>$80</b><span>$240</span><span>$570</span></td><td class="pt"><a href="#booked">Try it<svg><use href="#i-arrow"/></svg></a></td></tr>
+            <tr><th scope="row"><i>03</i>Web scraping &amp; data pipelines</th><td class="pp"><b>$55</b><span>$175</span><span>$460</span></td><td class="pt"><a href="#measured">Try it<svg><use href="#i-arrow"/></svg></a></td></tr>
+            <tr><th scope="row"><i>04</i>Linux VPS deployment</th><td class="pp"><b>$65</b><span>$185</span><span>$430</span></td><td class="pt"><a href="#always-on">Try it<svg><use href="#i-arrow"/></svg></a></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="me" data-reveal>
+        <div class="me-top">
+          <img class="me-photo" src="../assets/eros.jpg" data-asset="eros.jpg" alt="Portrait of Eros C." width="320" height="320" loading="lazy">
+          <div class="me-txt">
+            <p class="me-name">Eros C.</p>
+            <p class="me-role">Python &amp; AI developer, Italy</p>
+            <p class="me-lang">Written updates in <span style="white-space:nowrap">English or Italian</span></p>
+          </div>
+        </div>
+        <p class="me-bio">I build the tools on this page for small businesses, founders and agencies: chatbots that answer from your documents, Telegram bots that take bookings, scrapers that deliver clean data, and the Linux setup that keeps them running.</p>
+        <ul class="stack" aria-label="Stack">
+          <li>Python</li><li>FastAPI</li><li>SQLite</li><li>PostgreSQL</li><li>Claude</li><li>GPT</li><li>Gemini</li><li>python-telegram-bot</li><li>httpx</li><li>Playwright</li><li>selectolax</li><li>openpyxl</li><li>Docker</li><li>Linux</li><li>systemd</li><li>Nginx</li><li>Bash</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <span>© 2026 Eros C. · Python &amp; AI developer, Italy</span>
+    <span>The demos use a fictional shop (NordLight Bikes) and a public practice catalog. They run in your browser on demo data and real logs; no AI model or server sits behind this page.</span>
+  </div>
+</footer>
+
+<nav class="hirebar" id="hirebar" aria-label="Hire me">
+  <span class="hb-label">Hire me</span>
+  <a class="hb-btn hb-up" href="https://www.upwork.com/freelancers/~0138825b03a288eecf" target="_blank" rel="noopener">Upwork</a>
+</nav>
+
+<dialog class="dlg dlg-guide" id="dlg-guide" aria-label="The shop guide">
+  <div class="dlg-bar"><span>nordlight_bikes.md · everything the assistant knows</span><button type="button" class="dlg-x" data-close aria-label="Close guide">Close</button></div>
+  <pre id="guide-pre"></pre>
+</dialog>
+
+<!-- DATA:START copied from ../data: the guide and both deploy logs and the scraper log verbatim; the 40 sample rows keep only the columns the page shows -->
+<script type="text/markdown" id="data-guide">
+# NordLight Bikes – Customer Guide (DEMO, fictional company)
+
+## Description
+NordLight Bikes is a fictional e-bike rental shop in Verona, Italy, used only for a demo. It rents city e-bikes and trekking e-bikes by the hour or by the day.
+
+## Opening hours
+- Monday to Saturday: 9:00 to 19:00
+- Sunday: 10:00 to 17:00
+- Closed on 25 December and 1 January
+
+## Prices
+| Bike | 1 hour | Half day (4 h) | Full day |
+|---|---|---|---|
+| City e-bike | €8 | €25 | €39 |
+| Trekking e-bike | €10 | €32 | €49 |
+| Child seat (add-on) | €2 | €5 | €8 |
+
+Helmet and lock are always included at no extra cost.
+
+## Booking and payment
+- Bookings can be made on the website or at the shop.
+- Payment by card or cash at pickup.
+- A deposit of €100 is held on the card and released when the bike is returned undamaged.
+
+## Cancellation policy
+- Free cancellation up to 24 hours before pickup.
+- Cancellations within 24 hours: 50% of the rental price is charged.
+- No-show: full price is charged.
+
+## Battery and range
+- City e-bike range: about 60 km per charge.
+- Trekking e-bike range: about 90 km per charge.
+- Spare batteries can be rented for €6 per day.
+
+## Damage and theft
+- Small scratches are not charged.
+- Flat tyres are repaired for free during opening hours.
+- In case of theft, the customer must file a police report; the fee is €350 per bike.
+
+## Frequently Asked Questions
+
+### Q: Do I need a driving licence?
+A: No. Any adult can rent an e-bike. Riders aged 14 to 17 need a parent's signature.
+
+### Q: Can I return the bike to another location?
+A: No, all bikes must be returned to the Verona shop.
+
+### Q: Do you offer guided tours?
+A: Yes, a 3-hour guided tour of the Valpolicella hills leaves every Saturday at 9:30 and costs €45 per person, bike included.
+</script>
+<script type="text/plain" id="data-scraper-log">
+[20:05:49] start: books.toscrape.com
+[20:05:50] found 50 categories
+[20:05:50] category Travel: 11 books
+[20:05:51] category Philosophy: 11 books
+[20:05:51] category Womens Fiction: 17 books
+[20:05:51] category Classics: 19 books
+[20:05:51] category Religion: 7 books
+[20:05:51] category Music: 13 books
+[20:05:51] category Science Fiction: 16 books
+[20:05:51] category Sports and Games: 5 books
+[20:05:51] category New Adult: 6 books
+[20:05:52] category Science: 14 books
+[20:05:52] category Paranormal: 1 books
+[20:05:52] category Poetry: 19 books
+[20:05:52] category Psychology: 7 books
+[20:05:52] category Art: 8 books
+[20:05:52] category Parenting: 1 books
+[20:05:52] category Autobiography: 9 books
+[20:05:52] category Adult Fiction: 1 books
+[20:05:52] category Humor: 10 books
+[20:05:52] category Horror: 17 books
+[20:05:52] category History: 18 books
+[20:05:52] category Christian Fiction: 6 books
+[20:05:52] category Biography: 5 books
+[20:05:52] category Business: 12 books
+[20:05:52] category Thriller: 11 books
+[20:05:53] category Academic: 1 books
+[20:05:53] category Spirituality: 6 books
+[20:05:53] category Contemporary: 3 books
+[20:05:53] category Self Help: 5 books
+[20:05:53] category Historical: 2 books
+[20:05:53] category Christian: 3 books
+[20:05:53] category Suspense: 1 books
+[20:05:53] category Novels: 1 books
+[20:05:53] category Short Stories: 1 books
+[20:05:53] category Health: 4 books
+[20:05:53] category Politics: 3 books
+[20:05:53] category Cultural: 1 books
+[20:05:53] category Crime: 1 books
+[20:05:53] category Erotica: 1 books
+[20:05:53] category Romance: 35 books
+[20:05:53] category Mystery: 32 books
+[20:05:53] category Historical Fiction: 26 books
+[20:05:53] category Childrens: 29 books
+[20:05:54] category Food and Drink: 30 books
+[20:05:54] category Fiction: 65 books
+[20:05:54] category Fantasy: 48 books
+[20:05:54] category Sequential Art: 75 books
+[20:05:54] category Young Adult: 54 books
+[20:05:54] category Add a comment: 67 books
+[20:05:55] category Nonfiction: 110 books
+[20:05:56] category Default: 152 books
+[20:05:56] fetching 1000 book pages
+[20:06:01] parsed 100/1000 books
+[20:06:06] parsed 200/1000 books
+[20:06:11] parsed 300/1000 books
+[20:06:16] parsed 400/1000 books
+[20:06:21] parsed 500/1000 books
+[20:06:26] parsed 600/1000 books
+[20:06:31] parsed 700/1000 books
+[20:06:37] parsed 800/1000 books
+[20:06:43] parsed 900/1000 books
+[20:06:48] parsed 1000/1000 books
+[20:06:48] database: 1000 new books, 0 price changes since last run
+[20:06:48] saved books.xlsx, books.csv and report.html to output/
+[20:06:48] done: 1000 books, 1081 requests, 0 retries, 0 errors, 59 s
+</script>
+<script type="text/csv" id="data-books">
+upc,title,category,price_gbp,rating,in_stock,stock_count,url
+7093cf549cd2e7de,Logan Kade (Fallen Crest High #5.5),Academic,13.12,2,True,5,https://books.toscrape.com/catalogue/logan-kade-fallen-crest-high-55_384/index.html
+165affa7adb5eded,#GIRLBOSS,Add a comment,50.96,1,True,3,https://books.toscrape.com/catalogue/girlboss_113/index.html
+61cf7eb9d2cd8bb0,23 Degrees South: A Tropical Tale of Changing Whether...,Add a comment,35.79,2,True,9,https://books.toscrape.com/catalogue/23-degrees-south-a-tropical-tale-of-changing-whether_556/index.html
+01a177623cce9596,A Brush of Wings (Angels Walking #3),Add a comment,55.51,1,True,14,https://books.toscrape.com/catalogue/a-brush-of-wings-angels-walking-3_651/index.html
+89a89e76f3516357,A Clash of Kings (A Song of Ice and Fire #2),Add a comment,10.79,3,True,5,https://books.toscrape.com/catalogue/a-clash-of-kings-a-song-of-ice-and-fire-2_356/index.html
+03cbb67c0f990d87,A Game of Thrones (A Song of Ice and Fire #1),Add a comment,46.42,2,True,5,https://books.toscrape.com/catalogue/a-game-of-thrones-a-song-of-ice-and-fire-1_358/index.html
+c181ca8eabe7d18c,A Hero's Curse (The Unseen Chronicles #1),Add a comment,50.49,3,True,9,https://books.toscrape.com/catalogue/a-heros-curse-the-unseen-chronicles-1_557/index.html
+1ad06aed9349af46,A People's History of the United States,Add a comment,40.79,2,True,14,https://books.toscrape.com/catalogue/a-peoples-history-of-the-united-states_654/index.html
+c1379d3744f1dd2c,"A Series of Catastrophes and Miracles: A True Story of Love, Science, and Cancer",Add a comment,56.48,2,True,14,https://books.toscrape.com/catalogue/a-series-of-catastrophes-and-miracles-a-true-story-of-love-science-and-cancer_655/index.html
+1fbb5f786e53a0ce,Angels Walking (Angels Walking #1),Add a comment,34.2,2,True,14,https://books.toscrape.com/catalogue/angels-walking-angels-walking-1_662/index.html
+bfbb54bc8cdeed2b,Cell,Add a comment,20.29,4,True,14,https://books.toscrape.com/catalogue/cell_674/index.html
+33a3e0e3ffde0dcd,Code Name Verity (Code Name Verity #1),Add a comment,22.13,4,True,14,https://books.toscrape.com/catalogue/code-name-verity-code-name-verity-1_680/index.html
+dbe33cf29ef1623d,Cosmos,Add a comment,36.17,2,True,3,https://books.toscrape.com/catalogue/cosmos_141/index.html
+75cc85cdbe9ad46b,Evicted: Poverty and Profit in the American City,Add a comment,42.27,1,True,5,https://books.toscrape.com/catalogue/evicted-poverty-and-profit-in-the-american-city_372/index.html
+b28c7d07afa7063b,Find Her (Detective D.D. Warren #8),Add a comment,22.37,1,True,5,https://books.toscrape.com/catalogue/find-her-detective-dd-warren-8_373/index.html
+2ed3a794a70aa85f,Fire Bound (Sea Haven/Sisters of the Heart #5),Add a comment,21.28,4,True,3,https://books.toscrape.com/catalogue/fire-bound-sea-havensisters-of-the-heart-5_157/index.html
+56a34d0cec11d6b0,Fun Home: A Family Tragicomic,Add a comment,56.59,4,True,6,https://books.toscrape.com/catalogue/fun-home-a-family-tragicomic_428/index.html
+c00bc29a678a6efb,Good in Bed (Cannie Shapiro #1),Add a comment,37.05,5,True,7,https://books.toscrape.com/catalogue/good-in-bed-cannie-shapiro-1_469/index.html
+68407606544d6f22,John Adams,Add a comment,57.43,4,True,7,https://books.toscrape.com/catalogue/john-adams_472/index.html
+228f74b74f3a08ae,Judo: Seven Steps to Black Belt (an Introductory Guide for Beginners),Add a comment,53.9,2,True,16,https://books.toscrape.com/catalogue/judo-seven-steps-to-black-belt-an-introductory-guide-for-beginners_903/index.html
+71a6471bbdac21d9,Lord of the Flies,Add a comment,24.89,3,True,1,https://books.toscrape.com/catalogue/lord-of-the-flies_30/index.html
+546da23278482b0a,Manuscript Found in Accra,Add a comment,34.98,2,True,3,https://books.toscrape.com/catalogue/manuscript-found-in-accra_192/index.html
+f38f37ed934d84b2,Mere Christianity,Add a comment,48.51,3,True,6,https://books.toscrape.com/catalogue/mere-christianity_435/index.html
+caf4fe9311f1dc59,Modern Romance,Add a comment,28.26,5,True,15,https://books.toscrape.com/catalogue/modern-romance_820/index.html
+47d47155e89c8be7,More Than Music (Chasing the Dream #1),Add a comment,37.61,2,True,14,https://books.toscrape.com/catalogue/more-than-music-chasing-the-dream-1_716/index.html
+b757c0c361e689ce,On a Midnight Clear,Add a comment,14.07,3,True,16,https://books.toscrape.com/catalogue/on-a-midnight-clear_912/index.html
+81ef44fcc5f454df,One with You (Crossfire #5),Add a comment,15.71,4,True,12,https://books.toscrape.com/catalogue/one-with-you-crossfire-5_626/index.html
+720c36b2bee4692e,Pride and Prejudice,Add a comment,19.27,4,True,6,https://books.toscrape.com/catalogue/pride-and-prejudice_437/index.html
+b4f5672f68ec3a83,Rogue Lawyer (Rogue Lawyer #1),Add a comment,50.11,3,True,3,https://books.toscrape.com/catalogue/rogue-lawyer-rogue-lawyer-1_214/index.html
+44d97b6707dae3f0,Rook,Add a comment,37.86,4,True,13,https://books.toscrape.com/catalogue/rook_647/index.html
+5b2cd5b31a510848,Sarah's Key,Add a comment,46.29,1,True,3,https://books.toscrape.com/catalogue/sarahs-key_217/index.html
+07806456878931bc,Seven Days in the Art World,Add a comment,52.33,2,True,3,https://books.toscrape.com/catalogue/seven-days-in-the-art-world_220/index.html
+0c27e6c3744fc14b,"Shobu Samurai, Project Aryoku (#3)",Add a comment,29.06,3,True,15,https://books.toscrape.com/catalogue/shobu-samurai-project-aryoku-3_830/index.html
+ba047a636b7d3793,Team of Rivals: The Political Genius of Abraham Lincoln,Add a comment,20.12,5,True,7,https://books.toscrape.com/catalogue/team-of-rivals-the-political-genius-of-abraham-lincoln_488/index.html
+80cfab6bcff3a244,The Art Forger,Add a comment,40.76,3,True,16,https://books.toscrape.com/catalogue/the-art-forger_930/index.html
+cd3dcd83bb002e78,The Blind Side: Evolution of a Game,Add a comment,53.71,5,True,3,https://books.toscrape.com/catalogue/the-blind-side-evolution-of-a-game_231/index.html
+970bd3316219e7dc,The Case for Christ (Cases for Christianity),Add a comment,47.84,1,True,3,https://books.toscrape.com/catalogue/the-case-for-christ-cases-for-christianity_234/index.html
+487449f4f6322f0f,The Catcher in the Rye,Add a comment,24.55,1,True,3,https://books.toscrape.com/catalogue/the-catcher-in-the-rye_236/index.html
+64fd010bf8d15096,The Children,Add a comment,11.88,3,True,12,https://books.toscrape.com/catalogue/the-children_633/index.html
+18b4545a5ed15581,The Communist Manifesto,Add a comment,14.76,3,True,1,https://books.toscrape.com/catalogue/the-communist-manifesto_61/index.html
+</script>
+<script type="text/plain" id="data-deploy-log">
+[01:52:36]
+[01:52:36] == 1/9 System packages
+[01:52:36] $ apt-get update -qq
+[01:52:50] $ DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3-venv nginx sqlite3 rsync curl >/dev/null
+[01:53:01] $ nginx -v 2>&1; python3 --version
+[01:53:01] nginx version: nginx/1.24.0 (Ubuntu)
+[01:53:01] Python 3.12.3
+[01:53:01]
+[01:53:01] == 2/9 Dedicated user without login, app folders
+[01:53:01] $ id nordlight >/dev/null 2>&1 || useradd --system --home /opt/nordlight --shell /usr/sbin/nologin nordlight
+[01:53:01] $ install -d -o nordlight -g nordlight -m 750 /opt/nordlight /opt/nordlight/data
+[01:53:01]
+[01:53:01] == 3/9 Application code (no secrets, no local venv)
+[01:53:01] $ rsync -a --delete --exclude .venv --exclude .env --exclude data/*.sqlite3 --exclude __pycache__ --exclude branding --exclude .pytest_cache ./nordlight/ /opt/nordlight/app/
+[01:53:01] $ chown -R root:nordlight /opt/nordlight/app && chmod -R o-rwx /opt/nordlight/app
+[01:53:01]
+[01:53:01] == 4/9 Python virtual environment
+[01:53:01] $ python3 -m venv /opt/nordlight/venv
+[01:53:03] $ /opt/nordlight/venv/bin/pip install -q --upgrade pip
+[01:53:05] $ /opt/nordlight/venv/bin/pip install -q -r /opt/nordlight/app/requirements.txt
+[01:53:29] $ /opt/nordlight/venv/bin/python -c 'import fastapi, telegram, anthropic; print("dependencies ok")'
+[01:53:30] dependencies ok
+[01:53:30]
+[01:53:30] == 5/9 Secrets in a protected env file
+[01:53:30] $ install -d -m 750 -o root -g nordlight /etc/nordlight
+[01:53:30] $ install -m 640 -o root -g nordlight ./nordlight/.env /etc/nordlight/nordlight.env
+[01:53:30] $ sed -i -e 's/^DEMO_DEV_MODE=.*/DEMO_DEV_MODE=false/' -e 's/^HOST=.*/HOST=127.0.0.1/' -e 's/^PORT=.*/PORT=8000/' -e 's|^PUBLIC_URL=.*|PUBLIC_URL=|' /etc/nordlight/nordlight.env
+[01:53:30] $ ls -l /etc/nordlight/nordlight.env
+[01:53:30] -rw-r----- 1 root nordlight 356 Oct 21 01:53 /etc/nordlight/nordlight.env
+[01:53:30]
+[01:53:30] == 6/9 systemd service with auto-restart and sandboxing
+[01:53:30] $ install -m 644 ./nordlight/deploy/nordlight.service /etc/systemd/system/nordlight.service
+[01:53:30] $ systemctl daemon-reload && systemctl enable --now nordlight
+[01:53:30] Created symlink /etc/systemd/system/multi-user.target.wants/nordlight.service → /etc/systemd/system/nordlight.service.
+[01:53:31] $ sleep 6 && systemctl is-active nordlight
+[01:53:37] active
+[01:53:37]
+[01:53:37] == 7/9 Nginx reverse proxy
+[01:53:37] $ install -m 644 ./nordlight/deploy/nginx-nordlight.conf /etc/nginx/sites-available/nordlight
+[01:53:37] $ ln -sf /etc/nginx/sites-available/nordlight /etc/nginx/sites-enabled/nordlight && rm -f /etc/nginx/sites-enabled/default
+[01:53:37] $ chmod o+x /opt/nordlight /opt/nordlight/app /opt/nordlight/app/app && chmod -R o+rX /opt/nordlight/app/app/static
+[01:53:37] $ nginx -t 2>&1 && systemctl reload nginx && sleep 1
+[01:53:37] nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+[01:53:37] nginx: configuration file /etc/nginx/nginx.conf test is successful
+[01:53:38] $ curl -s http://localhost/health; echo
+[01:53:38] {"ok":true,"llm":"anthropic","bot":true}
+[01:53:38]
+[01:53:38] == 8/9 Daily backup with integrity check
+[01:53:38] $ install -m 755 ./nordlight/deploy/backup.sh /opt/nordlight/backup.sh
+[01:53:38] $ install -m 644 ./nordlight/deploy/nordlight-backup.service ./nordlight/deploy/nordlight-backup.timer /etc/systemd/system/
+[01:53:38] $ systemctl daemon-reload && systemctl enable --now nordlight-backup.timer
+[01:53:38] Created symlink /etc/systemd/system/timers.target.wants/nordlight-backup.timer → /etc/systemd/system/nordlight-backup.timer.
+[01:53:38] $ systemctl start nordlight-backup.service && journalctl -u nordlight-backup --no-pager -o cat | grep 'backup ok' | tail -1
+[01:53:38] backup ok: /var/backups/nordlight/bookings-20261021-015338.sqlite3.gz (4.0K)
+[01:53:38]
+[01:53:38] == 9/9 Crash test: kill the app, systemd brings it back
+[01:53:38] $ systemctl kill -s KILL nordlight; sleep 5
+[01:53:43] $ systemctl is-active nordlight && systemctl show nordlight -p NRestarts
+[01:53:43] active
+[01:53:43] NRestarts=1
+[01:53:43] $ curl -s http://localhost/health; echo
+[01:53:43] {"ok":true,"llm":"anthropic","bot":true}
+[01:53:43]
+[01:53:43] == Deployed: app on 127.0.0.1:8000 behind Nginx on :80
+</script>
+<script type="text/plain" id="data-https-log">
+[01:53:48]
+[01:53:48] == HTTPS 1/3 Install cloudflared (official package)
+[01:53:48] $ command -v cloudflared >/dev/null || (curl -sL -o /tmp/cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && dpkg -i /tmp/cloudflared.deb >/dev/null)
+[01:53:55] $ cloudflared --version
+[01:53:55] cloudflared version 2026.10.2 (built 2026-10-20-09:11 UTC)
+[01:53:55]
+[01:53:55] == HTTPS 2/3 Tunnel service
+[01:53:55] $ systemctl daemon-reload && systemctl enable --now cloudflared-quick
+[01:53:55] Created symlink /etc/systemd/system/multi-user.target.wants/cloudflared-quick.service → /etc/systemd/system/cloudflared-quick.service.
+[01:54:01] public url: https://demo.trycloudflare.com
+[01:54:01]
+[01:54:01] == HTTPS 3/3 Point the Mini App to the public address
+[01:54:01] $ sed -i 's|^PUBLIC_URL=.*|PUBLIC_URL=https://demo.trycloudflare.com|' /etc/nordlight/nordlight.env && systemctl restart nordlight
+[01:54:04] $ curl -s https://demo.trycloudflare.com/health; echo
+[01:54:04] {"ok":true,"llm":"anthropic","bot":true}
+[01:54:04] $ systemctl --no-pager --plain list-units 'nordlight*' 'nginx*' 'cloudflared*' --type=service,timer | head -8
+[01:54:04] UNIT                      LOAD   ACTIVE SUB     DESCRIPTION
+[01:54:04] cloudflared-quick.service loaded active running Cloudflare quick tunnel to Nginx
+[01:54:04] nginx.service             loaded active running A high performance web server and a reverse proxy server
+[01:54:04] nordlight.service         loaded active running NordLight Bikes demo (web chat, Mini App, Telegram bot)
+[01:54:04] nordlight-backup.timer    loaded active waiting Daily backup of the NordLight bookings database
+[01:54:04]
+[01:54:04] Legend: LOAD   → Reflects whether the unit definition was properly loaded.
+[01:54:04]         ACTIVE → The high-level unit activation state, i.e. generalization of SUB.
+</script>
+<!-- DATA:END -->
+
+<script>
+  /* Keep every image on the one asset prefix (the src / srcset attributes already use it, so this only acts if they differ). */
+  (function () { var b = window.ASSET_BASE, n = document.querySelectorAll('[data-asset]'); for (var i = 0; i < n.length; i++) { var a = n[i].tagName === 'SOURCE' ? 'srcset' : 'src', u = b + n[i].getAttribute('data-asset'); if (n[i].getAttribute(a) !== u) n[i].setAttribute(a, u); } })();
+</script>
+<script src="../app.js" defer></script>
+</body>
+</html>

@@ -1273,3 +1273,25 @@ html:not(.js) .rec-play { display: none; }
   .gdot { opacity: 1; }
   .preview { display: none; }
 }
+
+/* ===== Full experience invite (the film loads after the click) */
+.xp-invite { position: absolute; top: -8px; right: 0; z-index: 3; display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 15px 0 5px; border-radius: 999px; border: 1px solid rgba(245, 165, 36, .45); background: rgba(13, 21, 30, .72); font: 600 14px/1 var(--body); white-space: nowrap; animation: fadeIn .9s .9s both; transition: border-color .25s, background-color .25s, transform .25s var(--ease); }
+.xp-invite:hover { border-color: var(--amber); background: rgba(245, 165, 36, .1); transform: translateY(-1px); }
+.xpi-play { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--amber); color: var(--amber-ink); animation: xpiRing 2.4s 2s 3; }
+.xpi-play svg { width: 13px; height: 13px; margin-left: 2px; }
+.xpi-txt { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.xpi-txt small { font: 500 10.5px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+.xpi-eq { display: flex; align-items: flex-end; gap: 2px; height: 14px; }
+.xpi-eq i { width: 2px; height: 100%; background: var(--amber); transform-origin: 50% 100%; transform: scaleY(.4); animation: xpiEq .9s ease-in-out 6 alternate; }
+.xpi-eq i:nth-child(2) { animation-delay: .3s; } .xpi-eq i:nth-child(3) { animation-delay: .15s; } .xpi-eq i:nth-child(4) { animation-delay: .45s; }
+.xp-invite[aria-busy="true"] .xpi-play { background: none; border: 2px solid var(--amber); border-right-color: transparent; animation: xpiSpin .8s linear infinite; }
+.xp-invite[aria-busy="true"] .xpi-play svg { opacity: 0; }
+@keyframes xpiEq { to { transform: scaleY(1); } }
+@keyframes xpiRing { 0% { box-shadow: 0 0 0 0 rgba(245, 165, 36, .55); } 70%, 100% { box-shadow: 0 0 0 12px rgba(245, 165, 36, 0); } }
+@keyframes xpiSpin { to { transform: rotate(360deg); } }
+html:not(.js) .xp-invite { display: none; }
+@media (max-width: 1380px) { .xpi-eq { display: none; } }
+@media (max-width: 1320px) { .xp-invite { gap: 8px; padding-right: 13px; font-size: 13px; } .xpi-txt small { display: none; } }
+/* one column: after the live strip */
+@media (max-width: 1240px) { .xp-invite { position: relative; top: auto; right: auto; order: 6; align-self: flex-start; height: 44px; margin-top: 14px; padding: 0 16px 0 6px; font-size: 14px; } .xpi-play { width: 32px; height: 32px; } .xpi-txt small, .xpi-eq { display: flex; } }
+@media (max-width: 720px) { .xp-invite { align-self: stretch; height: 46px; margin-top: 12px; } .xpi-eq { margin-left: auto; } }

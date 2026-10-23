@@ -1045,9 +1045,12 @@
   function autoLater(fn, wait) {
     auto.pending = fn;
     clearTimeout(auto.timer);
-    if (auto.paused || auto.over) return;
+    if (auto.paused || auto.over || auto.held) return;
     auto.timer = setTimeout(function () { var f = auto.pending; auto.pending = null; if (f && !auto.over) f(); }, wait);
   }
+  // held while the Full experience covers the page
+  document.addEventListener('xp:open', function () { auto.held = true; clearTimeout(auto.timer); });
+  document.addEventListener('xp:close', function () { auto.held = false; var f = auto.pending; if (f && !auto.paused && !auto.over) autoLater(f, 600); });
   function setAutoBtn(label, icon) { autoBtn.querySelector('span').textContent = label; autoBtn.querySelector('use').setAttribute('href', icon); }
   // The questions the page asks by itself are not announced; the log speaks once the visitor takes over.
   function logLive(on) { chatLog.setAttribute('aria-live', on ? 'polite' : 'off'); }
@@ -1238,8 +1241,8 @@
     var R = QS.map(reply);
     el.setAttribute('aria-label', 'Live demo: try it. The shop assistant answering from its guide; jump to it and ask your own question.');
     if (reduced) return;  // calm version: the first question and its real answer, already in the HTML
-    var i = 0, timer = 0, on = false, hold = false, stopped = false, phase = null;
-    function running() { return on && !hold && !stopped; }
+    var i = 0, timer = 0, on = false, hold = false, stopped = false, phase = null, xpHeld = false;
+    function running() { return on && !hold && !stopped && !xpHeld; }
     function later(fn, ms) { clearTimeout(timer); phase = fn; if (running()) timer = setTimeout(function () { phase = null; fn(); }, ms); }
     function setBtn(state) {  // running: Pause · paused: Play · done: Replay (only when the visitor asks)
       if (!pauseBtn) return;
@@ -1274,6 +1277,8 @@
     function resume() { if (phase && running()) { var f = phase; phase = null; clearTimeout(timer); timer = setTimeout(f, 300); } }
     function pause() { hold = true; clearTimeout(timer); }
     function unpause() { hold = false; resume(); }
+    document.addEventListener('xp:open', function () { xpHeld = true; clearTimeout(timer); });
+    document.addEventListener('xp:close', function () { xpHeld = false; resume(); });
     el.addEventListener('pointerenter', pause);
     el.addEventListener('pointerleave', unpause);
     el.addEventListener('focus', pause);
@@ -2064,4 +2069,49 @@
     }, { threshold: 0.6 });
     items.forEach(function (li) { io.observe(li); });
   })();
+})();
+
+/* Full experience: loaded (next to this script) only on click, which also makes the audio context. Esc or a 2nd click cancels a load. */
+(function () {
+  var me = document.currentScript, base = (me && me.src) || location.href, asked = false, st, cur = null, D = document;
+  function quiet(p) { if (p && p.catch) p.catch(function () {}); }
+  function reset(c) {
+    cur = null; D.removeEventListener('keydown', esc, true); c.from.removeAttribute('aria-busy'); window.__xp.state = 'closed';
+    if (window.__xpBoot === c) window.__xpBoot = null;
+    if (c.audio) try { quiet(c.audio.close()); } catch (x) {}
+  }
+  function cancel() { if (!cur || cur.open) return false; cur.cancelled = true; reset(cur); return true; }
+  function esc(e) { if (/^Esc/.test(e.key) && cancel()) e.preventDefault(); }
+  function start(e) {
+    if (e.detail > 1) return;   // the second click of a double-click: keep the load going
+    var b = e.currentTarget, w = window, AC = w.AudioContext || w.webkitAudioContext, s = w.speechSynthesis, ac = null, u, t = b.querySelector('small');
+    if (w.__xp && /^(loading|question|playing|paused|finale)$/.test(w.__xp.state)) { cancel(); return; }
+    if (b.xpL == null) { b.xpL = b.getAttribute('aria-label'); b.xpT = t && t.textContent; }
+    if (b.xpL) b.setAttribute('aria-label', b.xpL);
+    if (t) t.textContent = b.xpT;
+    if (!st) { st = D.createElement('p'); st.className = 'sr-only'; st.setAttribute('role', 'status'); D.body.appendChild(st); }
+    st.textContent = '';
+    try { if (AC) { ac = new AC(); quiet(ac.resume()); } } catch (x) { ac = null; }
+    try { if (s && w.SpeechSynthesisUtterance) { s.cancel(); u = new SpeechSynthesisUtterance(' '); u.volume = 0; s.speak(u); } } catch (x) {}
+    w.__xp = { state: 'loading', scene: 'loading', t: 0, quality: '', fps: 0 };
+    cur = w.__xpBoot = { audio: ac, from: b };
+    D.addEventListener('keydown', esc, true);
+    b.setAttribute('aria-busy', 'true');
+    if (w.__xpStart) { w.__xpStart(w.__xpBoot); return; }
+    if (asked) return;
+    asked = true;
+    var sc = D.createElement('script');
+    sc.type = 'module'; sc.src = new URL('xp/experience.js', base).href;
+    sc.onload = function () { sc.onload = sc.onerror = null; sc.remove(); };  // keeps nothing alive
+    sc.onerror = function () {
+      sc.onload = sc.onerror = null; sc.remove();
+      asked = false; reset(w.__xpBoot || { from: b, audio: ac });
+      if (t) t.textContent = 'Could not load · try again';
+      b.setAttribute('aria-label', 'Full experience could not load. Try again.');
+      setTimeout(function () { st.textContent = 'The full experience could not load. Try again.'; }, 60);
+    };
+    D.head.appendChild(sc);
+  }
+  var bs = D.querySelectorAll('[data-xp-start]');
+  for (var i = 0; i < bs.length; i++) bs[i].addEventListener('click', start);
 })();

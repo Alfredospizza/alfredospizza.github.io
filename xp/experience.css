@@ -1,0 +1,735 @@
+/* Full experience overlay. Loaded only after the click (and removed on exit); it reuses the page's own fonts and colours. */
+html.xp-lock { overflow: hidden !important; }
+html.xp-lock { scroll-behavior: auto !important; }
+
+#xp {
+  --a: var(--amber, #f5a524); --a-hi: #ffc04a; --ink: #edf2f7; --mut: #a6b5c4; --dimc: #8293a4; --mint: #4fd18b; --red: #ff5b4f; --tg: #2aabee;
+  --gut: clamp(16px, 3.4vw, 52px); --top: 76px; --bar: 0px; --subH: 96px; --e: cubic-bezier(.16, 1, .3, 1);
+  --cond: var(--condensed, 'Archivo F', 'Arial Narrow', Impact, sans-serif);
+  --disp: var(--display, 'Archivo F', Arial, sans-serif);
+  --mono-f: var(--mono, ui-monospace, Consolas, monospace);
+  --serif-f: var(--serif, Georgia, serif);
+  --body-f: var(--body, system-ui, sans-serif);
+  position: fixed; inset: 0; z-index: 2147483000; overflow: hidden; overflow: clip; isolation: isolate;   /* clip: a focused field can never scroll the film sideways */
+  background: #020407; color: var(--ink); font: 400 16px/1.5 var(--body-f);
+  opacity: 0; transition: opacity .6s ease; outline: none; -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-align: left;
+}
+#xp.in { opacity: 1; }
+#xp.out { opacity: 0; transition: opacity .5s ease; }
+#xp *, #xp *::before, #xp *::after { box-sizing: border-box; }
+:where(#xp) button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; }
+:where(#xp) svg { width: 1em; height: 1em; flex: none; display: block; max-width: none; }
+#xp :focus-visible { outline: 2px solid var(--a); outline-offset: 3px; }
+#xp .hl { color: var(--a); }
+#xp .tg { color: var(--tg); }
+#xp .red { color: var(--red); }
+#xp .mint { color: var(--mint); }
+@media (min-aspect-ratio: 13/10) { #xp { --bar: clamp(0px, calc((100vh - 100vw / 2.1) / 2), 10vh); } }
+
+/* ---------- picture layers */
+.xp-gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.6s ease; }
+#xp.loaded .xp-gl { opacity: 1; }
+.xp-2d { position: absolute; inset: 0; display: none; overflow: hidden; background: radial-gradient(80% 60% at 50% 100%, rgba(245, 165, 36, .2), transparent 62%), linear-gradient(#03060a, #08101a); }
+#xp.flat .xp-2d { display: block; }
+.xp-2d img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 100% 50%; opacity: .3; animation: xp2d 16s ease-out both; -webkit-mask: linear-gradient(90deg, transparent 34%, rgba(0, 0, 0, .55) 58%, #000 82%); mask: linear-gradient(90deg, transparent 34%, rgba(0, 0, 0, .55) 58%, #000 82%); }
+/* the phone frame crops the recording to the Mini App's own column (x 760-1064, y 29-689 of the 1280x720 video) */
+#xp .xp-2d .xp-2dv { box-sizing: content-box; position: absolute; left: 50%; top: 50%; width: min(30vh, 260px); aspect-ratio: 304 / 660; transform: translate(-50%, -48%); overflow: hidden; background: #0b1118; border-radius: 26px; border: 6px solid #0b1118; box-shadow: 0 0 0 1px rgba(42, 171, 238, .5), 0 30px 80px rgba(0, 0, 0, .7), 0 0 120px rgba(42, 171, 238, .25); }
+.xp-2d .xp-2dv video { position: absolute; left: -250%; top: -4.3939%; width: 421.0526%; height: 109.0909%; max-width: none; object-fit: fill; opacity: 0; transition: opacity .4s; }
+.xp-2d .xp-2dv.ready video { opacity: 1; }   /* a dark screen until the recording has a frame to show (slow network), never a blank white one */
+/* the Booked poster prints its own quote: on wide screens it stays a blurred, dim glow beside the DOM card */
+.xp-2d[data-s="booked"] img { opacity: .24; filter: blur(6px) brightness(.5); animation: none; }
+/* phones: the posters stay faint atmosphere under the cards; the Booked poster's printed text would sit under the quote card, so it goes.
+   The phone frame is placed by the script in the free band between the lower third and the cards (none on short screens). */
+@media (max-width: 760px), (max-aspect-ratio: 4/5) { .xp-2d img { opacity: .17; -webkit-mask: linear-gradient(transparent 18%, #000 40%, #000 58%, transparent 80%); mask: linear-gradient(transparent 18%, #000 40%, #000 58%, transparent 80%); } .xp-2d[data-s="booked"] img { display: none; } }
+.xp-2d .city { position: absolute; inset: 38% 0 0; background: repeating-linear-gradient(90deg, rgba(245, 165, 36, .1) 0 2px, transparent 2px 44px), repeating-linear-gradient(0deg, rgba(120, 170, 230, .06) 0 1px, transparent 1px 30px); -webkit-mask: linear-gradient(transparent, #000); mask: linear-gradient(transparent, #000); }
+/* the deploy poster prints terminal text: while the crash test's big titles are up it steps back, as the Booked one does */
+.xp-2d[data-s="alwayson"] img { transition: filter .6s ease, opacity .6s ease; }
+#xp.crashing .xp-2d[data-s="alwayson"] img { filter: blur(6px) brightness(.5); opacity: .16; }
+#xp.calm .xp-2d[data-s="alwayson"] img { transition-property: filter, opacity !important; transition-duration: .9s !important; }
+@keyframes xp2d { from { transform: scale(1.08); } to { transform: none; } }
+.xp-vig { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(120% 95% at 50% 50%, transparent 52%, rgba(0, 0, 0, .6)); }
+#xp.flat .xp-vig, #xp.no-post .xp-vig { opacity: 1; }
+.xp-dim { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(75% 65% at 50% 50%, rgba(2, 4, 7, .38), rgba(2, 4, 7, .9)); }
+.xp-black { position: absolute; inset: 0; z-index: 9; pointer-events: none; background: #000; opacity: 0; }
+.xp-bars i { position: absolute; left: 0; right: 0; z-index: 2; height: var(--bar); background: #000; transform: scaleY(0); transition: transform 1.6s var(--e); }
+.xp-bars i:first-child { top: 0; transform-origin: 50% 0; }
+.xp-bars i:last-child { bottom: 0; transform-origin: 50% 100%; }
+#xp.playing .xp-bars i { transform: none; }
+
+/* ---------- every timed element */
+.xp-scene { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+#xp .xp-scene > :not(.cv) { content-visibility: hidden; }   /* the film's text is laid out a few parts at a time once the city is ready, not in the click's frame */
+#xp [data-k] { opacity: 0; visibility: hidden; transition: opacity .45s ease, transform .75s var(--e), visibility 0s linear .45s; }
+#xp [data-k].on { opacity: 1; visibility: visible; transition: opacity .45s ease, transform .75s var(--e), visibility 0s; }
+
+/* ---------- top bar: brand, chapters, text-labelled controls */
+.xp-top { position: absolute; top: 0; left: 0; right: 0; z-index: 30; display: flex; align-items: center; gap: 14px; height: max(var(--top), var(--bar)); padding: env(safe-area-inset-top, 0px) var(--gut) 0; }
+.xp-brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 0 1 auto; overflow: hidden; font: 500 11px/1 var(--mono-f); letter-spacing: .18em; text-transform: uppercase; color: rgba(237, 242, 247, .66); white-space: nowrap; }
+.xp-brand b { color: var(--ink); font-weight: 600; }
+.xp-brand > b, .xp-brand > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.xp-brand em { font-style: normal; color: var(--a); border: 1px solid rgba(245, 165, 36, .4); padding: 5px 7px 4px; border-radius: 6px; letter-spacing: .08em; }
+.xp-brand em i { font-style: normal; }
+.xp-brand .ct-s { display: none; }
+.xp-rec { width: 8px; height: 8px; border-radius: 50%; background: var(--red); box-shadow: 0 0 10px var(--red); animation: xpBlink 2s ease-in-out infinite; }
+@keyframes xpBlink { 50% { opacity: .3; } }
+.xp-chap { display: flex; gap: 2px; margin: 0 auto; padding: 0; list-style: none; }
+.xp-chap li { position: relative; display: flex; align-items: center; gap: 6px; padding: 7px 9px 6px; border-radius: 999px; border: 1px solid transparent; font: 500 11px/1 var(--mono-f); letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; color: rgba(237, 242, 247, .42); transition: color .5s, border-color .5s, background-color .5s; }
+.xp-chap li i { font-style: normal; color: rgba(237, 242, 247, .32); }
+.xp-chap li em { font-style: normal; font-size: 9px; letter-spacing: .08em; padding: 3px 5px 2px; border-radius: 5px; background: var(--a); color: #1c1304; }
+.xp-chap li.done { color: rgba(237, 242, 247, .72); }
+.xp-chap li.done i { color: var(--mint); }
+.xp-chap li.cur { color: var(--ink); border-color: rgba(245, 165, 36, .5); background: rgba(245, 165, 36, .1); }
+.xp-chap li.cur i { color: var(--a); }
+.xp-ctrls { display: flex; gap: 6px; margin-left: auto; }
+.xb { position: relative; height: 40px; min-width: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 12px 0 11px; border-radius: 999px; background: rgba(6, 10, 16, .45); border: 1px solid rgba(160, 190, 220, .17); color: rgba(237, 242, 247, .88); font: 500 11px/1 var(--mono-f); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; transition: border-color .2s, background-color .2s, color .2s, opacity .2s; }
+.xb svg { width: 16px; height: 16px; }
+.xb:hover { border-color: rgba(245, 165, 36, .75); background: rgba(245, 165, 36, .1); }
+.xb:disabled { opacity: .38; cursor: default; }
+.xb:disabled:hover { border-color: rgba(160, 190, 220, .17); background: rgba(6, 10, 16, .45); }
+.xb.off { color: rgba(237, 242, 247, .45); }
+.xb.off svg { opacity: .55; }
+.xb-mute[aria-pressed="true"] { color: var(--a); border-color: rgba(245, 165, 36, .6); }
+.xb-exit { color: var(--ink); border-color: rgba(237, 242, 247, .55); }
+.xb-exit:hover { background: rgba(237, 242, 247, .14); border-color: #fff; }
+@media (max-width: 1500px) { .xp-chap li span { display: none; } .xp-chap li.cur span, .xp-chap li.mt span { display: inline; } }
+@media (max-width: 1600px) { #xp.calm .xp-brand span { display: none; } }
+@media (max-width: 1279px) { .xp-brand > span { display: none; } }   /* the chapters need the room: never a brand cut mid-word */
+@media (max-width: 1439px) {   /* the calm version's tag shortens to "Calm" (the full words stay for screen readers) */
+  #xp.calm .xp-brand { gap: 8px; }
+  #xp.calm .xp-brand .ct-l { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  #xp.calm .xp-brand .ct-s { display: inline; }
+}
+@media (max-width: 1000px) { #xp.calm .xp-brand b { display: none; } }
+@media (max-width: 1180px) {
+  .xb { width: 40px; padding: 0; }
+  .xb-l { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  .xb-exit { width: auto; padding: 0 12px 0 11px; }
+  .xb-exit .xb-l { position: static; width: auto; height: auto; overflow: visible; clip: auto; clip-path: none; }
+}
+.xp-prog { position: absolute; left: 0; right: 0; bottom: var(--bar); z-index: 25; height: 2px; background: rgba(255, 255, 255, .06); opacity: 0; transition: opacity .6s; }
+#xp.playing .xp-prog { opacity: 1; }
+.xp-prog i { display: block; height: 100%; background: linear-gradient(90deg, var(--a), var(--a-hi)); transform-origin: 0 50%; transform: scaleX(0); }
+
+/* ---------- subtitles: always on screen, the source of truth */
+.xp-sub { position: absolute; left: 50%; bottom: max(calc(18px + min(6px, var(--bar))), calc(var(--bar) / 2 - 24px));   /* +6 px with a letterbox: the progress bar never runs through the notice */ z-index: 26; width: min(980px, 100% - 2 * var(--gut)); transform: translateX(-50%); text-align: center; pointer-events: none; opacity: 0; transition: opacity .35s; }
+#xp.answered.has-sub .xp-sub { opacity: 1; }
+#xp.no-subs .xs-line, #xp.no-subs .xs-who:not(.is-voice) { display: none; }
+.xs-who:empty { display: none; }
+/* the voice notice sits on its own dark pill, so bright 3D (the book towers, the deploy beam) never washes it out */
+.xs-who { display: block; width: fit-content; max-width: 100%; margin: 0 auto 7px; padding: 4px 8px 3px; border-radius: 6px; background: rgba(2, 4, 7, .66); font: 500 9.5px/1 var(--mono-f); letter-spacing: .2em; text-transform: uppercase; color: rgba(237, 242, 247, .74); text-shadow: 0 1px 6px rgba(0, 0, 0, .9); }
+.xs-who .w3 { display: none; }
+.xs-line { display: inline; margin: 0; padding: 4px 12px; border-radius: 6px; font: 500 clamp(15px, 1.35vw, 20px)/1.7 var(--body-f); color: #fff; background: rgba(2, 4, 7, .66); -webkit-box-decoration-break: clone; box-decoration-break: clone; text-shadow: 0 1px 2px rgba(0, 0, 0, .6); }
+
+/* ---------- the opening question, after a short cold open */
+.xp-q { position: absolute; z-index: 20; left: var(--gut); top: 50%; width: min(700px, 100% - 2 * var(--gut)); margin: 0; transform: translateY(-50%); transition: opacity .5s, transform .7s var(--e), visibility 0s; }
+.xp-q::before { content: ""; position: absolute; z-index: -1; inset: -32vh -34vw -32vh calc(-1 * var(--gut) - 12vw); pointer-events: none; background: radial-gradient(closest-side at 34% 50%, rgba(2, 4, 7, .9), rgba(2, 4, 7, .55) 58%, transparent); }
+.xq-cold { margin: 0 0 22px; }
+.xq-cold p { margin: 0; font: italic 400 clamp(22px, 2.4vw, 36px)/1.12 var(--serif-f); color: #fff; opacity: 0; transform: translateY(14px); filter: blur(6px); transition: opacity .9s ease, transform 1.1s var(--e), filter .9s ease, font-size .7s var(--e), color .6s; text-wrap: balance; }
+.xq-cold .xq-c2 { margin-top: 6px; color: var(--a); }
+#xp.xp-c1 .xq-c1, #xp.xp-c2 .xq-c2 { opacity: 1; transform: none; filter: none; }
+#xp.xp-ask .xq-cold p { font-size: clamp(17px, 1.55vw, 23px); color: var(--mut); }
+#xp.xp-ask .xq-cold .xq-c2 { color: var(--a); }
+.xq-ask { opacity: 0; visibility: hidden; transform: translateY(20px); transition: opacity .7s ease, transform .9s var(--e), visibility 0s linear .7s; }
+#xp.xp-ask .xq-ask { opacity: 1; visibility: visible; transform: none; transition: opacity .7s ease, transform .9s var(--e), visibility 0s; }
+#xp.xp-ask .xq-t { animation: xtSlam .8s var(--e) both; }
+.xp-q.gone { opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(calc(-50% - 24px)); transition: opacity .45s, transform .7s var(--e), visibility 0s .45s; }
+.xp-q.gone * { pointer-events: none !important; }
+.xp-q[hidden] { display: none !important; }
+.xp-k { margin: 0 0 12px; font: 500 12px/1.2 var(--mono-f); letter-spacing: .22em; text-transform: uppercase; color: var(--a); }
+.xq-t { margin: 0 0 22px; font: 850 clamp(48px, 6.4vw, 104px)/.86 var(--cond); font-stretch: 68%; letter-spacing: -.01em; text-transform: uppercase; text-wrap: balance; font-synthesis: none; }
+.xq-who { display: flex; align-items: center; gap: 8px; margin: -10px 0 14px; font: 500 10.5px/1.3 var(--mono-f); letter-spacing: .14em; text-transform: uppercase; color: rgba(237, 242, 247, .66); }
+.xq-who svg { width: 14px; height: 14px; color: var(--a); }
+.xq-who[hidden] { display: none; }
+.xq-row { display: flex; gap: 8px; }
+.xq-in { flex: 1; min-width: 0; height: 58px; padding: 0 18px; border-radius: 14px; border: 1px solid rgba(160, 190, 220, .28); background: rgba(5, 9, 14, .88); color: #fff; font: 500 18px/1 var(--body-f); outline: none; transition: border-color .2s, box-shadow .2s; }
+.xq-in::placeholder { color: rgba(166, 181, 196, .6); }
+.xq-in:focus { border-color: var(--a); box-shadow: 0 0 0 4px rgba(245, 165, 36, .18); }
+.xq-mic { flex: none; width: 58px; height: 58px; display: grid; place-items: center; border-radius: 14px; border: 1px solid rgba(160, 190, 220, .28); background: rgba(5, 9, 14, .88); transition: border-color .2s, color .2s; }
+.xq-mic[hidden] { display: none; }
+.xq-mic svg { width: 22px; height: 22px; }
+.xq-mic:hover { border-color: var(--a); }
+.xq-mic.live { color: var(--red); border-color: var(--red); animation: xqLive 1.4s infinite; }
+@keyframes xqLive { 0% { box-shadow: 0 0 0 0 rgba(255, 91, 79, .5); } 70%, 100% { box-shadow: 0 0 0 12px rgba(255, 91, 79, 0); } }
+.xq-go { flex: none; display: inline-flex; align-items: center; gap: 8px; height: 58px; padding: 0 22px; border-radius: 14px; background: var(--a); color: #1c1304; font: 700 17px/1 var(--body-f); transition: background-color .2s; }
+.xq-go:hover { background: var(--a-hi); }
+.xq-go svg { width: 18px; height: 18px; }
+.xq-micnote { margin: 9px 0 0; font: 500 11.5px/1.45 var(--mono-f); color: var(--dimc); }
+.xq-micnote[hidden] { display: none; }
+.xq-status { margin: 6px 0 0; min-height: 1.4em; font: 500 13px/1.4 var(--body-f); color: var(--a); }
+.xq-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 0; }
+.xq-chips button { height: 40px; padding: 0 15px; border-radius: 999px; border: 1px solid rgba(160, 190, 220, .24); background: rgba(5, 9, 14, .72); font: 500 14px/1 var(--body-f); transition: border-color .2s, background-color .2s; }
+.xq-chips button:hover { border-color: var(--a); background: rgba(245, 165, 36, .1); }
+.xq-foot { display: flex; align-items: center; gap: 16px; margin: 18px 0 0; }
+.xq-skip { height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(160, 190, 220, .2); font: 500 13px/1 var(--mono-f); color: var(--mut); }
+.xq-skip:hover { color: var(--ink); border-color: rgba(245, 165, 36, .6); }
+.xq-count { position: relative; padding-bottom: 7px; font: 500 12px/1 var(--mono-f); color: var(--dimc); }
+.xq-count i { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--a); opacity: .7; transform-origin: 0 50%; }
+.xq-hon { margin: 16px 0 0; max-width: 60ch; font: 500 12px/1.5 var(--mono-f); color: var(--dimc); }
+
+/* ---------- loading, pause */
+.xp-loading { position: absolute; z-index: 21; left: var(--gut); bottom: 22px; margin: 0; font: 500 11px/1.3 var(--mono-f); letter-spacing: .14em; text-transform: uppercase; color: var(--dimc); transition: opacity .5s, visibility 0s; }
+.xp-loading::before { content: ""; display: inline-block; width: 9px; height: 9px; margin-right: 10px; border-radius: 50%; border: 1.5px solid var(--a); border-right-color: transparent; vertical-align: -1px; animation: xpSpin .8s linear infinite; }
+@keyframes xpSpin { to { transform: rotate(360deg); } }
+#xp.loaded .xp-loading { opacity: 0; visibility: hidden; transition: opacity .5s, visibility 0s .5s; }
+#xp.waiting .xp-loading { left: 50%; bottom: 50%; transform: translate(-50%, 50%); font-size: 13px; color: var(--ink); }
+#xp:not(.xp-ask):not(.answered) .xp-loading { opacity: 0; }
+.xp-paused { position: absolute; z-index: 28; left: 50%; top: 50%; display: flex; align-items: center; gap: 12px; padding: 15px 22px; white-space: nowrap; border-radius: 999px; transform: translate(-50%, -50%); background: rgba(5, 9, 14, .88); border: 1px solid rgba(245, 165, 36, .5); font: 500 13px/1 var(--mono-f); letter-spacing: .12em; text-transform: uppercase; }
+.xp-paused[hidden] { display: none; }
+.xp-paused svg { width: 22px; height: 22px; color: var(--a); }
+#xp.is-paused *, #xp.ended *, #xp.is-paused *::before, #xp.ended *::before { animation-play-state: paused !important; }
+
+/* ---------- flight plan: the answer steers the flight */
+.xp-pins { position: absolute; inset: 0; z-index: 8; pointer-events: none; }
+.pin { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 8px; margin: -40px 0 0 -14px; padding: 5px 11px 5px 5px; border-radius: 999px; background: rgba(4, 7, 11, .84); border: 1px solid rgba(245, 165, 36, .38); font: 600 13px/1 var(--body-f); white-space: nowrap; opacity: 0; transition: opacity .5s; }
+.pin i { padding: 5px 7px 4px; border-radius: 999px; background: var(--a); color: #1c1304; font: 600 11px/1 var(--mono-f); font-style: normal; }
+.pin.lit { opacity: 1; }
+.xp-spark { position: absolute; left: -9px; top: -9px; z-index: 12; width: 18px; height: 18px; border-radius: 50%; pointer-events: none; opacity: 0; background: radial-gradient(circle, #fff 0 18%, rgba(255, 196, 110, .95) 30%, rgba(245, 165, 36, .5) 52%, transparent 72%); box-shadow: 0 0 30px 10px rgba(245, 165, 36, .55); transition: opacity .2s; }
+.xp-plan { position: absolute; left: var(--gut); top: calc(max(var(--top), var(--bar)) + 22px); width: min(560px, 44vw); transform: translateY(10px); }
+.xp-plan::before { content: ""; position: absolute; z-index: -1; inset: -60px -90px -50px calc(-1 * var(--gut)); background: radial-gradient(closest-side at 32% 46%, rgba(2, 4, 7, .82), transparent); }
+.xp-plan.on { transform: none; }
+.xp-quote { margin: 0 0 12px; font: italic 400 clamp(28px, 3.1vw, 46px)/1.08 var(--serif-f); color: #fff; text-wrap: balance; overflow-wrap: anywhere; }
+.xp-quote[hidden] { display: none; }
+.xp-matchline { margin: 0 0 14px; font: 500 15px/1.45 var(--body-f); color: var(--mut); transform: translateY(6px); }
+.xp-matchline.on { transform: none; }
+.xp-matchline b { color: var(--ink); font-weight: 600; }
+.xp-matchline strong { color: var(--a); }
+.xp-matchline .ar { color: var(--a); }
+.xp-routeline { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; }
+.xp-routeline li { display: flex; align-items: center; gap: 7px; padding: 7px 10px 6px; border-radius: 8px; background: rgba(4, 7, 11, .76); border: 1px solid rgba(160, 190, 220, .16); font: 600 13px/1 var(--body-f); }
+.xp-routeline li i { font: 500 11px/1 var(--mono-f); font-style: normal; color: var(--a); }
+.xp-routeline li em { font: 500 9.5px/1 var(--mono-f); font-style: normal; letter-spacing: .08em; text-transform: uppercase; color: var(--a); }
+.xp-routeline li.top { border-color: rgba(245, 165, 36, .6); background: rgba(245, 165, 36, .12); }
+.xp-hon { display: flex; align-items: center; gap: 8px; margin: 0; font: 500 11px/1.4 var(--mono-f); letter-spacing: .04em; color: var(--dimc); }
+.xp-hon .i-sm { width: 12px; height: 12px; color: var(--a); }
+
+/* ---------- opening titles */
+.xp-open { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; padding: 0 var(--gut); text-align: center; }
+.xo-name { margin: 0; font: 850 min(17vw, 30vh)/.82 var(--cond); font-stretch: 68%; letter-spacing: -.012em; text-transform: uppercase; font-synthesis: none; text-shadow: 0 0 70px rgba(0, 0, 0, .7); }
+.xo-role { margin: 16px 0 0; font: italic 400 clamp(22px, 2.6vw, 38px)/1.1 var(--serif-f); color: var(--mut); }
+.xo-four span { display: block; }
+.xo-four { margin: 0; font: 850 min(11.5vw, 19vh)/.86 var(--cond); font-stretch: 68%; letter-spacing: -.01em; text-transform: uppercase; font-synthesis: none; text-shadow: 0 0 70px rgba(0, 0, 0, .7); }
+.xo-real { transform: scale(1.18); }
+.xo-real.on { transform: none; animation: xtSlam .6s var(--e) both; }
+.xp-open.on .xo-name, .xp-open.on .xo-four > span:first-child { animation: xtSlam .7s var(--e) both; }
+
+/* ---------- title cards: the four words */
+.xp-title { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; padding: 0 var(--gut); text-align: center; transform: scale(.97); }
+/* a dark pool behind the title stack: whatever the city puts behind the word (the giant phone, the plant), the card reads clean */
+.xp-title::before { content: ""; position: absolute; z-index: -2; left: 50%; top: 50%; width: min(1200px, 140vw); height: min(640px, 72vh); transform: translate(-50%, -50%); background: radial-gradient(closest-side, rgba(2, 4, 7, .7), rgba(2, 4, 7, .46) 56%, transparent); pointer-events: none; }
+.xp-title.on { transform: none; }
+.xt-n { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; font: 500 13px/1 var(--mono-f); letter-spacing: .14em; color: var(--a); text-transform: uppercase; }
+.xt-n span { padding: 6px 8px 5px; border: 1px solid rgba(245, 165, 36, .5); border-radius: 7px; }
+.xt-match { padding: 6px 9px 5px; border-radius: 7px; background: var(--a); color: #1c1304; font-style: normal; font-size: 11px; letter-spacing: .1em; }
+.xt-match[hidden] { display: none; }
+.xt-w { position: relative; margin: 0; font: 850 min(15.5vw, 28vh)/.8 var(--cond); font-stretch: 68%; letter-spacing: -.012em; text-transform: uppercase; white-space: nowrap; color: #fff; font-synthesis: none; text-shadow: 0 0 90px rgba(245, 165, 36, .28), 0 4px 40px rgba(0, 0, 0, .6); }
+.xt-dot { display: inline-block; width: .13em; height: .13em; margin-left: .04em; background: var(--a); box-shadow: 0 0 .3em rgba(245, 165, 36, .9); }
+.xt-s { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 6px 14px; margin: 20px 0 0; font: 600 clamp(15px, 1.4vw, 21px)/1.3 var(--body-f); text-shadow: 0 2px 20px rgba(0, 0, 0, .8); }
+.xt-s em { font: 500 clamp(13px, 1.1vw, 16px)/1 var(--mono-f); font-style: normal; color: var(--a); }
+.xt-flare { position: absolute; left: 50%; top: 50%; z-index: -1; width: 130vw; height: 2px; margin-left: -65vw; opacity: 0; background: linear-gradient(90deg, transparent, rgba(255, 196, 110, .85) 44%, #fff 50%, rgba(255, 196, 110, .85) 56%, transparent); transform: scaleX(.15); }
+.xp-title.on .xt-w { animation: xtSlam .55s var(--e) both; }
+.xp-title.on .xt-flare { animation: xtFlare 1.2s ease-out both; }
+.xp-title.on .xt-dot { animation: xtDot .8s .25s var(--e) both; }
+@keyframes xtSlam { 0% { transform: scale(1.3); opacity: 0; filter: blur(14px); letter-spacing: .05em; } 45% { opacity: 1; filter: blur(0); } 100% { transform: none; letter-spacing: -.012em; } }
+@keyframes xtFlare { 0% { opacity: 0; transform: scaleX(.1); } 18% { opacity: .9; } 100% { opacity: 0; transform: scaleX(1); } }
+@keyframes xtDot { 0% { transform: scale(0); } 60% { transform: scale(1.9); } 100% { transform: none; } }
+
+/* ---------- lower thirds */
+.xp-lower { position: absolute; left: var(--gut); top: calc(max(var(--top), var(--bar)) + 24px); width: min(540px, 38vw); transform: translateY(-10px); }
+.xp-lower::before { content: ""; position: absolute; z-index: -1; inset: -70px -170px -80px calc(-1 * var(--gut)); background: linear-gradient(90deg, rgba(2, 4, 7, .9), rgba(2, 4, 7, .8) 58%, rgba(2, 4, 7, .45) 80%, transparent); -webkit-mask: linear-gradient(transparent, #000 26%, #000 76%, transparent); mask: linear-gradient(transparent, #000 26%, #000 76%, transparent); }
+.xp-lower.on { transform: none; }
+.xl-k { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font: 500 11.5px/1.35 var(--mono-f); letter-spacing: .14em; text-transform: uppercase; color: var(--mut); }
+.xl-k span { flex: none; padding: 5px 7px 4px; border: 1px solid rgba(245, 165, 36, .45); border-radius: 6px; color: var(--a); }
+.xl-h { margin: 0 0 12px; font: 800 clamp(28px, 2.9vw, 48px)/.98 var(--disp); letter-spacing: -.032em; text-wrap: balance; text-shadow: 0 2px 30px rgba(0, 0, 0, .85); }
+.xl-hon { margin: 0; max-width: 56ch; font: 500 12px/1.5 var(--mono-f); color: #95a6b7; text-shadow: 0 1px 8px rgba(0, 0, 0, .9); }
+.xl-stack { margin: 12px 0 0; padding-top: 11px; border-top: 1px solid rgba(160, 190, 220, .16); font: 500 12px/1.55 var(--mono-f); color: var(--mut); transform: translateY(8px); text-shadow: 0 1px 8px rgba(0, 0, 0, .9); }
+.xl-stack.on { transform: none; }
+
+/* ---------- story cards (right column) */
+.xp-cards { position: absolute; right: var(--gut); top: calc(max(var(--top), var(--bar)) + 22px); bottom: calc(var(--bar) + var(--subH)); width: min(440px, 33vw); display: grid; grid-template-columns: minmax(0, 1fr); align-content: center; gap: 10px; }
+.xc-answered { grid-template-areas: "q" "s" "a"; }
+.xc-answered [data-k="a-q1"], .xc-answered [data-k="a-q2"] { grid-area: q; }
+.xc-answered [data-k="a-search"] { grid-area: s; }
+.xc-answered [data-k="a-a1"], .xc-answered [data-k="a-miss"] { grid-area: a; }
+.xc-booked { grid-template-areas: "c" "k"; }
+.xc-booked [data-k="b-quote"], .xc-booked [data-k="b-owner"] { grid-area: c; }
+.xc-booked [data-k="b-checks"] { grid-area: k; }
+.xc-measured { grid-template-areas: "n" "t" "f"; }
+.xc-measured [data-k="m-count"] { grid-area: n; }
+.xc-measured [data-k="m-term"] { grid-area: t; }
+.xc-measured [data-k="m-files"] { grid-area: f; }
+.xc-alwayson { grid-template-areas: "m" "s"; }
+.xc-alwayson .xc, .xc-booked [data-k="b-owner"] { align-self: end; }
+.xc-answered .xc, .xc-measured .xc { align-self: center; }
+.xc-alwayson [data-k="o-steps"], .xc-alwayson [data-k="o-crash"], .xc-alwayson [data-k="o-back"] { grid-area: m; }
+.xc-alwayson [data-k="o-stats"] { grid-area: s; }
+.xc { min-width: 0; margin: 0; padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(160, 190, 220, .16); background: rgba(5, 9, 14, .86); box-shadow: 0 24px 60px -24px rgba(0, 0, 0, .95); font-size: 15px; line-height: 1.45; transform: translateX(22px); }
+.xc.on { transform: none; }
+.xc-q > b, .xc-bot > b { display: block; margin: 0 0 6px; font: 500 10.5px/1 var(--mono-f); letter-spacing: .14em; text-transform: uppercase; color: var(--dimc); }
+.xc-q { justify-self: end; max-width: 92%; border-color: rgba(245, 165, 36, .45); background: rgba(40, 27, 8, .9); }
+.xc-q > b { color: var(--a); }
+.xc-bot { justify-self: start; max-width: 96%; }
+.xc-sys { justify-self: center; display: flex; align-items: center; gap: 10px; padding: 9px 13px; font: 500 12px/1.3 var(--mono-f); color: var(--mut); }
+.xc-sys i { width: 8px; height: 8px; border-radius: 50%; background: var(--a); box-shadow: 0 0 10px var(--a); animation: xpBlink 1s infinite; }
+#xp .xchip { display: flex; width: max-content; max-width: 100%; margin-top: 10px; padding: 5px 9px 4px; border-radius: 7px; border: 1px solid rgba(245, 165, 36, .5); background: rgba(245, 165, 36, .16); color: var(--a); font: 500 11.5px/1.2 var(--mono-f); font-style: normal; letter-spacing: .03em; }
+#xp .xchip-red { border-color: rgba(255, 91, 79, .5); background: rgba(255, 91, 79, .12); color: #ff8f86; }
+.xc-miss { border-style: dashed; border-color: rgba(255, 91, 79, .45); }
+.xc-k { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; margin: 0 0 10px; font: 500 11px/1.25 var(--mono-f); letter-spacing: .14em; text-transform: uppercase; color: var(--mut); }
+.xc-k em { font-style: normal; letter-spacing: .03em; text-transform: none; color: var(--dimc); }
+#xp .xc-k .xchip { margin: 0; }
+.xc-k.tg { color: var(--tg); }
+.xc-k.red { color: var(--red); }
+.xc-k.mint { color: var(--mint); }
+/* the quote: the guide's prices add up, beat by beat, into the total */
+.xc-sum { position: relative; display: flex; align-items: baseline; gap: 10px; height: 64px; margin: 2px 0 8px; font: 800 40px/1 var(--disp); letter-spacing: -.02em; }
+.xc-sum .tk { display: inline-flex; align-items: baseline; gap: 10px; color: #fff; transform: translateY(10px) scale(1.15); filter: blur(5px); }
+.xc-sum .tk i { font-style: normal; font-weight: 500; color: var(--dimc); }
+.xc-sum .tk.on { transform: none; filter: none; }
+.xc-sum .tot { position: absolute; left: 0; top: 50%; font-size: 60px; color: var(--a); text-shadow: 0 0 40px rgba(245, 165, 36, .45); transform: translateY(-50%) scale(.6); transform-origin: 0 50%; }
+.xc-sum .tot.on { transform: translateY(-50%); }
+.xc-sum.sum .tk { opacity: 0 !important; filter: blur(8px); transition: opacity .35s ease, transform .45s var(--e), filter .35s; }
+.xc-sum.sum .tk1 { transform: translateX(40px) scale(.7); }
+.xc-sum.sum .tk2 { transform: translateX(-40px) scale(.7); }
+.xc-sum.sum .tk3 { transform: translateX(-140px) scale(.7); }
+.xc-quote ul { margin: 0; padding: 0; list-style: none; }
+.xc-quote li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid rgba(160, 190, 220, .1); font-size: 14px; color: var(--mut); }
+.xc-quote li b { color: var(--ink); }
+.xc-quote li.tl { border-bottom: 0; color: var(--ink); font-weight: 600; }
+.xc-quote li.tl b { color: var(--a); }
+.xc-owner { border-color: rgba(42, 171, 238, .5); background: rgba(8, 20, 32, .92); }
+.xc-owner p { margin: 0; color: var(--mut); font-size: 14px; }
+.xc-owner p b { display: block; margin: 0 0 4px; font: 700 17px/1.3 var(--body-f); color: #fff; }
+.xc-checks { display: grid; gap: 9px; list-style: none; }
+.xc-checks li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--dimc); opacity: .35; transition: opacity .4s, color .4s; }
+.xc-checks li::before { content: ""; flex: none; width: 17px; height: 17px; margin-top: 1px; border-radius: 50%; border: 1.5px solid currentColor; }
+.xc-checks li.on { opacity: 1; color: var(--ink); }
+.xc-checks li.on::before { border-color: var(--mint); background: var(--mint) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.2 4.2L19 7' fill='none' stroke='%23062014' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 11px no-repeat; }
+.xc-count { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.xc-count div { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.xc-count span { font: 500 10px/1 var(--mono-f); letter-spacing: .14em; text-transform: uppercase; color: var(--dimc); }
+.xc-count b { font: 600 22px/1 var(--mono-f); font-variant-numeric: tabular-nums; color: var(--ink); }
+.xc-count .ok b { color: var(--mint); }
+.xc-count .xc-big { grid-column: 1 / -1; flex-direction: row; align-items: baseline; gap: 12px; }
+.xc-count .xc-big b { font: 700 50px/.9 var(--mono-f); letter-spacing: -.04em; color: var(--mint); }
+.xc-count .xc-big small { font: 500 13px/1 var(--mono-f); color: var(--dimc); }
+.xc-term { font: 500 12px/1.6 var(--mono-f); }
+.xc-lines { min-height: 8em; }
+.xc-lines p { margin: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #c9d4df; }
+.xc-lines p i { font-style: normal; color: var(--dimc); }
+.xc-lines p.ok { color: var(--mint); }
+.xc-files { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; }
+.xc-files span { padding: 8px 11px 7px; border-radius: 8px; border: 1px solid rgba(79, 209, 139, .45); background: rgba(79, 209, 139, .12); color: #bff3d6; font: 500 12.5px/1 var(--mono-f); }
+.xc-steps ol { display: grid; gap: 3px; margin: 0; padding: 0; list-style: none; font: 500 12px/1.45 var(--mono-f); }
+.xc-steps li { display: flex; gap: 8px; min-width: 0; color: var(--dimc); transition: color .3s; }
+.xc-steps li span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.xc-steps li i { flex: none; width: 2.6em; font-style: normal; color: rgba(127, 145, 163, .6); }
+.xc-steps li.cur { color: #ffd59a; }
+.xc-steps li.cur i { color: var(--a); }
+.xc-steps li.done { color: var(--ink); }
+.xc-steps li.done i { color: var(--mint); }
+.xc-steps .xc-k b { color: var(--ink); font-weight: 600; }
+.xc-crash { border-color: rgba(255, 91, 79, .6); background: rgba(26, 7, 7, .92); }
+.xc-crash code, .xc-back code { display: block; font: 500 12.5px/1.55 var(--mono-f); color: #ffb4ad; overflow-wrap: anywhere; }
+.xc-st { margin: 10px 0 0; font: 500 12.5px/1.45 var(--mono-f); color: var(--mut); }
+.xc-st b { color: var(--red); font-weight: 600; }
+.xc-back { border-color: rgba(79, 209, 139, .55); }
+.xc-back code { color: #bff3d6; }
+.xc-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.xc-stats b { display: block; font: 800 38px/1 var(--disp); letter-spacing: -.02em; color: var(--mint); }
+.xc-stats span { font-size: 13px; color: var(--mut); }
+
+/* ---------- the crash test, full screen: killed on purpose, five real seconds, back by itself */
+.xp-crashbig, .xp-backbig { position: absolute; left: 50%; top: 50%; width: min(620px, 100% - 2 * var(--gut)); transform: translate(-50%, -50%) scale(.96); text-align: center; }
+.xp-crashbig.on, .xp-backbig.on { transform: translate(-50%, -50%); }
+.xcb-h { margin: 0; font: 850 clamp(40px, min(5.6vw, 9vh), 92px)/.86 var(--cond);   /* 9vh: on 16:9 laptops it clears the crash card beside it */ font-stretch: 68%; letter-spacing: -.01em; text-transform: uppercase; color: var(--red); font-synthesis: none; text-shadow: 0 0 60px rgba(255, 91, 79, .45); }
+@media (max-width: 1332px) { .xcb-h { font-size: clamp(40px, min(9vh, 5.4vw - 6px), 92px); } }   /* below 1333 px the card column narrows with the window: same clearance */
+.xcb-n { margin: 6px 0 0; }
+.xcb-n b { display: inline-block; min-width: 1ch; font: 850 clamp(120px, 22vh, 230px)/.84 var(--cond); font-stretch: 68%; color: #fff; font-synthesis: none; text-shadow: 0 0 80px rgba(255, 91, 79, .55); }
+.xcb-s { display: inline-block; margin: 10px 0 0; padding: 5px 10px 4px; border-radius: 6px; background: rgba(2, 4, 7, .78); font: 500 12px/1.4 var(--mono-f); letter-spacing: .16em; text-transform: uppercase; color: #ffb4ad; }
+.xp-backbig::before, .xp-crashbig::before { content: ""; position: absolute; z-index: -1; inset: -22% -8%;   /* -8%: the dark pool stays off the crash card beside it */ background: radial-gradient(closest-side, rgba(2, 4, 7, .92), rgba(2, 4, 7, .66) 60%, transparent); pointer-events: none; }
+.xbb-h { margin: 0; font: 850 clamp(52px, min(8vw, 12vh), 132px)/.84 var(--cond); font-stretch: 68%; letter-spacing: -.012em; text-transform: uppercase;   /* the slam's end spacing, also in the calm version (one line, as in the motion version) */ color: var(--mint); font-synthesis: none; text-shadow: 0 0 70px rgba(79, 209, 139, .5); }
+.xp-backbig.on .xbb-h { animation: xtSlam .55s var(--e) both; }
+.xbb-s { display: inline-block; margin: 14px 0 0; padding: 5px 10px 4px; border-radius: 6px; background: rgba(2, 4, 7, .78); font: 500 13px/1.4 var(--mono-f); color: #bff3d6; }
+#xp [data-k="o-steps"]:not(.on), #xp [data-k="o-crash"].on { transition: none; }
+/* hand-overs in one place: the leaving text clears fast and the arriving one starts a beat later (no text over text) */
+#xp :is([data-k="a-q1"], [data-k="b-quote"], [data-k="a-search"], [data-k="o-cd"], [data-k="o-backbig"]):not(.on) { transition: opacity .2s ease, transform .75s var(--e), visibility 0s linear .2s; }
+#xp :is([data-k="a-q2"], [data-k="b-owner"], [data-k="a-a1"], [data-k="o-backbig"], [data-k="o-back"]).on { transition: opacity .45s ease .15s, transform .75s var(--e), visibility 0s; }
+#xp.blackout .xp-lower::before { background: linear-gradient(90deg, rgba(0, 0, 0, .9), rgba(0, 0, 0, .7) 70%, transparent); }
+
+/* ---------- finale: the hire scene */
+.xp-fin { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: calc(max(var(--top), var(--bar)) + 20px) var(--gut) calc(var(--bar) + 58px); text-align: center; }
+#xp.at-end .xp-fin { justify-content: space-between; }
+#xp:not(.at-end) .xf-hire { position: absolute; }
+.xf-words { display: flex; flex-direction: column; align-items: center; margin: 0; padding: 0; list-style: none; }
+#xp.at-end .xf-words { flex-direction: row; flex-wrap: wrap; justify-content: center; column-gap: .42em; }
+.xf-words li { font: 850 min(8.6vw, 12vh)/.86 var(--cond); font-stretch: 68%; letter-spacing: -.012em; text-transform: uppercase; white-space: nowrap; color: #fff; font-synthesis: none; opacity: 0; transform: translateY(18px) scale(1.12); transition: opacity .3s, transform .5s var(--e), font-size 1s var(--e); text-shadow: 0 4px 40px rgba(0, 0, 0, .7); }
+.xf-words li.on { opacity: 1; transform: none; }
+.xf-words li i { display: inline-block; width: .13em; height: .13em; margin-left: .03em; background: var(--a); }
+#xp.at-end .xf-words li { font-size: min(4.4vw, 6.8vh); }
+.xf-hire { position: relative; display: grid; justify-items: center; gap: 14px; transform: translateY(16px); }
+.xf-hire::before { content: ""; position: absolute; z-index: -1; inset: -56px -16vw -48px; background: radial-gradient(closest-side, rgba(2, 4, 7, .92), rgba(2, 4, 7, .78) 62%, transparent); pointer-events: none; }
+.xf-hire.on { transform: none; pointer-events: auto; }
+.xf-h { margin: 0; font: 800 clamp(30px, 3.7vw, 58px)/1 var(--disp); letter-spacing: -.035em; text-wrap: balance; text-shadow: 0 4px 40px rgba(0, 0, 0, .8); outline: none; }
+.xf-you { margin: -2px 0 2px; max-width: 64ch; font: 500 clamp(15px, 1.25vw, 18px)/1.45 var(--body-f); color: var(--mut); text-wrap: balance; transform: translateY(8px); }
+.xf-you.on { transform: none; }
+.xf-you[hidden] { display: none; }
+.xf-you q { font: italic 400 1.2em/1 var(--serif-f); color: #fff; quotes: "“" "”"; }
+.xf-you b { color: var(--ink); }
+.xf-you em { font: 500 .9em/1 var(--mono-f); font-style: normal; color: var(--a); }
+.xf-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.xf-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 56px; padding: 0 24px; border-radius: 999px; border: 1px solid rgba(160, 190, 220, .3); background: rgba(6, 10, 16, .8); color: var(--ink); font: 600 16px/1 var(--body-f); text-decoration: none; transition: transform .2s, background-color .2s, border-color .2s; }
+.xf-btn:hover { border-color: var(--a); transform: translateY(-1px); }
+.xf-btn svg { width: 17px; height: 17px; }
+.xf-main { border-color: var(--a); background: var(--a); color: #1c1304; box-shadow: 0 16px 44px -12px rgba(245, 165, 36, .85); }
+.xf-main:hover { background: var(--a-hi); }
+.xf-note { margin: 0; font: 500 12.5px/1.5 var(--mono-f); color: #b4c2cf; text-shadow: 0 1px 8px rgba(0, 0, 0, .95); }
+.xf-sec { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.xf-sec button { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 15px; border-radius: 999px; border: 1px solid rgba(160, 190, 220, .2); font: 500 13px/1 var(--mono-f); color: var(--mut); }
+.xf-sec button:hover { color: var(--ink); border-color: rgba(245, 165, 36, .6); }
+.xf-sec svg { width: 15px; height: 15px; }
+.xf-hon { margin: 2px 0 0; max-width: min(84ch, 100%); padding: 4px 10px; border-radius: 6px; background: rgba(2, 4, 7, .7); font: 500 11.5px/1.5 var(--mono-f); color: #aebdcb; }
+
+/* ---------- the calm version (prefers-reduced-motion): no camera flight, slow crossfades, no flashes */
+#xp.calm [data-k], #xp.calm .xc, #xp.calm .xp-title, #xp.calm .xp-lower, #xp.calm .xp-plan, #xp.calm .xf-words li, #xp.calm .xf-hire, #xp.calm .xl-stack, #xp.calm .xq-ask, #xp.calm .xq-cold p, #xp.calm .xc-sum .tk, #xp.calm .xc-sum .tot, #xp.calm .xp-crashbig, #xp.calm .xp-backbig { transform: none !important; filter: none !important; }
+#xp.calm .xp-crashbig, #xp.calm .xp-backbig { transform: translate(-50%, -50%) !important; }
+#xp.calm .xc-sum .tot { transform: translateY(-50%) !important; }
+#xp.calm [data-k] { transition: opacity .9s ease, visibility 0s linear .9s; }
+#xp.calm [data-k].on { transition: opacity .9s ease, visibility 0s; }
+#xp.calm .xt-w, #xp.calm .xo-name, #xp.calm .xo-four span, #xp.calm .xt-dot, #xp.calm .xp-rec, #xp.calm .xc-sys i, #xp.calm .xq-mic.live, #xp.calm .xp-loading::before, #xp.calm .xq-t, #xp.calm .xbb-h { animation: none !important; }
+#xp.calm .xt-flare, #xp.calm .xp-spark { display: none; }
+#xp.calm .xf-words li { transition: opacity .9s ease; }
+#xp.calm .xp-bars i { transition: none; }
+/* the page's own reduced-motion rule cuts every transition (.001ms !important) and would reach in here too: the calm
+   version keeps its slow, opacity-only crossfades (nothing moves), so their timings are restated with !important */
+#xp.calm { transition-duration: .6s !important; }
+#xp.calm.out { transition-duration: .5s !important; }
+#xp.calm .xp-gl { transition-duration: 1.6s !important; }
+#xp.calm [data-k] { transition-property: opacity, visibility !important; transition-duration: .9s, 0s !important; transition-timing-function: ease, linear !important; transition-delay: 0s, .9s !important; }
+#xp.calm [data-k].on { transition-delay: 0s, 0s !important; }
+#xp.calm [data-k="o-steps"]:not(.on), #xp.calm [data-k="o-crash"].on { transition-duration: 0s, 0s !important; transition-delay: 0s, 0s !important; }
+/* texts that hand over in the same place (nothing moves here): the leaving one clears quickly, then the arriving one fades in,
+   so two lines never print over each other (questions 1 -> 2, quote -> owner, search -> answer, countdown -> back -> card) */
+#xp.calm :is([data-k="a-q1"], [data-k="b-quote"], [data-k="a-search"], [data-k="o-cd"], [data-k="o-backbig"]):not(.on) { transition-duration: .25s, 0s !important; transition-delay: 0s, .25s !important; }
+#xp.calm :is([data-k="a-q2"], [data-k="b-owner"], [data-k="a-a1"], [data-k="o-backbig"], [data-k="o-back"]).on { transition-delay: .25s, 0s !important; }
+#xp.calm .xq-cold p, #xp.calm .xf-words li { transition-property: opacity, color !important; transition-duration: .9s, .6s !important; transition-delay: 0s !important; }
+#xp.calm .xq-ask, #xp.calm .xp-q, #xp.calm .xp-loading { transition-property: opacity, visibility !important; transition-duration: .7s, 0s !important; transition-delay: 0s, .7s !important; }
+#xp.calm.xp-ask .xq-ask, #xp.calm .xp-q:not(.gone), #xp.calm:not(.loaded) .xp-loading { transition-delay: 0s, 0s !important; }
+#xp.calm .xp-sub, #xp.calm .xc-checks li, #xp.calm .pin, #xp.calm .xp-prog { transition-duration: .5s !important; }
+/* the quote's prices hand over to the total in place (nothing moves in the calm version): out quickly first, then the total fades in */
+#xp.calm .xc-sum.sum .tk { transition-duration: .25s, 0s !important; }
+#xp.calm .xc-sum .tot.on { transition-delay: .25s, 0s !important; }
+
+/* ---------- phones and narrow windows (phones held sideways take this compact type too; their layout is at the end) */
+@media (max-width: 760px), (max-aspect-ratio: 4/5), (orientation: landscape) and (max-height: 500px) {
+  #xp { --top: 62px; --subH: 116px; --gut: 16px; }
+  .xs-who .w2 { display: none; }
+  .xs-who .w3 { display: inline; }
+  .xp-top { gap: 8px; }
+  .xp-brand { gap: 8px; letter-spacing: .14em; }
+  .xp-brand span, .xp-brand em, .xp-chap { display: none; }
+  .xp-ctrls { gap: 4px; }
+  .xb { width: 38px; height: 38px; min-width: 38px; padding: 0; }
+  .xb-l { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  .xb-exit { width: 38px; padding: 0; }
+  .xb-exit .xb-l { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
+  .xb svg { width: 16px; height: 16px; }
+  #xp.calm .xp-brand em { display: inline-block; font-size: 9px; padding: 4px 5px 3px; }
+  #xp.calm .xp-brand .ct-l { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  #xp.calm .xp-brand .ct-s { display: inline; }
+  .xp-paused { gap: 10px; padding: 13px 18px; font-size: 12px; letter-spacing: .08em; }
+  #xp.calm .xp-brand b { display: none; }
+  .xp-q { top: auto; bottom: max(14px, env(safe-area-inset-bottom)); transform: none; }
+  .xp-q::before { inset: -40vh -20vw -10vh -20vw; background: linear-gradient(transparent, rgba(2, 4, 7, .9) 34%, rgba(2, 4, 7, .96)); }
+  .xp-q.gone { transform: translateY(24px); }
+  .xq-cold { margin-bottom: 14px; }
+  .xq-cold p { font-size: 22px; }
+  #xp.xp-ask .xq-cold p { font-size: 14.5px; }
+  .xq-t { margin-bottom: 14px; font-size: clamp(40px, 12.4vw, 60px); }
+  .xq-in { height: 52px; padding: 0 14px; font-size: 16px; }
+  .xq-mic { width: 52px; height: 52px; }
+  .xq-go { height: 52px; padding: 0 16px; }
+  .xq-chips { gap: 6px; }
+  .xq-chips button { height: 38px; padding: 0 12px; font-size: 13.5px; }
+  .xq-foot { margin-top: 12px; }
+  .xq-hon { margin-top: 12px; font-size: 11px; }
+  .xq-micnote { font-size: 10.5px; }
+  .xq-who { margin: -6px 0 11px; font-size: 10px; letter-spacing: .1em; }
+  .xp-sub { bottom: max(14px, env(safe-area-inset-bottom)); }
+  .xs-line { font-size: 15px; line-height: 1.6; }
+  .xp-plan { left: var(--gut); right: var(--gut); width: auto; top: calc(var(--top) + 8px); }
+  .xp-quote { font-size: 26px; }
+  .xp-matchline { font-size: 14px; }
+  .xp-lower { left: var(--gut); right: var(--gut); width: auto; top: calc(var(--top) + 6px); bottom: auto; }
+  .xp-lower::before { inset: -70px -30px -58px -30px; background: linear-gradient(rgba(2, 4, 7, .94), rgba(2, 4, 7, .9) 60%, rgba(2, 4, 7, .6) 82%, transparent); -webkit-mask: none; mask: none; }   /* opaque enough behind the honest line that no 3D label ghosts through it */
+  .xl-k { margin-bottom: 8px; font-size: 10.5px; }
+  .xl-h { margin-bottom: 8px; font-size: 25px; }
+  .xl-hon { font-size: 10.5px; }
+  .xl-stack { display: none; }
+  .xp-cards { left: var(--gut); right: var(--gut); width: auto; top: auto; bottom: calc(var(--subH) + 4px); align-content: end; gap: 8px; }
+  .xc { padding: 11px 13px; font-size: 14px; }
+  #xp .xchip { margin-top: 8px; padding: 4px 7px 3px; font-size: 10.5px; }
+  .xc-sum { height: 46px; margin: 0 0 4px; font-size: 28px; }
+  .xc-sum .tot { font-size: 42px; }
+  .xc-quote li { padding: 3px 0; font-size: 12.5px; }
+  .xc-checks { gap: 5px; }
+  .xc-checks li { font-size: 12.5px; }
+  .xc-checks li::before { width: 14px; height: 14px; background-size: 9px; }
+  .xc-owner p b { font-size: 15px; }
+  .xc-count { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+  .xc-count span { font-size: 9px; letter-spacing: .08em; }
+  .xc-count b { font-size: 16px; }
+  .xc-count .xc-big b { font-size: 34px; }
+  .xc-lines { min-height: 4.8em; }
+  .xc-lines p:nth-last-child(n+4) { display: none; }
+  .xc-term .xc-k em { display: none; }
+  .xc-steps ol li { display: none; }
+  .xc-steps ol li.cur, .xc-steps ol li:last-child.done { display: flex; }
+  .xc-steps li span { white-space: normal; overflow: visible; }
+  .xc-stats b { font-size: 30px; }
+  .xp-crashbig, .xp-backbig { top: 43%; }
+  .xcb-x { display: none; }
+  .xcb-n b { font-size: 26vh; }
+  .xt-w { font-size: min(17vw, 26vh); }
+  .xo-name { font-size: 22vw; }
+  .xo-four { font-size: 17vw; }
+  .xf-words li { font-size: 15vw; }
+  #xp.at-end .xf-words li { font-size: 8.4vw; }
+  .xp-fin { gap: 14px; padding-bottom: 96px; }
+  .xf-hire { gap: 11px; }
+  .xf-btns { flex-direction: column; align-items: stretch; width: min(100%, 360px); }
+  .xf-btn { height: 52px; }
+  .xf-hon { font-size: 10.5px; }
+  .xf-note { font-size: 11.5px; }
+}
+/* the narrowest phones (360 px): slightly smaller controls, so the name is never cut */
+@media (max-width: 374px) { .xb, .xb-exit { width: 36px; height: 36px; min-width: 36px; } .xp-ctrls { gap: 3px; } .xp-brand { letter-spacing: .1em; } }
+/* phones up to ~830 px tall: the crash test's countdown sits low, in the cards' place, under the lower third; the crash card steps
+   aside while it runs (the big title says the same; the "back by itself" card follows the restart) */
+@media (max-width: 760px) and (max-height: 830px), (max-aspect-ratio: 4/5) and (max-height: 830px) {
+  .xp-crashbig { top: auto; bottom: calc(var(--subH) + 4px); transform: translateX(-50%) scale(.96); transform-origin: 50% 100%; }
+  .xp-crashbig.on { transform: translateX(-50%); }
+  #xp.calm .xp-crashbig { transform: translateX(-50%) !important; }
+  .xp-crashbig::before { inset: -14% -22%; }
+  .xcb-h { font-size: clamp(36px, 10.4vw, 46px); }
+  .xcb-n b { font-size: min(17vh, 126px); }
+  #xp.blackout .xc-alwayson [data-k="o-crash"] { opacity: 0; visibility: hidden; }
+}
+/* laptop and desktop windows up to ~820 px tall: the lower third reaches down to the middle of the picture, so the crash test's
+   big titles take the free band between it and the card column (sized to that band) instead of the centre, where they would
+   print over the honest line or the stack. Taller windows keep them centred. */
+@media (min-width: 761px) and (min-aspect-ratio: 4/5) and (min-height: 501px) {
+  #xp { --band: calc(100vw - 2 * var(--gut) - min(540px, 38vw) - min(440px, 33vw)); }
+  /* 2D version: the Mini App's phone frame stands in the same free band, never under the lower third's text */
+  #xp .xp-2d .xp-2dv { left: calc(var(--gut) + min(540px, 38vw) + var(--band) / 2); width: min(30vh, 260px, var(--band) - 40px); }
+}
+@media (min-width: 761px) and (min-aspect-ratio: 4/5) and (min-height: 501px) and (max-height: 820px) {
+  .xp-crashbig, .xp-backbig { left: calc(var(--gut) + min(540px, 38vw) + var(--band) / 2); width: calc(var(--band) - 24px); }
+  .xcb-h { font-size: clamp(32px, min(9vh, (var(--band) - 24px) / 5.1), 92px); }     /* "ON PURPOSE" fits the band */
+  .xbb-h { font-size: clamp(38px, min(12vh, (var(--band) - 24px) / 3.45), 132px); }  /* two lines: "BACK BY / ITSELF" */
+  .xcb-x, .xbb-hl { display: none; }   /* the health line follows a moment later on the "Back by itself" card */
+  .xbb-s { font-size: 12px; }
+}
+/* short laptop windows (and landscape tablets): the card column is shorter than its cards at the desktop size, so it takes the
+   compact type of the sideways phones and keeps to its own box (bottom-aligned, never over the bar) */
+@media (min-width: 761px) and (min-aspect-ratio: 4/5) and (min-height: 501px) and (max-height: 640px) {
+  .xp-cards { align-content: end; gap: 8px; overflow: hidden; }
+  .xc { padding: 9px 12px; font-size: 14px; line-height: 1.4; }
+  .xc-q > b, .xc-bot > b { margin-bottom: 4px; }
+  #xp .xchip { margin-top: 7px; }
+  .xc-k { margin-bottom: 7px; }
+  .xc-sum { height: 48px; font-size: 32px; }
+  .xc-sum .tot { font-size: 46px; }
+  .xc-quote li { padding: 4px 0; font-size: 13px; }
+  .xc-checks { gap: 6px; }
+  .xc-checks li { font-size: 13px; }
+  .xc-count { gap: 8px 10px; }
+  .xc-count .xc-big b { font-size: 30px; }
+  .xc-term { font-size: 12px; line-height: 1.5; }
+  .xc-lines { min-height: 0; }
+  .xc-lines p:nth-last-child(n+5) { display: none; }
+  .xc-files { padding: 8px; }
+  .xc-stats b { font-size: 30px; }
+}
+/* the counter's four small numbers ("1,081", "59", "0", "0") stay apart where the card column narrows with the window */
+@media (min-width: 761px) and (max-width: 1240px) and (min-height: 501px) { .xc-count b { font-size: 18px; } }
+/* short landscape screens: tighter, but the speech notice and the honest line never disappear */
+@media (max-height: 560px) and (orientation: landscape) {
+  #xp { --top: 52px; --subH: 60px; }
+  .xp-q { top: calc(50% + 22px); bottom: auto; transform: translateY(-50%); }
+  .xp-q.gone { transform: translateY(calc(-50% - 24px)); }
+  .xq-cold { margin-bottom: 6px; }
+  #xp.xp-ask .xq-cold p { font-size: 13px; }
+  .xq-cold .xq-c1 { display: none; }
+  .xq-t { font-size: 38px; margin-bottom: 8px; }
+  .xq-who { margin: -1px 0 8px; font-size: 9.5px; }
+  .xq-in, .xq-mic, .xq-go { height: 44px; }
+  .xq-mic { width: 44px; }
+  .xq-micnote { margin-top: 5px; font-size: 10px; line-height: 1.3; }
+  .xq-status { min-height: 0; margin-top: 2px; }
+  .xq-chips button { height: 32px; font-size: 12.5px; }
+  .xq-foot { margin-top: 6px; }
+  .xq-hon { margin-top: 6px; font-size: 10px; line-height: 1.3; }
+  .xp-lower { width: min(460px, 44vw); }
+  .xl-h { font-size: 24px; }
+}
+@media (max-height: 430px) and (orientation: landscape) {
+  .xq-cold { display: none; }
+  .xq-t { font-size: 30px; }
+  .xq-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .xq-chips button { flex: none; }
+  .xq-foot { margin-top: 4px; }
+  .xq-skip { height: 34px; }
+}
+/* ---------- phones held sideways (and any short landscape window). The phone block gives the compact type; here the lower
+   third keeps the left column and the cards take the right one, between the bar and the subtitles, so nothing runs under the
+   controls, the subtitles or the honest line. The crash test plays in the cards' column; the finale's buttons are one row. */
+@media (orientation: landscape) and (max-height: 500px) {
+  #xp { --top: 52px; --gut: max(16px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)); --col: min(380px, calc(45vw - var(--gut))); }   /* 45vw: a free band stays in the middle for the subject (the 3D phone in Booked) */
+  .xp-sub { bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
+  .xs-who { margin-bottom: 4px; }
+  .xs-line { padding: 2px 10px; font-size: 14px; line-height: 1.55; }
+  /* the route: a left column, the map stays in view */
+  .xp-plan { right: auto; width: min(520px, 58vw); top: calc(var(--top) + 4px); }
+  .xp-plan .xp-k { margin-bottom: 6px; }
+  .xp-quote { margin-bottom: 6px; font-size: 24px; }
+  .xp-matchline { margin-bottom: 8px; font-size: 13.5px; }
+  .xp-routeline { margin-bottom: 8px; }
+  .xp-routeline li { padding: 6px 9px 5px; font-size: 12.5px; }
+  /* opening titles: sized by the height */
+  .xo-name { font-size: min(22vw, 36vh); }
+  .xo-role { margin-top: 10px; font-size: 20px; }
+  .xo-four { font-size: min(17vw, 25vh); }
+  /* lower third: the left column */
+  .xp-lower { right: auto; width: var(--col); top: calc(var(--top) + 8px); }
+  .xp-lower::before { inset: -64px -56px -64px calc(-1 * var(--gut)); background: linear-gradient(90deg, rgba(2, 4, 7, .94), rgba(2, 4, 7, .86) 64%, rgba(2, 4, 7, .5) 84%, transparent); -webkit-mask: linear-gradient(transparent, #000 24%, #000 76%, transparent); mask: linear-gradient(transparent, #000 24%, #000 76%, transparent); }
+  .xl-k { margin-bottom: 6px; font-size: 10px; }
+  .xl-h { margin-bottom: 6px; font-size: clamp(20px, 3.2vw, 26px); }
+  .xl-hon { font-size: 10.5px; line-height: 1.45; }
+  /* cards: the right column, bounded by the bar and the subtitles */
+  .xp-cards { left: auto; right: var(--gut); width: var(--col); top: calc(var(--top) + 6px); bottom: calc(var(--subH) + 6px); align-content: end; gap: 6px; overflow: hidden; }
+  .xc { padding: 9px 12px; font-size: 13px; line-height: 1.4; }
+  .xc-q > b, .xc-bot > b { margin-bottom: 4px; }
+  #xp .xchip { margin-top: 6px; }
+  .xc-k { margin-bottom: 6px; }
+  .xc-answered { grid-template-areas: "q" "a"; }
+  .xc-answered [data-k="a-search"] { grid-area: a; }   /* the search line comes and goes before the answer, in its place */
+  .xc-sum { height: 40px; font-size: 26px; }
+  .xc-sum .tot { font-size: 38px; }
+  .xc-checks li { font-size: 12px; }
+  .xc-count { gap: 6px 9px; }
+  .xc-count .xc-big b { font-size: 30px; }
+  .xc-lines { min-height: 0; }
+  .xc-lines p:nth-last-child(n+3) { display: none; }
+  .xc-files { gap: 6px; padding: 8px; }
+  .xc-files span { padding: 6px 8px 5px; font-size: 11px; }
+  .xc-crash code, .xc-back code { font-size: 11.5px; }
+  .xc-stats b { font-size: 26px; }
+  /* the crash test: in the cards' column (the crash card steps aside while it runs, as on short phones) */
+  .xp-crashbig, .xp-backbig { left: auto; right: var(--gut); top: calc(var(--top) + 6px); bottom: calc(var(--subH) + 6px); width: var(--col); display: flex; flex-direction: column; align-items: center; justify-content: center; transform: scale(.96); transform-origin: 50% 50%; }
+  .xp-backbig { justify-content: flex-start; }
+  .xp-crashbig.on, .xp-backbig.on, #xp.calm .xp-crashbig, #xp.calm .xp-backbig { transform: none !important; }
+  .xp-crashbig::before, .xp-backbig::before { inset: -8% -12%; }
+  .xcb-h { font-size: min(6.4vw, 12vh); }
+  .xcb-n { margin-top: 2px; }
+  .xcb-n b { font-size: min(22vh, 110px); }
+  .xcb-s { margin-top: 6px; font-size: 11px; }
+  .xbb-h { font-size: min(7.4vw, 13vh); }
+  .xbb-s { margin-top: 8px; font-size: 11.5px; }
+  #xp.blackout .xc-alwayson [data-k="o-crash"] { opacity: 0; visibility: hidden; }
+  /* finale: the words, then one row of hire buttons, clear of the subtitles; it can scroll if a browser bar eats the height */
+  .xp-fin { gap: 8px; padding: calc(var(--top) + 4px) var(--gut) 52px; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+  .xf-words li { font-size: min(10vw, 16vh); }
+  #xp.at-end .xf-words li { font-size: min(4.4vw, 6.8vh); }
+  .xf-hire { gap: 8px; }
+  .xf-hire::before { inset: -40px -12vw -36px; }
+  .xf-h { font-size: clamp(22px, 3.6vw, 30px); }
+  .xf-you { margin: 0; font-size: 13.5px; }
+  .xf-btns { flex-direction: row; align-items: center; width: auto; gap: 8px; }
+  .xf-btn { height: 44px; padding: 0 18px; font-size: 15px; }
+  .xf-note { font-size: 11px; }
+  .xf-sec button { height: 36px; padding: 0 13px; font-size: 12px; }
+  .xf-hon { margin: 0; padding: 3px 9px; font-size: 10px; }
+}
+/* the smallest sideways phones keep the two half-width columns: the cards need every pixel there */
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 699px) { #xp { --col: calc(50vw - var(--gut) - 8px); } }
+/* sideways phones up to 400 px tall: the quote card keeps its big total and drops the line items (the owner's card repeats them) */
+@media (orientation: landscape) and (max-height: 400px) { .xc-quote ul { display: none; } }
+/* very short (a browser bar showing): the recap words make room for the hire buttons at the end, and the cards get tighter */
+@media (orientation: landscape) and (max-height: 350px) { .xf-words { transition: opacity .3s; } #xp.at-end .xf-words { position: absolute; opacity: 0; } }
+@media (orientation: landscape) and (max-height: 340px) {
+  .xc { padding: 7px 11px; }
+  .xc-sum { height: 34px; margin: 0; font-size: 22px; }
+  .xc-sum .tot { font-size: 32px; }
+  .xc-checks { gap: 3px; }
+  .xc-checks li { font-size: 11.5px; line-height: 1.3; }
+  .xc-checks li::before { width: 13px; height: 13px; margin-top: 0; }
+  .xc-count .xc-big b { font-size: 24px; }
+  .xc-term .xc-k { display: none; }
+  .xc-measured [data-k="m-files"] { display: none; }   /* no room for a third card: the lower third and the subtitles already say "to Excel" */
+  .xc-owner p { font-size: 12px; line-height: 1.35; }
+  .xc-owner p b { margin-bottom: 2px; font-size: 14px; }
+  .xc-lines p { line-height: 1.45; }
+}
+@media (orientation: landscape) and (max-height: 340px) and (max-width: 600px) {   /* 4-inch phones held sideways */
+  .xc { padding: 6px 10px; font-size: 12.5px; line-height: 1.35; }
+  .xc-q > b, .xc-bot > b { margin-bottom: 3px; }
+  #xp .xchip { margin-top: 4px; }
+}
+/* sideways phones with room for them: the chapters and the Exit label come back to the bar */
+@media (orientation: landscape) and (max-height: 500px) and (min-width: 800px) {
+  .xp-chap { display: flex; }
+  .xb-exit { width: auto; padding: 0 12px 0 11px; }
+  .xb-exit .xb-l { position: static; width: auto; height: auto; overflow: visible; clip: auto; clip-path: none; }
+}
+
+/* ---------- last pass (owner's review build) */
+/* the progress line lives on the screen's bottom edge, never through the subtitles or the voice notice */
+.xp-prog { bottom: 0; }
+/* the centred crash titles: their dark pool stops before the crash card */
+.xp-backbig::before, .xp-crashbig::before { inset: -22% 0; }
+/* short laptop windows (under ~700 px tall): the cold open and the question stay under the top bar */
+@media (min-width: 761px) and (min-height: 501px) and (max-height: 700px) {
+  .xp-q { top: calc(max(var(--top), var(--bar)) + 10px); transform: none; }
+  .xp-q.gone { transform: translateY(-24px); }
+  .xq-cold { margin-bottom: 12px; }
+  #xp.xp-ask .xq-c1 { display: none; }
+  .xq-t { margin-bottom: 14px; font-size: clamp(40px, min(6.4vw, 11vh), 104px); }
+}
+/* short upright phones (iPhone SE / 6-8 with Safari's toolbar, small Androids): compact lower third and cards, and the card
+   column never climbs over the lower third's honest line */
+@media (max-width: 760px) and (orientation: portrait) and (max-height: 640px) {
+  .xl-h { margin-bottom: 6px; font-size: 21px; }
+  .xl-hon { font-size: 10px; }
+  .xp-cards { top: max(46vh, 256px); overflow: hidden; gap: 6px; }
+  .xc { padding: 8px 11px; font-size: 13px; }
+  .xc-quote ul { display: none; }
+  .xc-lines { min-height: 0; }
+  .xc-lines p:nth-last-child(n+3) { display: none; }
+  .xc-count .xc-big b { font-size: 26px; }
+  .xc-sum { height: 36px; font-size: 22px; }
+  .xc-sum .tot { font-size: 32px; }
+  /* the question: anchored under the controls, the first cold-open line steps aside once the question is up */
+  .xp-q { top: calc(var(--top) + 4px); bottom: auto; transform: none; }
+  .xp-q.gone { transform: translateY(-24px); }
+  #xp.xp-ask .xq-c1 { display: none; }
+  .xq-cold { margin-bottom: 10px; }
+  .xq-t { margin-bottom: 12px; font-size: clamp(34px, 11vw, 46px); }
+  /* the crash test: "back by itself" also sits low, in the cards' place, under the lower third (like the countdown) */
+  .xp-backbig { top: auto; bottom: calc(var(--subH) + 4px); transform: translateX(-50%) scale(.96); transform-origin: 50% 100%; }
+  .xp-backbig.on { transform: translateX(-50%); }
+  #xp.calm .xp-backbig { transform: translateX(-50%) !important; }
+  .xbb-h { font-size: clamp(34px, 10vw, 44px); }
+  .xcb-n b { font-size: min(14vh, 96px); }
+  /* the finale: the recap words step aside at the end and the buttons are compact, so the honest line stays on screen */
+  .xf-words { transition: opacity .3s; }
+  #xp.at-end .xf-words { position: absolute; opacity: 0; }
+  .xp-fin { gap: 10px; padding-bottom: calc(var(--subH) + 4px); }
+  .xf-hire { gap: 8px; }
+  .xf-btn { height: 46px; }
+}
+/* calm version, scene changes too: the leaving text clears quickly, the arriving title or lower third waits for it */
+#xp.calm [data-k]:not(.on) { transition-duration: .3s, 0s !important; transition-delay: 0s, .3s !important; }
+#xp.calm :is([data-k^="title-"], [data-k="open-four"], [data-k="open-real"], [data-k^="lower-"]).on { transition-delay: .3s, 0s !important; }
+/* the smallest upright screens (360 px wide, under 600 px tall): the lower third keeps its kicker and honest line; the headline
+   steps aside (the title card just said it), so the cards never reach the honest line */
+@media (max-width: 370px) and (orientation: portrait) and (max-height: 600px) { .xl-h { display: none; } }

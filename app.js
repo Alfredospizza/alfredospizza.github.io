@@ -2094,6 +2094,7 @@
     try { if (AC) { ac = new AC(); quiet(ac.resume()); } } catch (x) { ac = null; }
     try { if (s && w.SpeechSynthesisUtterance) { s.cancel(); u = new SpeechSynthesisUtterance(' '); u.volume = 0; s.speak(u); } } catch (x) {}
     w.__xp = { state: 'loading', scene: 'loading', t: 0, quality: '', fps: 0 };
+    try { if (w.goatcounter && w.goatcounter.count) w.goatcounter.count({ path: (/\/upwork\//.test(location.pathname) ? 'upwork/' : '') + 'full-experience', title: 'Full experience started', event: true }); } catch (x) {}  // visit counter event
     cur = w.__xpBoot = { audio: ac, from: b };
     D.addEventListener('keydown', esc, true);
     b.setAttribute('aria-busy', 'true');

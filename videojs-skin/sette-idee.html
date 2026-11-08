@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Sette idee per il player</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f6fc; --fg: #131417; --muted: #56585f; --card: #ffffff; --line: rgb(19 20 23 / 0.12);
+    --acc: #9889ff; --acc-strong: #6a43f3; --acc-hi: #552fca;
+    --d-bg: rgb(19 20 23 / 0.88); --d-fg: #f5f6fc; --d-muted: #bbbdc6; --d-line: rgb(245 246 252 / 0.14);
+    --ease: cubic-bezier(.2, .8, .2, 1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #131417; --fg: #f5f6fc; --muted: #bbbdc6; --card: #25262c; --line: rgb(245 246 252 / 0.14); }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 16px max(16px, env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  }
+  main { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin: 0 0 4px; }
+  h2 { font-size: 1.05rem; margin: 0 0 6px; }
+  h3 { font-size: 0.875rem; margin: 12px 0 4px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  p, li { color: var(--muted); }
+  p { margin: 0 0 10px; }
+  ul { margin: 0; padding-left: 20px; }
+  kbd { font: 600 0.8em ui-monospace, Menlo, Consolas, monospace; padding: 1px 6px; border: 1px solid var(--line); border-radius: 6px; }
+  :focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+
+  /* ---------- schede ---------- */
+  .tabs { display: flex; gap: 6px; overflow-x: auto; padding: 4px 2px 8px; margin: 12px 0 4px; scrollbar-width: none; }
+  .tab {
+    flex: none; font: inherit; font-weight: 600; color: var(--fg); background: transparent;
+    border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; min-height: 44px; cursor: pointer; white-space: nowrap;
+  }
+  .tab[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-top: 12px; }
+  .panel .try { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .pbtn { font: inherit; font-weight: 600; color: var(--fg); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; min-height: 44px; cursor: pointer; }
+
+  /* ---------- player ---------- */
+  .player {
+    position: relative; border-radius: 16px; overflow: hidden; background: #000;
+    container-type: inline-size; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  }
+  .player video { display: block; width: 100%; aspect-ratio: 16 / 9; }
+  .player:fullscreen video { height: 100%; aspect-ratio: auto; }
+  .dbtn {
+    width: 40px; height: 40px; border-radius: 50%; border: 0; padding: 0; display: grid; place-items: center; flex: none;
+    background: transparent; color: inherit; cursor: pointer; position: relative;
+  }
+  .dbtn:hover { background: rgb(245 246 252 / 0.10); }
+  .dbtn svg { width: 20px; height: 20px; fill: currentColor; }
+  .dbtn.primary { width: 44px; height: 44px; background: var(--acc-strong); color: #fff; }
+  .dbtn.primary:hover { background: var(--acc-hi); }
+  .player :focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+  .dock {
+    position: absolute; left: 10px; right: 10px; bottom: 10px; padding: 4px 10px 6px; border-radius: 18px;
+    background: var(--d-bg); color: var(--d-fg); border: 1px solid var(--d-line);
+    transition: opacity 200ms var(--ease), transform 200ms var(--ease);
+  }
+  .bar { display: flex; align-items: center; gap: 4px; }
+  .spacer { flex: 1; }
+  .time { font: 600 0.875rem/1 system-ui, sans-serif; font-variant-numeric: tabular-nums; padding: 10px 8px; white-space: nowrap;
+          background: none; border: 0; color: inherit; border-radius: 999px; cursor: default; min-height: 40px; }
+  [data-idea="7"] .time { cursor: pointer; background: rgb(245 246 252 / 0.08); }
+  [data-idea="7"] .time:hover { background: rgb(245 246 252 / 0.14); }
+  .hint { font: 600 0.75rem/1 system-ui, sans-serif; color: var(--d-muted); border: 1px solid var(--d-line); border-radius: 999px;
+          background: none; padding: 8px 10px; min-height: 36px; cursor: pointer; white-space: nowrap; }
+  .only { display: none !important; }
+  [data-idea="2"] .only-2, [data-idea="3"] .only-3 { display: inline-flex !important; }
+
+  /* barra */
+  .seek-wrap { position: relative; touch-action: none; }
+  .seek {
+    --p: 0%; --h: 4px;
+    -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 24px; margin: 0; background: transparent; cursor: pointer;
+  }
+  .seek-wrap:hover .seek, .seek:focus-visible, .seek-wrap.active .seek { --h: 8px; }
+  .seek::-webkit-slider-runnable-track { height: var(--h); border-radius: 999px; transition: height 160ms var(--ease);
+    background: linear-gradient(to right, var(--acc) var(--p), rgb(245 246 252 / 0.18) var(--p)); }
+  .seek::-moz-range-track { height: var(--h); border-radius: 999px; background: linear-gradient(to right, var(--acc) var(--p), rgb(245 246 252 / 0.18) var(--p)); }
+  .seek::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%;
+    margin-top: calc((var(--h) - 14px) / 2); background: #fff; box-shadow: 0 0 0 2px #131417; transition: margin-top 160ms var(--ease); }
+  .seek::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px #131417; }
+  [data-idea="4"] .seek { pointer-events: none; }  /* idea 4: il trascinamento lo gestiamo noi */
+  [data-idea="4"] .seek-wrap { cursor: ew-resize; }
+
+  .prec {
+    position: absolute; bottom: calc(100% + 8px); left: var(--x, 50%); transform: translateX(-50%);
+    display: grid; justify-items: center; gap: 2px; padding: 6px 12px; border-radius: 14px;
+    background: #131417; color: #f5f6fc; box-shadow: 0 8px 24px rgb(0 0 0 / .4); pointer-events: none; white-space: nowrap;
+  }
+  .prec[hidden] { display: none; }
+  .prec b { font-size: 1rem; font-variant-numeric: tabular-nums; }
+  .prec span { font-size: 0.75rem; color: #bbbdc6; }
+  .prec .steps { display: flex; gap: 4px; }
+  .prec .steps i { width: 18px; height: 4px; border-radius: 2px; background: rgb(255 255 255 / .2); }
+  .prec .steps i.on { background: var(--acc); }
+
+  /* ---------- idea 1: ghiera ---------- */
+  .ring-ui { display: none; }
+  [data-idea="1"] .dock { display: none; }
+  [data-idea="1"] .ring-ui { display: flex; }
+  .ring-ui {
+    position: absolute; right: 14px; bottom: 14px; align-items: center; gap: 10px;
+    --size: clamp(96px, 20cqi, 136px);
+  }
+  .sat {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+  }
+  .sat .chip { display: flex; align-items: center; gap: 2px; padding: 2px; border-radius: 999px; background: var(--d-bg); color: var(--d-fg); border: 1px solid var(--d-line); }
+  .sat .tlabel { font: 600 0.8125rem/1 system-ui, sans-serif; font-variant-numeric: tabular-nums; padding: 8px 12px; border-radius: 999px; background: var(--d-bg); color: var(--d-fg); border: 1px solid var(--d-line); white-space: nowrap; }
+  .ring { position: relative; width: var(--size); height: var(--size); touch-action: none; }
+  .ring svg.dial { width: 100%; height: 100%; display: block; overflow: visible; cursor: grab; }
+  .ring svg.dial:active { cursor: grabbing; }
+  .ring .disc { fill: rgb(19 20 23 / 0.88); stroke: rgb(245 246 252 / 0.14); }
+  .ring .track { fill: none; stroke: rgb(245 246 252 / 0.16); stroke-width: 8; }
+  .ring .arc { fill: none; stroke: var(--acc); stroke-width: 8; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 60px 60px; transition: stroke 300ms; }
+  .ring.vol .arc { stroke: #6fd6c8; }
+  .ring .knob { fill: #fff; stroke: #131417; stroke-width: 2; }
+  .ring .center {
+    position: absolute; inset: 22%; border-radius: 50%; border: 0; display: grid; place-items: center; cursor: pointer;
+    background: var(--acc-strong); color: #fff; touch-action: none;
+  }
+  .ring.vol .center { background: #0f6e64; }
+  .ring .center svg { width: 40%; height: 40%; fill: currentColor; }
+  .ring .rlabel { position: absolute; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%); font: 600 0.75rem/1 system-ui; color: #fff;
+    background: #131417; padding: 6px 10px; border-radius: 999px; white-space: nowrap; pointer-events: none; }
+  .ring .rlabel[hidden] { display: none; }
+  .ring:focus-visible { outline: 2px solid #fff; outline-offset: 4px; border-radius: 50%; }
+
+  /* ---------- idea 2: palette ---------- */
+  .palette {
+    position: absolute; left: 50%; top: 12%; transform: translateX(-50%); width: min(92%, 440px);
+    background: rgb(19 20 23 / 0.96); color: #f5f6fc; border: 1px solid rgb(245 246 252 / .16); border-radius: 16px;
+    box-shadow: 0 20px 50px rgb(0 0 0 / .5); padding: 10px; z-index: 5;
+  }
+  .palette[hidden] { display: none; }
+  .palette input {
+    width: 100%; font: 500 1rem/1.4 system-ui, sans-serif; color: #fff; background: rgb(245 246 252 / .08);
+    border: 1px solid rgb(245 246 252 / .18); border-radius: 10px; padding: 10px 12px; outline: none;
+  }
+  .palette input:focus { border-color: var(--acc); }
+  .palette .out { font-size: 0.875rem; padding: 8px 4px 4px; color: #bbbdc6; min-height: 1.6em; }
+  .palette .out b { color: #fff; }
+  .palette .sugg { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 4px; }
+  .palette .sugg button { font: 600 0.75rem/1 ui-monospace, Menlo, Consolas, monospace; color: #f5f6fc; background: rgb(245 246 252 / .08);
+    border: 1px solid rgb(245 246 252 / .14); border-radius: 999px; padding: 8px 10px; cursor: pointer; }
+
+  /* ---------- idea 3: menu radiale ---------- */
+  .radial { position: absolute; width: 0; height: 0; z-index: 6; --r: 78px; }
+  .radial[hidden] { display: none; }
+  .radial .dot { position: absolute; width: 18px; height: 18px; margin: -9px; border-radius: 50%; background: rgb(255 255 255 / .9); box-shadow: 0 0 0 6px rgb(255 255 255 / .2); }
+  .radial button {
+    position: absolute; left: 0; top: 0; width: 52px; height: 52px; margin: -26px; border-radius: 50%;
+    border: 1px solid rgb(245 246 252 / .16); background: rgb(19 20 23 / .9); color: #f5f6fc; cursor: pointer;
+    display: grid; place-items: center; transform: translate(0, 0) scale(.4); opacity: 0;
+    transition: transform 220ms var(--ease), opacity 160ms, background 120ms;
+  }
+  .radial.open button { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(1); }
+  .radial button svg { width: 20px; height: 20px; fill: currentColor; }
+  .radial button small { position: absolute; top: 100%; margin-top: 3px; font: 600 0.6875rem/1 system-ui; color: #fff;
+    text-shadow: 0 1px 3px #000; white-space: nowrap; }
+  .radial button.hot { background: var(--acc-strong); transform: translate(var(--tx), var(--ty)) scale(1.15); }
+
+  /* ---------- idea 5: pillola ---------- */
+  .toast {
+    position: absolute; left: 50%; top: 14px; transform: translate(-50%, -8px); opacity: 0; pointer-events: none;
+    display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 14px; border-radius: 999px;
+    background: rgb(19 20 23 / .92); color: #f5f6fc; border: 1px solid rgb(245 246 252 / .14);
+    font: 600 0.8125rem/1.2 system-ui; white-space: nowrap; transition: opacity 200ms, transform 200ms var(--ease); z-index: 7;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  .toast button { font: inherit; color: #fff; background: rgb(245 246 252 / .12); border: 0; border-radius: 999px; padding: 8px 12px; cursor: pointer; min-height: 32px; }
+  .toast.noaction { padding-right: 14px; }
+
+  /* ---------- idea 6: suono visibile ---------- */
+  .mute-btn { --lvl: 0; }
+  [data-idea="6"] .mute-btn.muted::after {
+    content: ""; position: absolute; inset: 2px; border-radius: 50%; border: 2px solid #6fd6c8;
+    transform: scale(calc(1 + var(--lvl) * 0.45)); opacity: calc(var(--lvl) * 1.2); pointer-events: none;
+  }
+  .vu { display: none; align-items: flex-end; gap: 2px; height: 14px; margin-left: -6px; margin-right: 4px; }
+  [data-idea="6"] .vu { display: inline-flex; }
+  .vu i { width: 3px; border-radius: 2px; background: #6fd6c8; height: 3px; transition: height 80ms linear; }
+  .sound-chip { display: none; }
+  [data-idea="6"] .sound-chip.show { display: inline-flex; }
+  .sound-chip { align-items: center; gap: 6px; font: 600 0.75rem/1 system-ui; color: #0b2b27; background: #6fd6c8; border: 0;
+    border-radius: 999px; padding: 8px 12px; cursor: pointer; white-space: nowrap; }
+  @media (prefers-reduced-motion: reduce) {
+    [data-idea="6"] .mute-btn.muted::after { transform: none; opacity: calc(var(--lvl) > 0 ? 1 : 0); }
+    .radial button, .toast, .dock, .seek::-webkit-slider-runnable-track { transition: none; }
+  }
+  @container (max-width: 480px) { .hide-sm { display: none !important; } }
+
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Sette idee per il player</h1>
+  <p>Prototipi veloci, fuori dalla skin. Scegli un'idea, prova, confronta. Il video è lo stesso per tutte.</p>
+
+  <div class="tabs" role="tablist" aria-label="Idee" id="tabs"></div>
+
+  <div class="player" id="player" data-idea="1">
+    <video id="v" playsinline crossorigin="anonymous"
+      poster="https://image.mux.com/1U7atblCas8wrFyf4jKbsZ7b00bTQLeBGl9xw9yN7Qt8/thumbnail.webp?time=47"></video>
+
+    <!-- dock di base (idee 2-7) -->
+    <div class="dock" id="dock">
+      <div class="seek-wrap" id="seekWrap">
+        <input class="seek" id="seek" type="range" min="0" max="1000" step="1" value="0" aria-label="Avanzamento">
+        <div class="prec" id="prec" hidden><b id="precTime">0:00</b><div class="steps" id="precSteps"><i></i><i></i><i></i><i></i></div><span id="precTxt">velocità piena</span></div>
+      </div>
+      <div class="bar">
+        <button class="dbtn primary js-play" type="button" aria-label="Riproduci"><svg viewBox="0 0 20 20"><path class="js-play-path"/></svg></button>
+        <button class="dbtn mute-btn js-mute" type="button" aria-label="Disattiva audio"><svg viewBox="0 0 20 20"><path class="js-mute-path"/></svg></button>
+        <span class="vu" aria-hidden="true"><i></i><i></i><i></i></span>
+        <button class="time" id="time" type="button" tabindex="-1">0:00 / 0:00</button>
+        <button class="sound-chip" id="soundChip" type="button">♪ C'è audio: attivalo</button>
+        <span class="spacer"></span>
+        <button class="hint only only-2 hide-sm" id="palBtn" type="button" aria-keyshortcuts="/">Comandi <kbd style="border-color:currentColor">/</kbd></button>
+        <button class="hint only only-3" id="radBtn" type="button">Menu</button>
+        <button class="dbtn js-fs" type="button" aria-label="Schermo intero"><svg viewBox="0 0 20 20"><path d="M3 3h5v2H5v3H3zm9 0h5v5h-2V5h-3zM3 12h2v3h3v2H3zm12 0h2v5h-5v-2h3z"/></svg></button>
+      </div>
+    </div>
+
+    <!-- idea 1: ghiera -->
+    <div class="ring-ui" id="ringUi">
+      <div class="sat">
+        <span class="tlabel" id="ringTime">0:00 / 0:00</span>
+        <span class="chip">
+          <button class="dbtn js-mute" type="button" aria-label="Disattiva audio"><svg viewBox="0 0 20 20"><path class="js-mute-path"/></svg></button>
+          <button class="dbtn js-fs" type="button" aria-label="Schermo intero"><svg viewBox="0 0 20 20"><path d="M3 3h5v2H5v3H3zm9 0h5v5h-2V5h-3zM3 12h2v3h3v2H3zm12 0h2v5h-5v-2h3z"/></svg></button>
+        </span>
+      </div>
+      <div class="ring" id="ring" tabindex="0" role="slider" aria-label="Avanzamento (tasto V per il volume)" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <svg class="dial" id="dial" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="disc" cx="60" cy="60" r="59"/>
+          <circle class="track" cx="60" cy="60" r="50"/>
+          <circle class="arc" id="arc" cx="60" cy="60" r="50" stroke-dasharray="314.16" stroke-dashoffset="314.16"/>
+          <circle class="knob" id="knob" cx="60" cy="10" r="6.5"/>
+        </svg>
+        <button class="center js-ring-center" id="ringCenter" type="button" aria-label="Riproduci"><svg viewBox="0 0 20 20"><path class="js-center-path"/></svg></button>
+        <span class="rlabel" id="ringLabel" hidden></span>
+      </div>
+    </div>
+
+    <!-- idea 2: palette -->
+    <div class="palette" id="palette" role="dialog" aria-modal="true" aria-label="Comandi del player" hidden>
+      <input id="palIn" type="text" autocomplete="off" spellcheck="false" enterkeyhint="go"
+        placeholder="Scrivi: 1:20 · +30 · velocità 1.5 · muto" aria-describedby="palOut">
+      <div class="out" id="palOut" aria-live="polite">Invio per eseguire, Esc per chiudere.</div>
+      <div class="sugg" id="palSugg"></div>
+    </div>
+
+    <!-- idea 3: menu radiale -->
+    <div class="radial" id="radial" role="menu" aria-label="Menu rapido" hidden><span class="dot"></span></div>
+
+    <!-- pillola condivisa -->
+    <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastTxt"></span><button id="toastBtn" type="button" hidden></button></div>
+  </div>
+
+  <section class="panel" id="panel" role="tabpanel" aria-live="polite"></section>
+  <div id="live" class="sr" aria-live="polite"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+<script>
+(() => {
+  const PID = '1U7atblCas8wrFyf4jKbsZ7b00bTQLeBGl9xw9yN7Qt8';
+  const SRC = `https://stream.mux.com/${PID}.m3u8`;
+  const $ = id => document.getElementById(id);
+  const $$ = sel => [...document.querySelectorAll(sel)];
+  const v = $('v'), player = $('player');
+  let idea = 1;
+
+  // hls.js prima (su iPhone usa ManagedMediaSource e funziona anche con Web Audio), HLS nativo come riserva
+  if (window.Hls && Hls.isSupported()) { const h = new Hls(); h.loadSource(SRC); h.attachMedia(v); }
+  else v.src = SRC;
+
+  const fmt = t => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
+  const say = msg => { $('live').textContent = ''; setTimeout(() => { $('live').textContent = msg; }, 30); };
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+
+  // ---------- icone ----------
+  const IC = {
+    play: 'M6 3.8v12.4c0 .8.9 1.3 1.6.9l10-6.2c.6-.4.6-1.4 0-1.8l-10-6.2C6.9 2.5 6 3 6 3.8z',
+    pause: 'M5 3h3c.6 0 1 .4 1 1v12c0 .6-.4 1-1 1H5c-.6 0-1-.4-1-1V4c0-.6.4-1 1-1zm7 0h3c.6 0 1 .4 1 1v12c0 .6-.4 1-1 1h-3c-.6 0-1-.4-1-1V4c0-.6.4-1 1-1z',
+    vol: 'M3 7.5h3l4-3.5v12l-4-3.5H3zm10.5-1.8a5.5 5.5 0 0 1 0 8.6l-1.2-1.4a3.6 3.6 0 0 0 0-5.8z',
+    muted: 'M3 7.5h3l4-3.5v12l-4-3.5H3zm9.3.2 1.3-1.3 1.9 1.9 1.9-1.9 1.3 1.3-1.9 1.9 1.9 1.9-1.3 1.3-1.9-1.9-1.9 1.9-1.3-1.3 1.9-1.9z',
+    back: 'M10 4V1L5 5l5 4V6a5 5 0 1 1-5 5H3a7 7 0 1 0 7-7z',
+    fwd: 'M10 4V1l5 4-5 4V6a5 5 0 1 0 5 5h2a7 7 0 1 1-7-7z',
+    speed: 'M10 3a8 8 0 0 0-7 12h2.4a6 6 0 1 1 9.2 0H17A8 8 0 0 0 10 3zm3.6 3.6-4.3 3.6a1.3 1.3 0 1 0 1.6 1.6z',
+    fs: 'M3 3h5v2H5v3H3zm9 0h5v5h-2V5h-3zM3 12h2v3h3v2H3zm12 0h2v5h-5v-2h3z',
+  };
+
+  // ---------- audio: muto e volume passano da qui ----------
+  let audio = null;            // { ctx, gain, an, data } quando il grafo Web Audio è attivo (idea 6)
+  let isMuted = true, volume = 0.8;
+  function applyAudio() {
+    if (audio) { v.muted = false; audio.gain.gain.value = isMuted ? 0 : volume; }
+    else { v.muted = isMuted; try { v.volume = volume; } catch {} }
+    $$('.js-mute').forEach(b => { b.setAttribute('aria-label', isMuted ? 'Attiva audio' : 'Disattiva audio'); b.classList.toggle('muted', isMuted); });
+    $$('.js-mute-path').forEach(p => p.setAttribute('d', isMuted ? IC.muted : IC.vol));
+  }
+  const setMuted = m => { isMuted = m; applyAudio(); };
+  const setVolume = x => { volume = clamp(x, 0, 1); if (volume > 0 && isMuted) isMuted = false; applyAudio(); };
+  $$('.js-mute').forEach(b => b.onclick = () => setMuted(!isMuted));
+
+  // ---------- comandi comuni ----------
+  const toggle = () => { if (v.paused) v.play().catch(() => {}); else v.pause(); };
+  const seekTo = t => { if (v.duration) v.currentTime = clamp(t, 0, v.duration - 0.05); };
+  const fullscreen = () => {
+    if (document.fullscreenElement) return document.exitFullscreen();
+    if (player.requestFullscreen) return player.requestFullscreen();
+    if (player.webkitRequestFullscreen) return player.webkitRequestFullscreen();
+    if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
+  };
+  $$('.js-play').forEach(b => b.onclick = toggle);
+  $$('.js-fs').forEach(b => b.onclick = fullscreen);
+
+  function syncPlay() {
+    const p = v.paused;
+    $$('.js-play').forEach(b => b.setAttribute('aria-label', p ? 'Riproduci' : 'Pausa'));
+    $$('.js-play-path').forEach(x => x.setAttribute('d', p ? IC.play : IC.pause));
+    if (!ringVol) { $('ringCenter').setAttribute('aria-label', p ? 'Riproduci (tieni premuto per il volume)' : 'Pausa (tieni premuto per il volume)'); $$('.js-center-path').forEach(x => x.setAttribute('d', p ? IC.play : IC.pause)); }
+  }
+  v.addEventListener('play', syncPlay); v.addEventListener('pause', syncPlay);
+
+  // tocco sul video: play/pausa (non nell'idea 3, dove il tocco lungo apre il menu)
+  v.addEventListener('click', () => { if (idea !== 3) toggle(); });
+
+  // ---------- pillola ----------
+  let toastTimer;
+  function toast(text, actionLabel, action, ms = 4000) {
+    $('toastTxt').textContent = text;
+    const b = $('toastBtn');
+    if (actionLabel) { b.hidden = false; b.textContent = actionLabel; b.onclick = () => { action(); hideToast(); }; }
+    else b.hidden = true;
+    $('toast').classList.toggle('noaction', !actionLabel);
+    $('toast').classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(hideToast, ms);
+  }
+  const hideToast = () => $('toast').classList.remove('show');
+
+  // ---------- barra di base ----------
+  const seek = $('seek');
+  let scrubbing = false;
+  seek.addEventListener('input', () => { if (v.duration) v.currentTime = seek.value / 1000 * v.duration; render(); });
+  seek.addEventListener('keydown', e => {
+    if (!v.duration) return;
+    const big = { ArrowRight: 5, ArrowUp: 5, ArrowLeft: -5, ArrowDown: -5 }[e.key];
+    if (big) { e.preventDefault(); seekTo(v.currentTime + (e.shiftKey ? big / 5 : big)); }   // Maiusc = 1 s: precisione anche da tastiera
+  });
+
+  // ============ IDEA 1: ghiera ============
+  const ring = $('ring'), dial = $('dial');
+  const C = 2 * Math.PI * 50;
+  let ringVol = false, ringDrag = false, lastF = 0, volTimer, holdTimer, held = false;
+  function angleFraction(e) {
+    const r = dial.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    let a = Math.atan2(e.clientX - cx, -(e.clientY - cy)); if (a < 0) a += 2 * Math.PI;
+    let f = a / (2 * Math.PI);
+    if (lastF > 0.8 && f < 0.2) f = 1; else if (lastF < 0.2 && f > 0.8) f = 0;   // niente salti passando dalle 12
+    return f;
+  }
+  function ringApply(f) {
+    lastF = f;
+    if (ringVol) { setVolume(f); showRingLabel(`Volume ${Math.round(f * 100)}%`); armVolExit(); }
+    else if (v.duration) { seekTo(f * v.duration); showRingLabel(fmt(f * v.duration)); }
+  }
+  dial.addEventListener('pointerdown', e => {
+    ringDrag = true; dial.setPointerCapture(e.pointerId);
+    lastF = ringVol ? volume : (v.duration ? v.currentTime / v.duration : 0);
+    ringApply(angleFraction(e));
+  });
+  dial.addEventListener('pointermove', e => { if (ringDrag) ringApply(angleFraction(e)); });
+  dial.addEventListener('lostpointercapture', () => { ringDrag = false; });
+  dial.addEventListener('pointerup', () => { ringDrag = false; if (!ringVol) setTimeout(() => $('ringLabel').hidden = true, 700); });
+  function showRingLabel(t) { const l = $('ringLabel'); l.textContent = t; l.hidden = false; }
+  function setRingVol(on) {
+    ringVol = on; ring.classList.toggle('vol', on);
+    ring.setAttribute('aria-label', on ? 'Volume (tasto V per tornare all\'avanzamento)' : 'Avanzamento (tasto V per il volume)');
+    $$('.js-center-path').forEach(x => x.setAttribute('d', on ? (isMuted ? IC.muted : IC.vol) : (v.paused ? IC.play : IC.pause)));
+    $('ringCenter').setAttribute('aria-label', on ? 'Esci dal volume' : (v.paused ? 'Riproduci' : 'Pausa'));
+    if (on) { showRingLabel(`Volume ${Math.round((isMuted ? 0 : volume) * 100)}%`); armVolExit(); say('Volume: gira l\'anello'); }
+    else { $('ringLabel').hidden = true; say('Avanzamento'); }
+    renderRing();
+  }
+  const armVolExit = () => { clearTimeout(volTimer); volTimer = setTimeout(() => { if (!ringDrag) setRingVol(false); }, 3000); };
+  const center = $('ringCenter');
+  center.addEventListener('pointerdown', e => {
+    held = false;
+    holdTimer = setTimeout(() => { held = true; setRingVol(!ringVol); if (navigator.vibrate) navigator.vibrate(10); }, 450);
+  });
+  center.addEventListener('pointerup', () => clearTimeout(holdTimer));
+  center.addEventListener('pointerleave', () => clearTimeout(holdTimer));
+  center.addEventListener('contextmenu', e => e.preventDefault());
+  center.addEventListener('click', () => { if (held) { held = false; return; } if (ringVol) setRingVol(false); else toggle(); });
+  ring.addEventListener('keydown', e => {
+    if (e.target !== ring) return;
+    if (e.key === 'v' || e.key === 'V') { e.preventDefault(); setRingVol(!ringVol); return; }
+    const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+    if (!d) return; e.preventDefault();
+    if (ringVol) { setVolume((isMuted ? 0 : volume) + d * 0.05); showRingLabel(`Volume ${Math.round(volume * 100)}%`); armVolExit(); }
+    else seekTo(v.currentTime + d * 5);
+  });
+  function renderRing() {
+    const f = ringVol ? (isMuted ? 0 : volume) : (v.duration ? v.currentTime / v.duration : 0);
+    $('arc').setAttribute('stroke-dashoffset', (C * (1 - f)).toFixed(2));
+    const a = f * 2 * Math.PI;
+    $('knob').setAttribute('cx', (60 + 50 * Math.sin(a)).toFixed(2));
+    $('knob').setAttribute('cy', (60 - 50 * Math.cos(a)).toFixed(2));
+    ring.setAttribute('aria-valuenow', Math.round(f * 100));
+    ring.setAttribute('aria-valuetext', ringVol ? `Volume ${Math.round(f * 100)}%` : `${fmt(v.currentTime)} di ${fmt(v.duration)}`);
+  }
+
+  // ============ IDEA 2: palette comandi ============
+  const pal = $('palette'), palIn = $('palIn');
+  const SUGG = ['1:20', '+30', '-10', '50%', 'velocità 1.5', 'muto', 'volume 40', 'pausa', 'fine', 'schermo intero'];
+  $('palSugg').innerHTML = SUGG.map(s => `<button type="button" data-s="${s}">${s}</button>`).join('');
+  $('palSugg').onclick = e => { const b = e.target.closest('button'); if (b) { palIn.value = b.dataset.s; runCommand(); } };
+  let palReturn = null;
+  function openPalette() {
+    if (idea !== 2) return;
+    palReturn = document.activeElement; pal.hidden = false; palIn.value = ''; preview(); palIn.focus();
+  }
+  function closePalette() { pal.hidden = true; if (palReturn && palReturn.focus) palReturn.focus(); }
+  $('palBtn').onclick = openPalette;
+  function parse(raw) {
+    const s = raw.trim().toLowerCase().replace(',', '.');
+    if (!s) return null;
+    let m;
+    if ((m = s.match(/^(\d{1,2}):(\d{2})$/))) { const t = +m[1] * 60 + +m[2]; return { label: `Vai a ${fmt(t)}`, run: () => seekTo(t) }; }
+    if ((m = s.match(/^([+-])\s*(\d+)\s*s?$/))) { const d = (m[1] === '-' ? -1 : 1) * +m[2]; return { label: `${d > 0 ? 'Avanti' : 'Indietro'} di ${Math.abs(d)} s`, run: () => seekTo(v.currentTime + d) }; }
+    if ((m = s.match(/^(\d{1,3})\s*%$/))) { const p = clamp(+m[1], 0, 100); return { label: `Vai al ${p}%`, run: () => seekTo(p / 100 * v.duration) }; }
+    if ((m = s.match(/^(\d+)\s*s$/))) { const t = +m[1]; return { label: `Vai a ${fmt(t)}`, run: () => seekTo(t) }; }
+    if ((m = s.match(/^(?:velocit[aà]|speed|vel)?\s*x?\s*(\d(?:\.\d+)?)\s*x?$/)) && /x|vel|speed/.test(s)) {
+      const r = clamp(+m[1], 0.25, 3); return { label: `Velocità ${r}×`, run: () => { v.playbackRate = r; } };
+    }
+    if ((m = s.match(/^vol(?:ume)?\s*(\d{1,3})%?$/))) { const x = clamp(+m[1], 0, 100); return { label: `Volume ${x}%`, run: () => setVolume(x / 100) }; }
+    const words = [
+      [/^(muto|mute|silenzio)$/, 'Disattiva audio', () => setMuted(true)],
+      [/^(audio|unmute|suono|smuta)$/, 'Attiva audio', () => setMuted(false)],
+      [/^(pausa|pause|stop)$/, 'Pausa', () => v.pause()],
+      [/^(play|riproduci|vai|avvia)$/, 'Riproduci', () => v.play()],
+      [/^(inizio|start|da capo)$/, 'Torna all\'inizio', () => seekTo(0)],
+      [/^(fine|end)$/, 'Vai alla fine', () => seekTo(v.duration - 3)],
+      [/^(schermo intero|fullscreen|fs|intero)$/, 'Schermo intero', fullscreen],
+      [/^(sottotitoli|cc|subtitles|sub)$/, 'Sottotitoli: questo video non ne ha', () => {}],
+    ];
+    for (const [re, label, run] of words) if (re.test(s)) return { label, run };
+    return { label: null };
+  }
+  function preview() {
+    const r = parse(palIn.value);
+    $('palOut').innerHTML = !r ? 'Invio per eseguire, Esc per chiudere.'
+      : r.label ? `→ <b>${r.label}</b>` : 'Non capisco ancora. Prova uno dei suggerimenti.';
+  }
+  function runCommand() {
+    const r = parse(palIn.value);
+    if (!r || !r.label) { preview(); return; }
+    r.run(); closePalette(); toast(r.label, null, null, 1800);
+  }
+  palIn.addEventListener('input', preview);
+  palIn.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); runCommand(); }
+    if (e.key === 'Escape') { e.preventDefault(); closePalette(); }
+    if (e.key === 'Tab') { const f = [palIn, ...$$('#palSugg button')]; const i = f.indexOf(document.activeElement); if (e.shiftKey && i === 0) { e.preventDefault(); f[f.length - 1].focus(); } }
+  });
+  pal.addEventListener('keydown', e => { if (e.key === 'Escape') closePalette(); });
+
+  // ============ IDEA 3: menu radiale ============
+  const radial = $('radial');
+  const ITEMS = [
+    { ang: -90, label: () => v.paused ? 'Play' : 'Pausa', icon: () => v.paused ? IC.play : IC.pause, run: toggle },
+    { ang: -30, label: () => '+10 s', icon: () => IC.fwd, run: () => seekTo(v.currentTime + 10) },
+    { ang: 30, label: () => `${v.playbackRate}×`, icon: () => IC.speed, run: () => { const r = [1, 1.5, 2, 0.5]; v.playbackRate = r[(r.indexOf(v.playbackRate) + 1) % r.length] || 1; toast(`Velocità ${v.playbackRate}×`, null, null, 1200); } },
+    { ang: 90, label: () => 'Schermo', icon: () => IC.fs, run: fullscreen },
+    { ang: 150, label: () => isMuted ? 'Audio' : 'Muto', icon: () => isMuted ? IC.muted : IC.vol, run: () => setMuted(!isMuted) },
+    { ang: 210, label: () => '−10 s', icon: () => IC.back, run: () => seekTo(v.currentTime - 10) },
+  ];
+  let radOpen = false, radPress = null, radHot = -1, radCenter = { x: 0, y: 0 }, radSticky = false, radReturn = null;
+  function buildRadial() {
+    radial.querySelectorAll('button').forEach(b => b.remove());
+    const pr = player.getBoundingClientRect();
+    const R = clamp(Math.min(pr.height / 2 - 34, 84), 52, 84);
+    radial.style.setProperty('--r', R + 'px');
+    ITEMS.forEach((it, i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.setAttribute('role', 'menuitem'); b.dataset.i = i;
+      const a = it.ang * Math.PI / 180;
+      b.style.setProperty('--tx', (Math.cos(a) * R).toFixed(1) + 'px');
+      b.style.setProperty('--ty', (Math.sin(a) * R).toFixed(1) + 'px');
+      b.setAttribute('aria-label', it.label());
+      b.innerHTML = `<svg viewBox="0 0 20 20"><path d="${it.icon()}"/></svg><small aria-hidden="true">${it.label()}</small>`;
+      b.onclick = () => { it.run(); closeRadial(); };
+      radial.appendChild(b);
+    });
+    return R;
+  }
+  function openRadial(x, y, keyboard) {
+    const pr = player.getBoundingClientRect();
+    const R = buildRadial(), m = R + 30;
+    radCenter = { x: clamp(x, m, pr.width - m), y: clamp(y, m, pr.height - m) };
+    radial.style.left = radCenter.x + 'px'; radial.style.top = radCenter.y + 'px';
+    radial.hidden = false; radOpen = true; radHot = -1; radReturn = document.activeElement;
+    requestAnimationFrame(() => radial.classList.add('open'));
+    if (navigator.vibrate) navigator.vibrate(10);
+    if (keyboard) { radSticky = true; radial.querySelector('button').focus(); }
+  }
+  function closeRadial() {
+    radial.classList.remove('open'); radOpen = false; radSticky = false; radHot = -1;
+    setTimeout(() => { if (!radOpen) radial.hidden = true; }, 200);
+    if (radReturn && radReturn.focus && radial.contains(document.activeElement)) radReturn.focus();
+  }
+  function hot(i) { radHot = i; radial.querySelectorAll('button').forEach((b, k) => b.classList.toggle('hot', k === i)); }
+  player.addEventListener('pointerdown', e => {
+    if (idea !== 3 || e.target !== v) return;
+    if (radOpen) { closeRadial(); return; }
+    const pr = player.getBoundingClientRect();
+    radPress = { x: e.clientX - pr.left, y: e.clientY - pr.top, id: e.pointerId, t: setTimeout(() => { openRadial(radPress.x, radPress.y); player.setPointerCapture(radPress.id); }, 380) };
+  });
+  player.addEventListener('pointermove', e => {
+    if (idea !== 3 || !radPress) return;
+    const pr = player.getBoundingClientRect(), x = e.clientX - pr.left, y = e.clientY - pr.top;
+    if (!radOpen) { if (Math.hypot(x - radPress.x, y - radPress.y) > 12) { clearTimeout(radPress.t); radPress = null; } return; }
+    const dx = x - radCenter.x, dy = y - radCenter.y;
+    if (Math.hypot(dx, dy) < 26) { hot(-1); return; }
+    const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+    let best = -1, bd = 999;
+    ITEMS.forEach((it, i) => { let d = Math.abs(((ang - it.ang) % 360 + 540) % 360 - 180); if (d < bd) { bd = d; best = i; } });
+    hot(best);
+  });
+  player.addEventListener('pointerup', () => {
+    if (idea !== 3 || !radPress) return;
+    clearTimeout(radPress.t);
+    if (!radOpen) toggle();                                   // tocco breve: play/pausa
+    else if (radHot >= 0) { ITEMS[radHot].run(); closeRadial(); }  // scorri e lascia: esegue
+    else radSticky = true;                                    // lasciato al centro: resta aperto per i tocchi
+    radPress = null;
+  });
+  player.addEventListener('contextmenu', e => { if (idea === 3) e.preventDefault(); });
+  radial.addEventListener('keydown', e => {
+    const bs = [...radial.querySelectorAll('button')], i = bs.indexOf(document.activeElement);
+    if (e.key === 'Escape') { e.preventDefault(); closeRadial(); }
+    if (['ArrowRight', 'ArrowDown'].includes(e.key)) { e.preventDefault(); bs[(i + 1) % bs.length].focus(); }
+    if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { e.preventDefault(); bs[(i - 1 + bs.length) % bs.length].focus(); }
+  });
+  $('radBtn').onclick = () => { const pr = player.getBoundingClientRect(); openRadial(pr.width / 2, pr.height / 2, true); };
+
+  // ============ IDEA 4: scorrimento di precisione ============
+  const wrap = $('seekWrap');
+  const LEVELS = [{ d: 0, f: 1, t: 'velocità piena' }, { d: 50, f: 0.5, t: 'metà velocità' }, { d: 100, f: 0.25, t: 'un quarto' }, { d: 150, f: 0.1, t: 'precisione fine' }];
+  let pScrub = null;
+  wrap.addEventListener('pointerdown', e => {
+    if (idea !== 4 || !v.duration) return;
+    e.preventDefault(); wrap.setPointerCapture(e.pointerId);
+    const r = seek.getBoundingClientRect();
+    const t0 = clamp((e.clientX - r.left) / r.width, 0, 1) * v.duration;   // primo tocco: salta lì, come una barra normale
+    seekTo(t0);
+    pScrub = { x: e.clientX, y: r.top + r.height / 2, t: t0, w: r.width, wasPlaying: !v.paused, lvl: 0 };
+    v.pause(); wrap.classList.add('active'); $('prec').hidden = false; updPrec(t0, 0);
+  });
+  wrap.addEventListener('pointermove', e => {
+    if (!pScrub) return;
+    const dist = Math.abs(e.clientY - pScrub.y);
+    let lvl = 0; LEVELS.forEach((L, i) => { if (dist >= L.d) lvl = i; });
+    if (lvl !== pScrub.lvl && navigator.vibrate) navigator.vibrate(8);
+    pScrub.lvl = lvl;
+    const dx = e.clientX - pScrub.x; pScrub.x = e.clientX;
+    pScrub.t = clamp(pScrub.t + dx / pScrub.w * v.duration * LEVELS[lvl].f, 0, v.duration);
+    seekTo(pScrub.t); updPrec(pScrub.t, lvl);
+  });
+  const endScrub = () => {
+    if (!pScrub) return;
+    if (pScrub.wasPlaying) v.play();
+    pScrub = null; wrap.classList.remove('active'); $('prec').hidden = true;
+  };
+  wrap.addEventListener('pointerup', endScrub); wrap.addEventListener('pointercancel', endScrub); wrap.addEventListener('lostpointercapture', endScrub); window.addEventListener('pointerup', endScrub);
+  function updPrec(t, lvl) {
+    $('precTime').textContent = fmt(t) + '.' + Math.floor((t % 1) * 10);
+    $('precTxt').textContent = LEVELS[lvl].t + (lvl < 3 ? ' · allontana il dito per rallentare' : '');
+    [...$('precSteps').children].forEach((x, i) => x.classList.toggle('on', i <= lvl));
+    $('prec').style.setProperty('--x', clamp(t / v.duration * 100, 12, 88) + '%');
+  }
+
+  // ============ IDEA 5: ripresa intelligente ============
+  const RESUME_AFTER = 8;    // secondi di pausa (nel prototipo 8 s per provarla subito; nella skin: 60 s)
+  let pausedAt = null, pausedPos = 0, seekedInPause = false;
+  v.addEventListener('pause', () => { if (pScrub) return; pausedAt = performance.now(); pausedPos = v.currentTime; seekedInPause = false; });
+  v.addEventListener('seeking', () => { if (v.paused) seekedInPause = true; });
+  v.addEventListener('play', () => {
+    if (idea !== 5 || pausedAt === null || seekedInPause) { pausedAt = null; return; }
+    const away = (performance.now() - pausedAt) / 1000;
+    pausedAt = null;
+    if (away < RESUME_AFTER) return;
+    const back = away > 60 ? 5 : 3;
+    const from = Math.max(0, pausedPos - back);
+    v.currentTime = from;
+    toast(`Ripreso da ${fmt(from)} · eri a ${fmt(pausedPos)}`, 'Annulla', () => { v.currentTime = pausedPos; }, 5000);
+  });
+  function simulateLongPause() {
+    if (!v.paused) v.pause();
+    setTimeout(() => { pausedAt = performance.now() - 120000; pausedPos = v.currentTime; seekedInPause = false; toast('Pausa simulata di 2 minuti: ora premi play', null, null, 2500); }, 50);
+  }
+
+  // ============ IDEA 6: il suono che si vede ============
+  let audioErr = '', soundSince = 0, vuRaf = 0, lvlS = 0;
+  function startAudio() {
+    if (audio || audioErr) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const src = ctx.createMediaElementSource(v);
+      const an = ctx.createAnalyser(); an.fftSize = 512;
+      const gain = ctx.createGain();
+      src.connect(an); an.connect(gain); gain.connect(ctx.destination);   // l'analisi avviene PRIMA del volume: sente anche col muto
+      audio = { ctx, an, gain, data: new Uint8Array(an.fftSize) };
+      applyAudio();
+      if (ctx.state === 'suspended') ctx.resume();
+      v.addEventListener('play', () => ctx.resume());
+      tickVu();
+    } catch (e) { audioErr = e.name; renderPanel(); }
+  }
+  function tickVu() {
+    cancelAnimationFrame(vuRaf);
+    const loop = () => {
+      vuRaf = requestAnimationFrame(loop);
+      if (!audio || idea !== 6) return;
+      audio.an.getByteTimeDomainData(audio.data);
+      let sum = 0; for (const x of audio.data) { const s = (x - 128) / 128; sum += s * s; }
+      const rms = Math.sqrt(sum / audio.data.length);
+      const raw = clamp((rms - 0.01) * 6, 0, 1);
+      lvlS = Math.max(raw, lvlS * 0.94);   // sale subito, scende piano: niente sfarfallio
+      const lvl = lvlS;
+      $$('.mute-btn').forEach(b => b.style.setProperty('--lvl', isMuted && !v.paused ? lvl.toFixed(2) : 0));
+      const bars = $$('.vu i'); bars.forEach((b, i) => { b.style.height = (3 + clamp(lvl * 1.4 - i * 0.25, 0, 1) * 11) + 'px'; });
+      // c'è suono continuo da 2 s mentre l'audio è disattivato → suggerisci di attivarlo
+      const now = performance.now();
+      if (isMuted && !v.paused && lvl > 0.15) { if (!soundSince) soundSince = now; } else if (lvl < 0.05) soundSince = 0;
+      $('soundChip').classList.toggle('show', isMuted && soundSince && now - soundSince > 2000);
+    };
+    loop();
+  }
+  $('soundChip').onclick = () => { setMuted(false); $('soundChip').classList.remove('show'); soundSince = 0; };
+
+  // ============ IDEA 7: tempo umano ============
+  let timeMode = 0;   // 0 = 0:38 / 1:33 · 1 = ancora 55 s · 2 = finisce alle 21:42
+  try { timeMode = +(localStorage.getItem('player-time-mode') || 0); } catch {}
+  const clock = new Intl.DateTimeFormat('it-IT', { hour: '2-digit', minute: '2-digit' });
+  function human(sec) {
+    sec = Math.max(0, Math.round(sec));
+    if (sec < 60) return `${sec} s`;
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return s ? `${m} min ${String(s).padStart(2, '0')} s` : `${m} min`;
+  }
+  function timeText() {
+    const d = v.duration || 0, t = v.currentTime || 0, left = (d - t) / (v.playbackRate || 1);
+    if (idea !== 7 || timeMode === 0) return { short: `${fmt(t)} / ${fmt(d)}`, long: `${fmt(t)} di ${fmt(d)}` };
+    if (timeMode === 1) return { short: `ancora ${human(left)}`, long: `mancano ${human(left)}` };
+    const end = clock.format(new Date(Date.now() + left * 1000));
+    return { short: `finisce alle ${end}`, long: `il video finisce alle ${end}` };
+  }
+  $('time').onclick = () => {
+    if (idea !== 7) return;
+    timeMode = (timeMode + 1) % 3;
+    try { localStorage.setItem('player-time-mode', timeMode); } catch {}
+    render(); say(timeText().long);
+  };
+
+  // ---------- tastiera globale ----------
+  document.addEventListener('keydown', e => {
+    const typing = e.target.closest && e.target.closest('input[type=text], textarea');
+    if (typing) return;
+    if (e.key === '/' && idea === 2) { e.preventDefault(); openPalette(); }
+  });
+
+  // ---------- disegno ----------
+  function render() {
+    const d = v.duration || 0, t = v.currentTime || 0;
+    if (!pScrub && d) seek.value = Math.round(t / d * 1000);
+    seek.style.setProperty('--p', (d ? t / d * 100 : 0) + '%');
+    seek.setAttribute('aria-valuetext', `${fmt(t)} di ${fmt(d)}`);
+    const tt = timeText();
+    $('time').textContent = tt.short;
+    $('time').setAttribute('aria-label', idea === 7 ? `Tempo: ${tt.long}. Premi per cambiare vista` : tt.long);
+    $('time').tabIndex = idea === 7 ? 0 : -1;
+    $('ringTime').textContent = `${fmt(t)} / ${fmt(d)}`;
+    renderRing();
+  }
+  v.addEventListener('timeupdate', render);
+  v.addEventListener('loadedmetadata', render);
+  v.addEventListener('ratechange', render);
+  setInterval(() => { if (idea === 7 && timeMode === 2) render(); }, 15000);
+
+  // ---------- schede e descrizioni ----------
+  const IDEAS = [
+    { n: 1, name: 'Ghiera', title: 'Ghiera: tutto in un cerchio',
+      try: ['Gira l\'anello per spostarti nel video (trascina lungo il cerchio).', 'Tocca il centro per play/pausa.', 'Tieni premuto il centro: l\'anello diventa il volume (color acqua). Torna indietro da solo dopo 3 s.', 'Tastiera: Tab sull\'anello, frecce ±5 s, tasto V per il volume.'],
+      why: 'Una dock rettangolare la hanno tutti. Un cerchio solo, che fa da barra, volume e play, si ricorda. Sui player piccoli (telefono verticale) occupa meno spazio di una barra.',
+      risk: 'Il regolamento chiede una "barra di avanzamento": nella skin, sopra una certa larghezza, l\'anello potrebbe aprirsi in una linea.' },
+    { n: 2, name: 'Palette /', title: 'Palette comandi con /',
+      try: ['Premi / sulla tastiera (oppure il tasto "Comandi").', 'Scrivi 1:20, +30, -10, 50%, velocità 1.5, 2x, muto, volume 40, fine, schermo intero.', 'Vedi in anteprima cosa farà, poi Invio. Esc chiude e il focus torna dov\'era.'],
+      why: 'Nessun player ha una riga di comando. Per chi usa solo la tastiera o uno screen reader è più veloce di qualunque slider: "1:20" porta esattamente lì.',
+      risk: 'Su telefono serve meno (niente tastiera fisica): lì resta il tasto "Comandi".' },
+    { n: 3, name: 'Menu radiale', title: 'Menu radiale sotto il pollice',
+      try: ['Tieni premuto sul video (dito o mouse) per mezzo secondo: i comandi si aprono in cerchio intorno al punto.', 'Senza staccare, scorri verso un comando e lascia: lo esegue.', 'Se lasci al centro, il menu resta aperto e puoi toccare.', 'Tocco breve = play/pausa. Tastiera: tasto "Menu", frecce, Esc.'],
+      why: 'I comandi arrivano dove sei tu, invece di cercarli in basso. Un gesto solo: premi, scorri, lascia. Con il telefono in mano si usa senza guardare.',
+      risk: 'È un gesto da scoprire: serve un piccolo suggerimento la prima volta.' },
+    { n: 4, name: 'Precisione', title: 'Scorrimento di precisione',
+      try: ['Premi sulla barra e trascina.', 'Mentre trascini, allontana il dito dalla barra (in su o in giù): il cursore rallenta a metà, un quarto, fine.', 'La pillola mostra decimi di secondo e il livello. Tastiera: frecce ±5 s, Maiusc + frecce ±1 s.'],
+      why: 'Su un telefono 1 pixel della barra vale più di mezzo secondo: centrare un punto è difficile. Qui la precisione si regola con la distanza, senza menu.',
+      risk: 'Invisibile finché non lo provi: va spiegato dalla pillola durante il trascinamento (già fatto).' },
+    { n: 5, name: 'Ripresa', title: 'Ripresa intelligente',
+      try: ['Metti in pausa, aspetta 8 secondi (nella skin: 1 minuto), poi premi play.', 'Il video riparte 3 secondi prima (5 dopo una pausa lunga) e lo dice. "Annulla" torna al punto esatto.', 'Oppure usa "Simula pausa di 2 minuti" qui sotto.'],
+      why: 'Dopo una pausa si perde il filo. Nessuna skin pensa a cosa succede quando torni: è una cortesia piccola, che si nota.',
+      risk: 'Se hai spostato il cursore durante la pausa, non interviene (giusto: hai scelto tu il punto).' },
+    { n: 6, name: 'Suono visibile', title: 'Il suono che si vede',
+      try: ['Avvia il video: parte con l\'audio disattivato.', 'Guarda il tasto del volume: pulsa quando nel video c\'è suono.', 'Dopo 2 s di suono continuo compare "C\'è audio: attivalo". Con l\'audio attivo, tre barrette mostrano il livello.'],
+      why: 'Rende visibile l\'audio: sai che ti stai perdendo qualcosa anche col muto. Utile anche a chi non sente. Prossimo passo: riconoscere il parlato e proporre i sottotitoli.',
+      risk: 'Serve Web Audio sul video: con Mux funziona (CORS). Con "riduci movimento" l\'anello non pulsa, resta acceso.' },
+    { n: 7, name: 'Tempo umano', title: 'Tempo umano',
+      try: ['Tocca il tempo nella dock: 0:38 / 1:33 → ancora 55 s → finisce alle 21:42.', 'La scelta resta salvata. Con velocità 2× "finisce alle" si aggiorna da solo.'],
+      why: '"Finisce alle" risponde alla domanda vera: "ce la faccio prima di uscire?". Nessun player standard lo mostra.',
+      risk: 'Piccola: da sola non vince, ma è un dettaglio che i giudici notano.' },
+  ];
+  $('tabs').innerHTML = IDEAS.map(i => `<button class="tab" role="tab" id="tab-${i.n}" aria-controls="panel" aria-selected="false" data-n="${i.n}">Idea ${i.n} · ${i.name}</button>`).join('');
+  function renderPanel() {
+    const it = IDEAS[idea - 1];
+    $('panel').setAttribute('aria-labelledby', 'tab-' + idea);
+    $('panel').innerHTML = `
+      <h2>${it.title}</h2>
+      <h3>Prova</h3><ul>${it.try.map(t => `<li>${t}</li>`).join('')}</ul>
+      <h3>Cosa c'è di nuovo</h3><p>${it.why}</p>
+      <h3>Rischio</h3><p>${it.risk}</p>
+      ${idea === 5 ? '<div class="try"><button class="pbtn" id="simPause" type="button">Simula pausa di 2 minuti</button></div>' : ''}
+      ${idea === 6 && audioErr ? `<p><b>Audio non leggibile qui:</b> ${audioErr}</p>` : ''}`;
+    const sp = $('simPause'); if (sp) sp.onclick = simulateLongPause;
+  }
+  function setIdea(n, focusTab) {
+    idea = n;
+    player.dataset.idea = n;
+    $$('.tab').forEach(t => { const on = +t.dataset.n === n; t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1; });
+    if (focusTab) $('tab-' + n).focus();
+    if (!pal.hidden) closePalette();
+    if (radOpen) closeRadial();
+    endScrub();
+    if (ringVol) setRingVol(false);
+    if (n === 6) startAudio();        // il clic sulla scheda è il gesto che sblocca l'audio
+    try { history.replaceState(null, '', '#idea-' + n); } catch {}
+    renderPanel(); render(); syncPlay();
+  }
+  $('tabs').addEventListener('click', e => { const t = e.target.closest('.tab'); if (t) setIdea(+t.dataset.n); });
+  $('tabs').addEventListener('keydown', e => {
+    const d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+    if (d) { e.preventDefault(); setIdea((idea - 1 + d + 7) % 7 + 1, true); }
+    if (e.key === 'Home') { e.preventDefault(); setIdea(1, true); }
+    if (e.key === 'End') { e.preventDefault(); setIdea(7, true); }
+  });
+
+  applyAudio();
+  const start = +(location.hash.match(/idea-(\d)/) || [])[1];
+  setIdea(start >= 1 && start <= 7 ? start : 1);
+})();
+</script>
+</body>
+</html>

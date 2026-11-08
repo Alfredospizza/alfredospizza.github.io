@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Prova camaleonte</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f6fc; --fg: #131417; --muted: #56585f; --card: #ffffff; --line: rgb(19 20 23 / 0.12);
+    --ok: #1d7a2e; --ko: #b3261e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #131417; --fg: #f5f6fc; --muted: #bbbdc6; --card: #25262c; --line: rgb(245 246 252 / 0.14); --ok: #6fd67f; --ko: #ff8a80; }
+  }
+  @property --acc  { syntax: "<color>"; inherits: true; initial-value: #8a81f0; }
+  @property --accs { syntax: "<color>"; inherits: true; initial-value: #6a43f3; }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 16px max(16px, env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  }
+  main { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin: 0 0 4px; }
+  h2 { font-size: 1rem; margin: 0 0 8px; }
+  p { margin: 0 0 12px; color: var(--muted); }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-top: 14px; }
+  video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  button {
+    font: inherit; font-weight: 600; color: var(--fg); background: transparent;
+    border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; min-height: 44px; cursor: pointer;
+  }
+  button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+  button:focus-visible { outline: 2px solid #8a81f0; outline-offset: 2px; }
+
+  #verdict { font-size: 1.05rem; font-weight: 700; margin: 0; }
+  #verdict.ok { color: var(--ok); } #verdict.ko { color: var(--ko); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; width: 46%; }
+  td { font-variant-numeric: tabular-nums; word-break: break-word; }
+
+  .sample { display: flex; gap: 12px; align-items: center; }
+  #c { width: 128px; height: 72px; image-rendering: pixelated; border-radius: 6px; background: #000; flex: none; }
+
+  /* Mini dock: colori dal camaleonte, dissolvenza con @property */
+  .dock {
+    margin-top: 12px; padding: 12px; border-radius: 16px; background: rgb(19 20 23 / 0.92);
+    display: flex; align-items: center; gap: 12px;
+    transition: --acc 800ms ease, --accs 800ms ease;
+  }
+  .dock .play { width: 44px; height: 44px; border-radius: 50%; background: var(--accs); display: grid; place-items: center; flex: none; }
+  .dock .play svg { width: 18px; height: 18px; fill: #fff; }
+  .dock .track { flex: 1; height: 6px; border-radius: 3px; background: rgb(245 246 252 / 0.14); position: relative; }
+  .dock .fill { position: absolute; inset: 0 40% 0 0; border-radius: 3px; background: var(--acc); }
+  .dock .thumb { position: absolute; left: 60%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--acc); }
+  @media (prefers-reduced-motion: reduce) { .dock { transition: none; } }
+
+  .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; border: 1px solid var(--line); }
+  #log { font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace; white-space: pre-wrap; margin: 0; color: var(--muted); max-height: 220px; overflow: auto; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Prova camaleonte</h1>
+  <p>Pagina di test, non fa parte della skin. Avvia il video e aspetta qualche secondo: la pagina prova a leggere i colori del fotogramma e mostra cosa ottiene.</p>
+
+  <section aria-labelledby="t-video">
+    <h2 id="t-video">1. Video</h2>
+    <video id="v" controls playsinline muted crossorigin="anonymous"
+      poster="https://image.mux.com/1U7atblCas8wrFyf4jKbsZ7b00bTQLeBGl9xw9yN7Qt8/thumbnail.webp?time=47"></video>
+    <div class="row" role="group" aria-label="Modo di riproduzione">
+      <button type="button" id="m-native" aria-pressed="false">HLS nativo (Safari)</button>
+      <button type="button" id="m-hls" aria-pressed="false">hls.js (come Chrome)</button>
+    </div>
+    <div class="row" role="group" aria-label="Vai alla scena">
+      <button type="button" data-t="5">prato 0:05</button>
+      <button type="button" data-t="20">campi 0:20</button>
+      <button type="button" data-t="47">interno 0:47</button>
+      <button type="button" data-t="70">tramonto 1:10</button>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-res" aria-live="polite">
+    <h2 id="t-res">2. Risultato</h2>
+    <p id="verdict">In attesa: premi play sul video.</p>
+    <div class="dock" id="dock" aria-hidden="true">
+      <div class="play"><svg viewBox="0 0 18 18"><path d="M5 3.5v11l9-5.5z"/></svg></div>
+      <div class="track"><div class="fill"></div><div class="thumb"></div></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-det">
+    <h2 id="t-det">3. Dettagli</h2>
+    <div class="sample">
+      <canvas id="c" width="16" height="9" aria-label="I 144 pixel letti dal video"></canvas>
+      <p style="margin:0">Questi sono i 16 × 9 pixel letti dal video. Se il riquadro resta nero mentre il video va, il browser non fa leggere i fotogrammi.</p>
+    </div>
+    <table>
+      <tbody id="info"></tbody>
+    </table>
+    <div class="row">
+      <button type="button" id="now">Campiona adesso</button>
+      <button type="button" id="copy">Copia risultati</button>
+    </div>
+    <span id="copied" class="sr" aria-live="polite"></span>
+  </section>
+
+  <section aria-labelledby="t-log">
+    <h2 id="t-log">4. Ultimi campioni</h2>
+    <pre id="log">—</pre>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+<script>
+(() => {
+  const PID = '1U7atblCas8wrFyf4jKbsZ7b00bTQLeBGl9xw9yN7Qt8';
+  const SRC = `https://stream.mux.com/${PID}.m3u8`;
+  const TRACK = [0x43, 0x44, 0x47];          // binario scuro (fg 14% sulla dock)
+  const DOCK_ON_WHITE = blend([0x13, 0x14, 0x17], [255, 255, 255], 0.92);
+  const WHITE = [255, 255, 255];
+  const FALLBACK = { fill: '#8a81f0', strong: '#6a43f3' };
+  const INTERVAL = 2000, HYSTERESIS = 25;
+
+  const $ = id => document.getElementById(id);
+  const v = $('v'), canvas = $('c'), dock = $('dock');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  let hls = null, mode = '', last = 0, appliedHue = null, samples = 0, okReads = 0, blackReads = 0;
+  const state = { error: '', lastRaw: null, colours: null, log: [] };
+
+  // ---------- colore (stesse funzioni di docs/CHAMELEON.md) ----------
+  function toLin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }
+  function toSrgb(x) { x = Math.min(1, Math.max(0, x)); return Math.round((x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055) * 255); }
+  function rgbToOklch([r, g, b]) {
+    r = toLin(r); g = toLin(g); b = toLin(b);
+    const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+    const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+    const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+    const L = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s;
+    const A = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s;
+    const B = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
+    return [L, Math.hypot(A, B), (Math.atan2(B, A) * 180 / Math.PI + 360) % 360];
+  }
+  function oklchToRgb([L, C, h]) {
+    const a = C * Math.cos(h * Math.PI / 180), b = C * Math.sin(h * Math.PI / 180);
+    const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+    const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+    const s = (L - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+    return [
+      toSrgb( 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+      toSrgb(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+      toSrgb(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s),
+    ];
+  }
+  function luminance([r, g, b]) { return 0.2126 * toLin(r) + 0.7152 * toLin(g) + 0.0722 * toLin(b); }
+  function contrast(x, y) { const a = luminance(x), b = luminance(y); return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05); }
+  function blend(fg, bg, a) { return fg.map((c, i) => Math.round(c * a + bg[i] * (1 - a))); }
+  const hex = rgb => '#' + rgb.map(c => c.toString(16).padStart(2, '0')).join('');
+
+  function dominantHue(data) {
+    let x = 0, y = 0, W = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const [L, C, h] = rgbToOklch([data[i], data[i + 1], data[i + 2]]);
+      if (L < 0.15 || L > 0.95 || C < 0.03) continue;
+      const w = C * C, rad = h * Math.PI / 180;
+      x += Math.cos(rad) * w; y += Math.sin(rad) * w; W += w;
+    }
+    if (W < 0.002) return null;
+    return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  }
+
+  function coloursFor(h) {
+    const C = 0.16;
+    // riempimento: L più bassa con contrasto >= 3 contro il binario
+    let lo = 0.40, hi = 0.95;
+    if (contrast(oklchToRgb([hi, C, h]), TRACK) < 3) return null;
+    for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2; contrast(oklchToRgb([m, C, h]), TRACK) >= 3 ? hi = m : lo = m; }
+    const fill = oklchToRgb([hi, C, h]);
+    // fondo del play: L più alta con bianco >= 4,5
+    lo = 0.20; hi = 0.75;
+    if (contrast(oklchToRgb([lo, C, h]), WHITE) < 4.5) return null;
+    for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2; contrast(oklchToRgb([m, C, h]), WHITE) >= 4.5 ? lo = m : hi = m; }
+    const strong = oklchToRgb([lo, C, h]);
+    return { fill: hex(fill), strong: hex(strong), cTrack: contrast(fill, TRACK), cDock: contrast(fill, DOCK_ON_WHITE), cWhite: contrast(strong, WHITE) };
+  }
+
+  const hueDist = (a, b) => { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; };
+
+  // ---------- campionamento ----------
+  function sample(force) {
+    if (!force && (v.paused || document.hidden)) return;
+    if (v.readyState < 2) return;
+    samples++;
+    const entry = { t: v.currentTime.toFixed(1) + 's' };
+    try {
+      ctx.drawImage(v, 0, 0, 16, 9);
+      const data = ctx.getImageData(0, 0, 16, 9).data;
+      let sum = 0; for (let i = 0; i < data.length; i += 4) sum += data[i] + data[i + 1] + data[i + 2];
+      if (sum === 0) { blackReads++; entry.res = 'fotogramma nero'; state.error = ''; apply(null); }
+      else {
+        okReads++; state.error = '';
+        const h = dominantHue(data);
+        state.lastRaw = h;
+        if (h === null) { entry.res = 'nessuna tinta → indaco'; apply(null); }
+        else {
+          if (force || appliedHue === null || hueDist(h, appliedHue) > HYSTERESIS) appliedHue = h;
+          const col = coloursFor(appliedHue);
+          entry.res = `tinta ${Math.round(h)}° (usata ${Math.round(appliedHue)}°) → ${col ? col.fill + ' / ' + col.strong : 'fuori gamma → indaco'}`;
+          apply(col);
+        }
+      }
+    } catch (e) {
+      state.error = e.name + (e.message ? ': ' + e.message : '');
+      entry.res = 'ERRORE ' + e.name;
+      apply(null);
+    }
+    state.log.unshift(entry.t + '  ' + entry.res);
+    state.log.length = Math.min(state.log.length, 12);
+    render();
+  }
+
+  function apply(col) {
+    state.colours = col;
+    const c = col || FALLBACK;
+    dock.style.setProperty('--acc', c.fill);
+    dock.style.setProperty('--accs', c.strong);
+  }
+
+  function loop() {
+    const now = performance.now();
+    if (now - last >= INTERVAL) { last = now; sample(false); }
+    if ('requestVideoFrameCallback' in v) v.requestVideoFrameCallback(loop);
+  }
+  if ('requestVideoFrameCallback' in v) v.requestVideoFrameCallback(loop);
+  else setInterval(() => sample(false), INTERVAL);
+
+  v.addEventListener('play', () => { if ('requestVideoFrameCallback' in v) v.requestVideoFrameCallback(loop); });
+  v.addEventListener('seeked', () => sample(true));
+  v.addEventListener('loadeddata', () => sample(true));
+  v.addEventListener('error', () => { state.error = 'errore video ' + (v.error && v.error.code); render(); });
+
+  // ---------- modi di riproduzione ----------
+  const canNative = !!v.canPlayType('application/vnd.apple.mpegurl');
+  const canHls = !!(window.Hls && Hls.isSupported());
+
+  function setMode(m) {
+    if (hls) { hls.destroy(); hls = null; }
+    v.removeAttribute('src'); v.load();
+    appliedHue = null; samples = okReads = blackReads = 0; state.log = []; state.error = '';
+    if (m === 'native') v.src = SRC;
+    else { hls = new Hls(); hls.loadSource(SRC); hls.attachMedia(v); }
+    mode = m;
+    $('m-native').setAttribute('aria-pressed', String(m === 'native'));
+    $('m-hls').setAttribute('aria-pressed', String(m === 'hls'));
+    render();
+  }
+  $('m-native').disabled = !canNative;
+  $('m-hls').disabled = !canHls;
+  $('m-native').onclick = () => setMode('native');
+  $('m-hls').onclick = () => setMode('hls');
+  document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { v.currentTime = +b.dataset.t; });
+  $('now').onclick = () => sample(true);
+
+  // ---------- resoconto ----------
+  function rows() {
+    const c = state.colours;
+    return [
+      ['Browser', navigator.userAgent],
+      ['Modo', mode === 'native' ? 'HLS nativo' : mode === 'hls' ? 'hls.js (MSE)' : '—'],
+      ['HLS nativo disponibile', canNative ? 'sì' : 'no'],
+      ['hls.js disponibile', canHls ? 'sì' : 'no'],
+      ['crossOrigin del video', v.crossOrigin || '(vuoto)'],
+      ['requestVideoFrameCallback', 'requestVideoFrameCallback' in v ? 'sì' : 'no (uso setInterval)'],
+      ['@property (CSS.registerProperty)', window.CSS && CSS.registerProperty ? 'sì' : 'no'],
+      ['Campioni', `${samples} totali · ${okReads} letti · ${blackReads} neri`],
+      ['Errore', state.error || 'nessuno'],
+      ['Tinta letta', state.lastRaw == null ? '—' : Math.round(state.lastRaw) + '°'],
+      ['Riempimento barra', c ? `${c.fill} · ${c.cTrack.toFixed(2)}:1 sul binario · ${c.cDock.toFixed(2)}:1 sulla dock` : 'indaco ' + FALLBACK.fill],
+      ['Fondo del play', c ? `${c.strong} · bianco ${c.cWhite.toFixed(2)}:1` : 'indaco ' + FALLBACK.strong],
+    ];
+  }
+
+  function render() {
+    const vd = $('verdict');
+    if (state.error) { vd.textContent = '✗ Non funziona: ' + state.error; vd.className = 'ko'; }
+    else if (okReads > 0) { vd.textContent = `✓ Funziona: il browser fa leggere i colori (${okReads} campioni).`; vd.className = 'ok'; }
+    else if (blackReads > 0) { vd.textContent = '✗ Fotogrammi neri: il browser non fa leggere i colori. Scatta il fallback indaco.'; vd.className = 'ko'; }
+    else { vd.textContent = mode ? 'In attesa: premi play sul video.' : 'Scegli un modo di riproduzione.'; vd.className = ''; }
+
+    $('info').innerHTML = rows().map(([k, val], i) => {
+      const sw = (i === 10 || i === 11) ? `<span class="sw" style="background:${(state.colours || FALLBACK)[i === 10 ? 'fill' : 'strong']}"></span>` : '';
+      return `<tr><th scope="row">${k}</th><td>${sw}${String(val).replace(/</g, '&lt;')}</td></tr>`;
+    }).join('');
+    $('log').textContent = state.log.length ? state.log.join('\n') : '—';
+  }
+
+  $('copy').onclick = async () => {
+    const text = ['Prova camaleonte', $('verdict').textContent, ...rows().map(([k, val]) => `${k}: ${val}`), '', ...state.log].join('\n');
+    try { await navigator.clipboard.writeText(text); }
+    catch { const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+    $('copy').textContent = 'Copiato ✓'; $('copied').textContent = 'Risultati copiati';
+    setTimeout(() => { $('copy').textContent = 'Copia risultati'; }, 2000);
+  };
+
+  apply(null);
+  setMode(canNative ? 'native' : 'hls');
+})();
+</script>
+</body>
+</html>

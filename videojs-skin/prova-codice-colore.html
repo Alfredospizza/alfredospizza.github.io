@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Codice colore e vetro adattivo</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f6fc; --fg: #131417; --muted: #56585f; --card: #ffffff; --line: rgb(19 20 23 / 0.12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #131417; --fg: #f5f6fc; --muted: #bbbdc6; --card: #25262c; --line: rgb(245 246 252 / 0.14); }
+  }
+  @property --d-surface { syntax: "<color>"; inherits: true; initial-value: rgb(19 20 23 / 0.92); }
+  @property --d-fg      { syntax: "<color>"; inherits: true; initial-value: #f5f6fc; }
+  @property --d-line    { syntax: "<color>"; inherits: true; initial-value: rgb(245 246 252 / 0.14); }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 16px max(16px, env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin: 0 0 4px; }
+  h2 { font-size: 1rem; margin: 0 0 8px; }
+  p { margin: 0 0 12px; color: var(--muted); }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-top: 14px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .panel-btn {
+    font: inherit; font-weight: 600; color: var(--fg); background: transparent;
+    border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; min-height: 44px; cursor: pointer;
+  }
+  .panel-btn[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+  :focus-visible { outline: 2px solid #8a81f0; outline-offset: 2px; }
+
+  /* ---------- player ---------- */
+  .player { position: relative; border-radius: 16px; overflow: hidden; background: #000; container-type: inline-size; }
+  .player video { display: block; width: 100%; aspect-ratio: 16 / 9; }
+
+  .dock {
+    position: absolute; left: 10px; right: 10px; bottom: 10px;
+    padding: 6px 10px 8px; border-radius: 18px;
+    background: var(--d-surface); color: var(--d-fg);
+    border: 1px solid var(--d-line);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    transition: --d-surface 600ms ease, --d-fg 600ms ease, --d-line 600ms ease;
+  }
+  .bar { display: flex; align-items: center; gap: 4px; }
+  .bar .spacer { flex: 1; }
+  .dbtn {
+    width: 40px; height: 40px; border-radius: 50%; border: 0; padding: 0; display: grid; place-items: center;
+    background: transparent; color: inherit; cursor: pointer;
+  }
+  .dbtn:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+  .dbtn svg { width: 20px; height: 20px; fill: currentColor; }
+  .dbtn.primary { background: #6a43f3; color: #fff; width: 44px; height: 44px; }
+  .dbtn.primary:hover { background: #552fca; }
+  .dbtn:focus-visible, .seek:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+  .time { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 0.875rem; padding: 0 6px; white-space: nowrap; }
+  .scene { font-size: 0.8125rem; opacity: 0.85; white-space: nowrap; padding-right: 4px; }
+  @container (max-width: 420px) { .scene { display: none; } }
+
+  /* ---------- timeline (input range: tastiera e screen reader gratis) ---------- */
+  .seek-wrap { position: relative; }
+  .seek {
+    --p: 0%; --h: 5px;
+    --code: linear-gradient(to right, #9889ff, #9889ff);
+    -webkit-appearance: none; appearance: none; display: block;
+    width: 100%; height: 26px; margin: 0; background: transparent; cursor: pointer;
+  }
+  .seek-wrap:hover .seek, .seek:focus-visible, .seek.dragging { --h: 12px; }
+  .seek::-webkit-slider-runnable-track {
+    height: var(--h); border-radius: 999px; transition: height 160ms ease;
+    background: var(--track-bg);
+  }
+  .seek::-moz-range-track { height: var(--h); border-radius: 999px; background: var(--track-bg); }
+  .seek::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; border-radius: 50%; margin-top: calc((var(--h) - 16px) / 2);
+    background: #fff; box-shadow: 0 0 0 2px #131417, 0 2px 6px rgb(0 0 0 / 0.4);
+    transition: margin-top 160ms ease;
+  }
+  .seek::-moz-range-thumb { width: 16px; height: 16px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px #131417, 0 2px 6px rgb(0 0 0 / 0.4); }
+
+  /* senza codice colore: barra classica */
+  .seek { --track-bg: linear-gradient(to right, #9889ff var(--p), color-mix(in srgb, currentColor 18%, transparent) var(--p)); }
+  /* con codice colore: tutto il film, la parte non ancora vista velata */
+  .coded .seek { --track-bg: linear-gradient(to right, transparent var(--p), rgb(10 10 12 / 0.62) var(--p)), var(--code); }
+
+  .tip {
+    position: absolute; bottom: calc(100% + 6px); transform: translateX(-50%);
+    display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+    background: #131417; color: #f5f6fc; font-size: 0.75rem; font-weight: 600; font-variant-numeric: tabular-nums;
+    white-space: nowrap; pointer-events: none; box-shadow: 0 6px 18px rgb(0 0 0 / 0.35);
+  }
+  .tip[hidden] { display: none; }
+  .tip i { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 1px rgb(255 255 255 / 0.5); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dock, .seek::-webkit-slider-runnable-track, .seek::-webkit-slider-thumb { transition: none; }
+  }
+  @media (forced-colors: active) {
+    .dock { background: Canvas; color: CanvasText; border-color: CanvasText; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .seek { --track-bg: CanvasText !important; }
+  }
+
+  /* ---------- mappa colori ---------- */
+  .map { height: 44px; border-radius: 10px; background: var(--code, #444); }
+  .map-scale { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; width: 46%; }
+  td { font-variant-numeric: tabular-nums; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Codice colore e vetro adattivo</h1>
+  <p>Prototipo delle idee 2 e 3, fuori dalla skin. La barra di avanzamento mostra i colori di tutto il film e si divide in scene. La dock diventa trasparente quanto può, chiara o scura a seconda della scena, senza mai scendere sotto il contrasto 4,5:1.</p>
+
+  <div class="player coded" id="player">
+    <video id="v" playsinline muted crossorigin="anonymous"
+      poster="https://image.mux.com/1U7atblCas8wrFyf4jKbsZ7b00bTQLeBGl9xw9yN7Qt8/thumbnail.webp?time=47"></video>
+    <div class="dock" id="dock">
+      <div class="seek-wrap" id="seekWrap">
+        <input class="seek" id="seek" type="range" min="0" max="1000" step="1" value="0" aria-label="Avanzamento">
+        <div class="tip" id="tip" hidden><i id="tipSw"></i><span id="tipTxt"></span></div>
+      </div>
+      <div class="bar">
+        <button class="dbtn primary" id="play" type="button" aria-label="Riproduci">
+          <svg viewBox="0 0 20 20" id="playIcon"><path d="M6 3.8v12.4c0 .8.9 1.3 1.6.9l10-6.2c.6-.4.6-1.4 0-1.8l-10-6.2C6.9 2.5 6 3 6 3.8z"/></svg>
+        </button>
+        <button class="dbtn" id="prev" type="button" aria-label="Scena precedente">
+          <svg viewBox="0 0 20 20"><path d="M4 4h2v12H4zM16 4.6v10.8c0 .8-.9 1.2-1.5.8L7.4 11a1.2 1.2 0 0 1 0-2l7.1-5.2c.6-.4 1.5 0 1.5.8z"/></svg>
+        </button>
+        <button class="dbtn" id="next" type="button" aria-label="Scena successiva">
+          <svg viewBox="0 0 20 20"><path d="M14 4h2v12h-2zM4 4.6v10.8c0 .8.9 1.2 1.5.8l7.1-5.2a1.2 1.2 0 0 0 0-2L5.5 3.8C4.9 3.4 4 3.8 4 4.6z"/></svg>
+        </button>
+        <span class="time" id="time">0:00 / 0:00</span>
+        <span class="spacer"></span>
+        <span class="scene" id="sceneLbl">—</span>
+      </div>
+    </div>
+  </div>
+  <div id="live" class="sr" aria-live="polite"></div>
+
+  <section aria-labelledby="t-ctl">
+    <h2 id="t-ctl">Interruttori</h2>
+    <div class="row">
+      <button type="button" class="panel-btn" id="tCode" aria-pressed="true">Codice colore: sì</button>
+      <button type="button" class="panel-btn" id="tGlass" aria-pressed="true">Vetro adattivo: sì</button>
+    </div>
+    <p style="margin:10px 0 0">Tasti: <kbd>[</kbd> e <kbd>]</kbd> per la scena precedente e successiva, frecce sulla barra per spostarsi di 5 secondi.</p>
+  </section>
+
+  <section aria-labelledby="t-map">
+    <h2 id="t-map">La mappa colori del film</h2>
+    <p>Un colore ogni 1,9 secondi, preso dalle miniature che Mux genera già per l'anteprima della barra. Le linee sottili sono i cambi di scena trovati in automatico.</p>
+    <div class="map" id="map" role="img" aria-label="Mappa colori del film"></div>
+    <div class="map-scale"><span>0:00</span><span id="mapEnd">—</span></div>
+  </section>
+
+  <section aria-labelledby="t-det">
+    <h2 id="t-det">Dettagli</h2>
+    <table><tbody id="info"></tbody></table>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+<script>
+(() => {
+  const PID = '1U7atblCas8wrFyf4jKbsZ7b00bTQLeBGl9xw9yN7Qt8';
+  const SRC = `https://stream.mux.com/${PID}.m3u8`;
+  const STORYBOARD = `https://image.mux.com/${PID}/storyboard.vtt?format=webp`;
+
+  const $ = id => document.getElementById(id);
+  const v = $('v'), player = $('player'), dock = $('dock'), seek = $('seek');
+
+  // ===== colore =====
+  const toLin = c => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  const toSrgb = x => { x = Math.min(1, Math.max(0, x)); return Math.round((x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055) * 255); };
+  function rgbToOklab([r, g, b]) {
+    r = toLin(r); g = toLin(g); b = toLin(b);
+    const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+    const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+    const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+    return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+            1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+            0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
+  }
+  function oklabToRgb([L, a, b]) {
+    const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+    const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+    const s = (L - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+    return [toSrgb(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+            toSrgb(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+            toSrgb(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s)];
+  }
+  const luminance = ([r, g, b]) => 0.2126 * toLin(r) + 0.7152 * toLin(g) + 0.0722 * toLin(b);
+  const contrast = (x, y) => { const a = luminance(x), b = luminance(y); return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05); };
+  const blend = (fg, bg, a) => fg.map((c, i) => c * a + bg[i] * (1 - a));
+  const hex = rgb => '#' + rgb.map(c => Math.round(c).toString(16).padStart(2, '0')).join('');
+  const fmt = t => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
+
+  // ===== idea 2: codice colore =====
+  let tiles = [];          // { start, end, lab, display }
+  let scenes = [];         // tempi di inizio scena
+  let codeOn = true;
+  const SCENE_DELTA = 0.07; // distanza OKLab tra due miniature vicine che conta come cambio scena
+
+  async function buildCode() {
+    const vtt = await (await fetch(STORYBOARD)).text();
+    const cues = [];
+    const re = /(\d+):(\d+):(\d+\.\d+)\s+-->\s+(\d+):(\d+):(\d+\.\d+)\s+(\S+)#xywh=(\d+),(\d+),(\d+),(\d+)/g;
+    let m, url = '';
+    while ((m = re.exec(vtt))) {
+      const t = (h, mi, s) => +h * 3600 + +mi * 60 + +s;
+      cues.push({ start: t(m[1], m[2], m[3]), end: t(m[4], m[5], m[6]), x: +m[8], y: +m[9], w: +m[10], h: +m[11] });
+      url = m[7];
+    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = url;
+    await img.decode();
+    const c = document.createElement('canvas'); c.width = 16; c.height = 9;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    tiles = cues.map(q => {
+      ctx.drawImage(img, q.x, q.y, q.w, q.h, 0, 0, 16, 9);
+      const d = ctx.getImageData(0, 0, 16, 9).data;
+      // due medie in OKLab: semplice (per trovare le scene) e pesata per la saturazione (per il colore da mostrare)
+      let L = 0, A = 0, B = 0, n = 0, wL = 0, wA = 0, wB = 0, W = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const [l, a, b] = rgbToOklab([d[i], d[i + 1], d[i + 2]]);
+        L += l; A += a; B += b; n++;
+        const w = 0.0004 + a * a + b * b;          // i pixel più colorati contano di più, i grigi quasi nulla
+        wL += l * w; wA += a * w; wB += b * w; W += w;
+      }
+      const lab = [L / n, A / n, B / n];
+      // per la barra: luminosità tra 0,45 e 0,80, così ogni striscia si vede su dock chiara e scura
+      const disp = [Math.min(0.80, Math.max(0.45, wL / W)), wA / W * 1.2, wB / W * 1.2];
+      return { start: q.start, end: q.end, lab, display: hex(oklabToRgb(disp)) };
+    });
+    // scene: salto di colore grande rispetto alla miniatura precedente, almeno 2 miniature per scena
+    scenes = [0];
+    for (let i = 1; i < tiles.length; i++) {
+      const [l1, a1, b1] = tiles[i - 1].lab, [l2, a2, b2] = tiles[i].lab;
+      const dE = Math.hypot(l2 - l1, a2 - a1, b2 - b1);
+      tiles[i].dE = dE;
+      const lastStartIdx = tiles.findIndex(t => t.start === scenes[scenes.length - 1]);
+      if (dE > SCENE_DELTA && i - lastStartIdx >= 2) scenes.push(tiles[i].start);
+    }
+    const total = tiles[tiles.length - 1].end;
+    const stops = [];
+    tiles.forEach((t, i) => {
+      const a = (t.start / total * 100).toFixed(3), b = (t.end / total * 100).toFixed(3);
+      const isCut = scenes.includes(t.start) && t.start > 0;
+      if (isCut) { const g = (+a + 0.35).toFixed(3); stops.push(`transparent ${a}%`, `transparent ${g}%`, `${t.display} ${g}%`); }
+      else stops.push(`${t.display} ${a}%`);
+      stops.push(`${t.display} ${b}%`);
+    });
+    const grad = `linear-gradient(to right, ${stops.join(', ')})`;
+    seek.style.setProperty('--code', grad);
+    $('map').style.setProperty('--code', grad);
+    $('mapEnd').textContent = fmt(total);
+    render();
+  }
+
+  const tileAt = t => tiles.find(x => t >= x.start && t < x.end) || tiles[tiles.length - 1];
+  const sceneIndex = t => { let k = 0; scenes.forEach((s, i) => { if (t >= s - 0.05) k = i; }); return k; };
+
+  function goScene(dir) {
+    if (!scenes.length) return;
+    const t = v.currentTime, k = sceneIndex(t);
+    let target;
+    if (dir < 0) target = (t - scenes[k] > 2 || k === 0) ? scenes[k] : scenes[k - 1];
+    else target = scenes[Math.min(k + 1, scenes.length - 1)];
+    v.currentTime = target + 0.01;
+    $('live').textContent = `Scena ${sceneIndex(target + 0.01) + 1} di ${scenes.length}, ${fmt(target)}`;
+  }
+
+  // ===== idea 3: vetro adattivo =====
+  const DARK = { name: 'scuro', surface: [19, 20, 23], fg: [245, 246, 252] };
+  const LIGHT = { name: 'chiaro', surface: [245, 246, 252], fg: [19, 20, 23] };
+  const A_MIN = 0.40, A_MAX = 0.96, TARGET = 5.0;   // 4,5:1 + margine per i dettagli persi a 32×18 px
+  const SWITCH_GAIN = 0.12, SWITCH_HOLD = 10000;
+  let glassOn = true, theme = DARK, alpha = 0.92, pendingSwitch = 0, lastSwitch = -Infinity;
+  const glass = { aDark: 0.92, aLight: 0.92, worstLum: 0, ratio: 0, rows: 0 };
+  const sc = document.createElement('canvas'); sc.width = 32; sc.height = 18;
+  const sctx = sc.getContext('2d', { willReadFrequently: true });
+
+  // α minima perché il testo resti ≥ TARGET anche sopra il pixel peggiore
+  function minAlpha(th, worst) {
+    const ok = a => contrast(th.fg, blend(th.surface, worst, a)) >= TARGET;
+    if (ok(A_MIN)) return A_MIN;
+    let lo = A_MIN, hi = A_MAX;
+    for (let i = 0; i < 20; i++) { const m = (lo + hi) / 2; ok(m) ? hi = m : lo = m; }
+    return hi;
+  }
+
+  function sampleGlass() {
+    if (!glassOn || v.readyState < 2) return;
+    try {
+      sctx.drawImage(v, 0, 0, 32, 18);
+      const pr = player.getBoundingClientRect(), dr = dock.getBoundingClientRect();
+      const y0 = Math.max(0, Math.floor((dr.top - pr.top) / pr.height * 18));
+      const x0 = Math.max(0, Math.floor((dr.left - pr.left) / pr.width * 32));
+      const x1 = Math.min(32, Math.ceil((dr.right - pr.left) / pr.width * 32));
+      const d = sctx.getImageData(x0, y0, x1 - x0, 18 - y0).data;
+      let brightest = [0, 0, 0], darkest = [255, 255, 255], lb = -1, ld = 2;
+      for (let i = 0; i < d.length; i += 4) {
+        const px = [d[i], d[i + 1], d[i + 2]], l = luminance(px);
+        if (l > lb) { lb = l; brightest = px; }
+        if (l < ld) { ld = l; darkest = px; }
+      }
+      glass.rows = 18 - y0;
+      glass.aDark = minAlpha(DARK, brightest);   // dock scura: il nemico è il pixel più chiaro
+      glass.aLight = minAlpha(LIGHT, darkest);   // dock chiara: il nemico è il pixel più scuro
+      // cambio di tema solo se l'altro fa risparmiare molta opacità, per 2 campioni di fila, e non prima di 10 s
+      const other = theme === DARK ? LIGHT : DARK;
+      const aCur = theme === DARK ? glass.aDark : glass.aLight;
+      const aOther = theme === DARK ? glass.aLight : glass.aDark;
+      const now = performance.now();
+      if (aCur - aOther >= SWITCH_GAIN) {
+        pendingSwitch++;
+        if (pendingSwitch >= 2 && now - lastSwitch >= SWITCH_HOLD) { theme = other; lastSwitch = now; pendingSwitch = 0; }
+      } else pendingSwitch = 0;
+      const a = theme === DARK ? glass.aDark : glass.aLight;
+      if (Math.abs(a - alpha) > 0.03) alpha = a;
+      const worst = theme === DARK ? brightest : darkest;
+      glass.worstLum = luminance(worst);
+      glass.ratio = contrast(theme.fg, blend(theme.surface, worst, alpha));
+      paintDock();
+    } catch (e) { glass.error = e.name; }
+    render();
+  }
+
+  // chi chiede meno trasparenza o più contrasto riceve sempre la dock piena
+  const solidMQ = matchMedia('(prefers-reduced-transparency: reduce), (prefers-contrast: more)');
+  solidMQ.addEventListener?.('change', () => paintDock());
+
+  function paintDock() {
+    const solid = solidMQ.matches;
+    const th = glassOn && !solid ? theme : DARK, a = solid ? 0.96 : glassOn ? alpha : 0.92;
+    const [r, g, b] = th.surface, [fr, fgc, fb] = th.fg;
+    dock.style.setProperty('--d-surface', `rgb(${r} ${g} ${b} / ${a.toFixed(3)})`);
+    dock.style.setProperty('--d-fg', `rgb(${fr} ${fgc} ${fb})`);
+    dock.style.setProperty('--d-line', `rgb(${fr} ${fgc} ${fb} / 0.14)`);
+  }
+
+  // ===== riproduzione =====
+  if (v.canPlayType('application/vnd.apple.mpegurl')) v.src = SRC;
+  else if (window.Hls && Hls.isSupported()) { const h = new Hls(); h.loadSource(SRC); h.attachMedia(v); }
+
+  const PLAY = 'M6 3.8v12.4c0 .8.9 1.3 1.6.9l10-6.2c.6-.4.6-1.4 0-1.8l-10-6.2C6.9 2.5 6 3 6 3.8z';
+  const PAUSE = 'M5 3h3.5c.6 0 1 .4 1 1v12c0 .6-.4 1-1 1H5c-.6 0-1-.4-1-1V4c0-.6.4-1 1-1zm6.5 0H15c.6 0 1 .4 1 1v12c0 .6-.4 1-1 1h-3.5c-.6 0-1-.4-1-1V4c0-.6.4-1 1-1z';
+  const toggle = () => v.paused ? v.play() : v.pause();
+  $('play').onclick = toggle;
+  v.addEventListener('click', toggle);
+  const syncPlay = () => {
+    $('playIcon').firstElementChild.setAttribute('d', v.paused ? PLAY : PAUSE);
+    $('play').setAttribute('aria-label', v.paused ? 'Riproduci' : 'Pausa');
+  };
+  v.addEventListener('play', syncPlay); v.addEventListener('pause', syncPlay);
+  $('prev').onclick = () => goScene(-1);
+  $('next').onclick = () => goScene(1);
+  document.addEventListener('keydown', e => {
+    if (e.target.closest && e.target.closest('input:not([type=range]), textarea')) return;
+    if (e.key === '[') { e.preventDefault(); goScene(-1); }
+    if (e.key === ']') { e.preventDefault(); goScene(1); }
+  });
+
+  // barra
+  let dragging = false;
+  seek.addEventListener('input', () => { dragging = true; seek.classList.add('dragging'); if (v.duration) v.currentTime = seek.value / 1000 * v.duration; render(); });
+  seek.addEventListener('change', () => { dragging = false; seek.classList.remove('dragging'); });
+  seek.addEventListener('keydown', e => {
+    if (!v.duration) return;
+    const step = { ArrowRight: 5, ArrowUp: 5, ArrowLeft: -5, ArrowDown: -5 }[e.key];
+    if (step) { e.preventDefault(); v.currentTime = Math.min(v.duration, Math.max(0, v.currentTime + step)); }
+  });
+  $('seekWrap').addEventListener('pointermove', e => {
+    if (!v.duration) return;
+    const r = seek.getBoundingClientRect(), f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), t = f * v.duration;
+    const tile = tiles.length ? tileAt(t) : null;
+    $('tip').hidden = false; $('tip').style.left = (f * 100) + '%';
+    $('tipSw').style.background = tile ? tile.display : '#9889ff';
+    $('tipTxt').textContent = fmt(t) + (scenes.length ? ` · scena ${sceneIndex(t) + 1}` : '');
+  });
+  $('seekWrap').addEventListener('pointerleave', () => { $('tip').hidden = true; });
+
+  // campionamento vetro ogni ~1 s mentre il video va
+  let last = 0;
+  const loop = () => {
+    const now = performance.now();
+    if (now - last >= 1000 && !v.paused && !document.hidden) { last = now; sampleGlass(); }
+    if ('requestVideoFrameCallback' in v) v.requestVideoFrameCallback(loop);
+  };
+  if ('requestVideoFrameCallback' in v) v.requestVideoFrameCallback(loop); else setInterval(loop, 1000);
+  v.addEventListener('play', () => { if ('requestVideoFrameCallback' in v) v.requestVideoFrameCallback(loop); });
+  v.addEventListener('seeked', () => setTimeout(sampleGlass, 120));
+  v.addEventListener('loadeddata', sampleGlass);
+  v.addEventListener('timeupdate', render);
+
+  // interruttori
+  $('tCode').onclick = () => {
+    codeOn = !codeOn; player.classList.toggle('coded', codeOn);
+    $('tCode').setAttribute('aria-pressed', String(codeOn)); $('tCode').textContent = 'Codice colore: ' + (codeOn ? 'sì' : 'no');
+  };
+  $('tGlass').onclick = () => {
+    glassOn = !glassOn; paintDock();
+    $('tGlass').setAttribute('aria-pressed', String(glassOn)); $('tGlass').textContent = 'Vetro adattivo: ' + (glassOn ? 'sì' : 'no');
+    if (glassOn) sampleGlass(); else render();
+  };
+
+  function render() {
+    const d = v.duration || 0, t = v.currentTime || 0;
+    if (!dragging && d) seek.value = Math.round(t / d * 1000);
+    seek.style.setProperty('--p', (d ? t / d * 100 : 0) + '%');
+    seek.setAttribute('aria-valuetext', `${fmt(t)} di ${fmt(d)}` + (scenes.length ? `, scena ${sceneIndex(t) + 1} di ${scenes.length}` : ''));
+    $('time').textContent = `${fmt(t)} / ${fmt(d)}`;
+    $('sceneLbl').textContent = scenes.length ? `Scena ${sceneIndex(t) + 1} di ${scenes.length}` : '—';
+    const tile = tiles.length ? tileAt(t) : null;
+    const rows = [
+      ['Miniature lette', tiles.length ? `${tiles.length} (una ogni ${(tiles[1].start - tiles[0].start).toFixed(2)} s)` : 'in caricamento…'],
+      ['Scene trovate', scenes.length ? `${scenes.length}: ${scenes.map(fmt).join(' · ')}` : '—'],
+      ['Colore di questo momento', tile ? tile.display : '—'],
+      ['Tema della dock', glassOn ? theme.name : 'fisso (scuro 92%)'],
+      ['Opacità della dock', glassOn ? Math.round(alpha * 100) + '%' : '92%'],
+      ['Opacità minima scura / chiara', glassOn ? `${Math.round(glass.aDark * 100)}% / ${Math.round(glass.aLight * 100)}%` : '—'],
+      ['Contrasto testo nel punto peggiore', glassOn && glass.ratio ? glass.ratio.toFixed(2) + ':1 (minimo 4,5)' : '—'],
+      ['Righe di video sotto la dock', glass.rows ? `${glass.rows} su 18` : '—'],
+      ['Errore', glass.error || 'nessuno'],
+    ];
+    $('info').innerHTML = rows.map(([k, val]) => `<tr><th scope="row">${k}</th><td>${val}</td></tr>`).join('');
+  }
+
+  paintDock();
+  render();
+  buildCode().catch(e => { $('info').insertAdjacentHTML('afterbegin', `<tr><th>Codice colore</th><td>non disponibile: ${e.name}</td></tr>`); player.classList.remove('coded'); });
+})();
+</script>
+</body>
+</html>

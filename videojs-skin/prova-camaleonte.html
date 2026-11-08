@@ -85,6 +85,10 @@
       <button type="button" data-t="47">interno 0:47</button>
       <button type="button" data-t="70">tramonto 1:10</button>
     </div>
+    <div class="row">
+      <button type="button" id="calm" aria-pressed="true">Regole calme: sì</button>
+    </div>
+    <p style="margin:10px 0 0">Regole calme: il colore cambia solo se 2 campioni di fila sono d'accordo e sono passati almeno 8 secondi dall'ultimo cambio. Spegnile per confrontare il contatore "Cambi di colore".</p>
   </section>
 
   <section aria-labelledby="t-res" aria-live="polite">
@@ -128,12 +132,29 @@
   const WHITE = [255, 255, 255];
   const FALLBACK = { fill: '#8a81f0', strong: '#6a43f3' };
   const INTERVAL = 2000, HYSTERESIS = 25;
+  const HOLD = 8000;            // regola calma 2: almeno 8 s tra un cambio e l'altro
+  let calm = true;              // regole calme attive
+  let candidate = null;         // regola calma 1: tinta in attesa di conferma
+  let lastChange = -Infinity, changes = 0;
 
   const $ = id => document.getElementById(id);
   const v = $('v'), canvas = $('c'), dock = $('dock');
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
   let hls = null, mode = '', last = 0, appliedHue = null, samples = 0, okReads = 0, blackReads = 0;
+
+  // Decide se la tinta letta diventa quella usata.
+  // force = salto o caricamento: l'utente ha cambiato scena, il colore segue subito.
+  function decide(h, force) {
+    const now = performance.now();
+    const change = to => { if (appliedHue === null || hueDist(to, appliedHue) > 1) changes++; appliedHue = to; candidate = null; lastChange = now; };
+    if (force || appliedHue === null) { change(h); return 'subito'; }
+    if (hueDist(h, appliedHue) <= HYSTERESIS) { candidate = null; return 'stessa tinta'; }
+    if (!calm) { change(h); return 'cambio'; }
+    if (candidate === null || hueDist(h, candidate) > HYSTERESIS) { candidate = h; return 'in attesa di conferma'; }
+    if (now - lastChange < HOLD) { candidate = h; return `confermata, attendo ${Math.ceil((HOLD - (now - lastChange)) / 1000)} s`; }
+    change(h); return 'cambio confermato';
+  }
   const state = { error: '', lastRaw: null, colours: null, log: [] };
 
   // ---------- colore (stesse funzioni di docs/CHAMELEON.md) ----------
@@ -211,9 +232,9 @@
         state.lastRaw = h;
         if (h === null) { entry.res = 'nessuna tinta → indaco'; apply(null); }
         else {
-          if (force || appliedHue === null || hueDist(h, appliedHue) > HYSTERESIS) appliedHue = h;
+          const why = decide(h, force);
           const col = coloursFor(appliedHue);
-          entry.res = `tinta ${Math.round(h)}° (usata ${Math.round(appliedHue)}°) → ${col ? col.fill + ' / ' + col.strong : 'fuori gamma → indaco'}`;
+          entry.res = `tinta ${Math.round(h)}° → usata ${Math.round(appliedHue)}° (${why}) → ${col ? col.fill : 'indaco'}`;
           apply(col);
         }
       }
@@ -254,7 +275,8 @@
   function setMode(m) {
     if (hls) { hls.destroy(); hls = null; }
     v.removeAttribute('src'); v.load();
-    appliedHue = null; samples = okReads = blackReads = 0; state.log = []; state.error = '';
+    appliedHue = null; candidate = null; lastChange = -Infinity; changes = 0;
+    samples = okReads = blackReads = 0; state.log = []; state.error = '';
     if (m === 'native') v.src = SRC;
     else { hls = new Hls(); hls.loadSource(SRC); hls.attachMedia(v); }
     mode = m;
@@ -268,6 +290,13 @@
   $('m-hls').onclick = () => setMode('hls');
   document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { v.currentTime = +b.dataset.t; });
   $('now').onclick = () => sample(true);
+  $('calm').onclick = () => {
+    calm = !calm; candidate = null; changes = 0;
+    $('calm').setAttribute('aria-pressed', String(calm));
+    $('calm').textContent = 'Regole calme: ' + (calm ? 'sì' : 'no');
+    state.log.unshift('— regole calme ' + (calm ? 'attive' : 'spente') + ', contatore azzerato');
+    render();
+  };
 
   // ---------- resoconto ----------
   function rows() {
@@ -281,6 +310,7 @@
       ['requestVideoFrameCallback', 'requestVideoFrameCallback' in v ? 'sì' : 'no (uso setInterval)'],
       ['@property (CSS.registerProperty)', window.CSS && CSS.registerProperty ? 'sì' : 'no'],
       ['Campioni', `${samples} totali · ${okReads} letti · ${blackReads} neri`],
+      ['Cambi di colore', `${changes} (regole calme: ${calm ? 'sì' : 'no'})`],
       ['Errore', state.error || 'nessuno'],
       ['Tinta letta', state.lastRaw == null ? '—' : Math.round(state.lastRaw) + '°'],
       ['Riempimento barra', c ? `${c.fill} · ${c.cTrack.toFixed(2)}:1 sul binario · ${c.cDock.toFixed(2)}:1 sulla dock` : 'indaco ' + FALLBACK.fill],
@@ -296,7 +326,7 @@
     else { vd.textContent = mode ? 'In attesa: premi play sul video.' : 'Scegli un modo di riproduzione.'; vd.className = ''; }
 
     $('info').innerHTML = rows().map(([k, val], i) => {
-      const sw = (i === 10 || i === 11) ? `<span class="sw" style="background:${(state.colours || FALLBACK)[i === 10 ? 'fill' : 'strong']}"></span>` : '';
+      const sw = (i === 11 || i === 12) ? `<span class="sw" style="background:${(state.colours || FALLBACK)[i === 11 ? 'fill' : 'strong']}"></span>` : '';
       return `<tr><th scope="row">${k}</th><td>${sw}${String(val).replace(/</g, '&lt;')}</td></tr>`;
     }).join('');
     $('log').textContent = state.log.length ? state.log.join('\n') : '—';

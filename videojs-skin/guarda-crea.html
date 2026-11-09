@@ -313,11 +313,17 @@
       <div class="menu" id="menu" hidden>
         <div class="mview" id="mMain" role="menu" aria-label="Settings">
           <button class="mrow" id="miCrea" type="button" role="menuitem"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="scissors"/></svg><span class="ml" id="mlCrea">Create a clip</span></button>
+          <button class="mrow" id="miAudio" type="button" role="menuitem" aria-haspopup="menu"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="vol"/></svg><span class="ml">Audio</span><span class="mv" id="mvAudio">English</span><svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path data-ic="chev"/></svg></button>
           <button class="mrow" id="miCC" type="button" role="menuitem" aria-haspopup="menu"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="cc"/></svg><span class="ml">Subtitles</span><span class="mv" id="mvCC">Off</span><svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path data-ic="chev"/></svg></button>
           <button class="mrow" id="miRead" type="button" role="menuitemcheckbox" aria-checked="false" aria-keyshortcuts="r"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="speak" fill-rule="evenodd"/></svg><span class="ml">Read subtitles aloud</span><span class="mv" id="mvRead">Off</span></button>
           <button class="mrow" id="miQ" type="button" role="menuitem" aria-haspopup="menu"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="gear" fill-rule="evenodd"/></svg><span class="ml">Quality</span><span class="mv" id="mvQ">Auto</span><svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path data-ic="chev"/></svg></button>
           <button class="mrow" id="miR" type="button" role="menuitem" aria-haspopup="menu"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="speed"/></svg><span class="ml">Speed</span><span class="mv" id="mvR">Normal</span><svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path data-ic="chev"/></svg></button>
           <button class="mrow" id="miHelp" type="button" role="menuitem"><span class="qi" aria-hidden="true">?</span><span class="ml">Keyboard shortcuts</span></button>
+        </div>
+        <div class="mview" id="mA" role="menu" aria-label="Audio" hidden>
+          <button class="mrow mhead" type="button" role="menuitem" data-back="miAudio"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="back"/></svg><span class="ml">Audio</span></button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-au="en" aria-checked="true">English (original)</button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-au="it" aria-checked="false"><span lang="it">Italiano</span>&nbsp;(voice-over)</button>
         </div>
         <div class="mview" id="mC" role="menu" aria-label="Subtitles" hidden>
           <button class="mrow mhead" type="button" role="menuitem" data-back="miCC"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="back"/></svg><span class="ml">Subtitles</span></button>
@@ -458,6 +464,8 @@
     </ul>
     <h3>Un solo menu</h3>
     <p>Il player è in <strong>inglese</strong>. L'ingranaggio in basso a destra apre un menu verticale: <strong>Create a clip</strong>, <strong>Subtitles</strong> (Off / English / Italiano: l'inglese è generato da Mux dal parlato del video, l'italiano è la traduzione), <strong>Read subtitles aloud</strong>, <strong>Quality</strong>, <strong>Speed</strong>, <strong>Keyboard shortcuts</strong>. I sottotitoli salgono quando compaiono i comandi, così non vengono mai coperti.</p>
+    <h3>Audio: doppiaggio italiano</h3>
+    <p>Menu ⚙ → <strong>Audio</strong> → <strong>Italiano (voice-over)</strong>: voce italiana registrata con ElevenLabs (voce "Luca", modello Eleven v4, con indicazioni di recitazione), ogni frase montata al suo tempo sopra l'audio originale abbassato al 12%. Funziona uguale su ogni dispositivo. Nella skin vera sarà una seconda traccia audio dello stesso video su Mux.</p>
     <h3>Leggi i sottotitoli ad alta voce</h3>
     <p>Con <strong>Read subtitles aloud</strong> la voce del browser legge ogni frase dei sottotitoli e l'audio del video si abbassa mentre parla. Legge la lingua scelta nei sottotitoli, anche se sono nascosti. I suoni tra parentesi, come [music], non li legge perché si sentono già. Serve a chi vede poco o non riesce a leggere in fretta. L'audio originale scende al 15% con una sfumatura (Web Audio, funziona anche su iPhone) e la velocità della voce si adatta alla durata della frase, così finisce prima della successiva. Limite: la voce è quella sintetica del sistema.</p>
     <h2 style="margin-top:18px">Crea: lo spettatore diventa videomaker</h2>
@@ -765,13 +773,14 @@
 
   // ---------- menu unico, verticale (come YouTube) ----------
   let menuOpen = false, swallow = false;
-  const VIEWS = ['mMain', 'mC', 'mQ', 'mR'];
+  const VIEWS = ['mMain', 'mA', 'mC', 'mQ', 'mR'];
   function showView(id, focusSel) {
     VIEWS.forEach(x => { $(x).hidden = x !== id; });
     const view = $(id), f = focusSel ? view.querySelector(focusSel) : null;
     (f || view.querySelector('button')).focus({ preventScroll: true });
   }
   function labelRows() {
+    $('miAudio').setAttribute('aria-label', `Audio: ${AUDIO_NAMES[audioLang]}`);
     $('miCC').setAttribute('aria-label', `Subtitles: ${CC_NAMES[ccLang]}`);
     $('miRead').setAttribute('aria-label', readOn ? `Read subtitles aloud, ${CC_NAMES[readLang()]}` : 'Read subtitles aloud');
     $('miQ').setAttribute('aria-label', `Quality: ${$('mvQ').textContent}`);
@@ -780,6 +789,8 @@
   function syncMenu() {
     $('mlCrea').textContent = creaOpen ? 'Back to watching' : 'Create a clip';
     $('mvCC').textContent = CC_NAMES[ccLang];
+    $('mvAudio').textContent = AUDIO_NAMES[audioLang];
+    $$('#mA [data-au]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.au === audioLang)));
     syncRead();
     labelRows();
     $$('#mC [data-cc]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.cc === ccLang)));
@@ -795,6 +806,11 @@
   }
   $('menuBtn').onclick = () => openMenu(!menuOpen);
   $('miCrea').onclick = e => { openMenu(false); openCrea(!creaOpen, e.detail === 0); };
+  $('miAudio').onclick = () => showView('mA', '[aria-checked="true"]');
+  $('mA').addEventListener('click', e => {
+    const b = e.target.closest('[data-au]'); if (!b) return;
+    setAudio(b.dataset.au); syncMenu(); showView('mMain', '#miAudio');
+  });
   $('miCC').onclick = () => showView('mC', '[aria-checked="true"]');
   $('miRead').onclick = () => setRead(!readOn);
   $('mC').addEventListener('click', e => {
@@ -911,8 +927,41 @@
     const vs = speechSynthesis.getVoices();
     return vs.find(x => x.lang === BCP[lang] && x.localService) || vs.find(x => x.lang && x.lang.toLowerCase().startsWith(lang)) || null;
   }
+  // ---------- doppiaggio italiano (ElevenLabs, voce "Luca", Eleven v4) come seconda traccia audio ----------
+  // File già mixato: voce italiana sopra l'originale al 12%. Nel prototipo è un <audio> tenuto in sincronia col video;
+  // nella skin vera sarà una traccia audio alternativa dello stesso asset Mux.
+  const AUDIO_NAMES = { en: 'English', it: 'Italiano' };
+  let audioLang = 'en', dub = null;
+  function syncDub(force) {
+    if (!dub || audioLang !== 'it') return;
+    if (dub.playbackRate !== v.playbackRate) dub.playbackRate = v.playbackRate;
+    dub.volume = v.volume; dub.muted = v.muted;
+    if (force || Math.abs(dub.currentTime - v.currentTime) > 0.25) { try { dub.currentTime = v.currentTime; } catch {} }
+    if (v.paused || v.seeking || v.readyState < 3) { if (!dub.paused) dub.pause(); }
+    else if (dub.paused) dub.play().catch(() => {});
+  }
+  function setAudio(lang) {
+    audioLang = lang;
+    const ar = lang === 'it' ? rig() : audioRig;
+    if (lang === 'it') {
+      if (readOn) setRead(false);                       // la lettura ad alta voce non serve con il doppiaggio
+      if (ar) { ar.ctx.resume().catch(() => {}); ar.gain.gain.setTargetAtTime(0, ar.ctx.currentTime, 0.05); }
+      if (!dub) { dub = new Audio('guarda-crea.it-dub.m4a'); dub.preload = 'auto'; }
+      syncDub(true);
+    } else {
+      if (dub) dub.pause();
+      if (ar) ar.gain.gain.setTargetAtTime(1, ar.ctx.currentTime, 0.05);
+    }
+    say(`Audio: ${AUDIO_NAMES[lang]}`);
+  }
+  ['play', 'pause', 'seeked', 'ratechange', 'volumechange', 'waiting', 'playing'].forEach(ev =>
+    v.addEventListener(ev, () => syncDub(ev === 'seeked')));
+  v.addEventListener('timeupdate', () => syncDub(false));
+  window.__gcDub = () => (dub ? { t: dub.currentTime, paused: dub.paused } : null); // per le prove
+
   // abbassamento morbido con Web Audio (funziona anche su iPhone, dove il volume della pagina non si può cambiare)
   function ramp(to, tau) {
+    if (audioLang === 'it') to = 0;                     // con il doppiaggio l'originale resta muto
     const ar = audioRig;
     if (ar && ar.gain) ar.gain.gain.setTargetAtTime(to, ar.ctx.currentTime, tau);
   }
@@ -995,6 +1044,7 @@
   }
   function setRead(on) {
     if (!TTS) { toast('This browser cannot read aloud'); return; }
+    if (on && audioLang === 'it') setAudio('en');
     readOn = on;
     if (on) {
       const ar = rig(); if (ar) ar.ctx.resume().catch(() => {});   // nel gesto: sblocca audio e voce su iPhone

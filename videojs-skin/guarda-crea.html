@@ -96,8 +96,8 @@
   .seek { position: relative; height: 30px; margin: 0 8px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
   .track { position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgb(255 255 255 / .3); transition: height .15s; }
   .seek:hover .track, .seek:focus-visible .track, .seek.drag .track { height: 7px; }
-  .fill { position: absolute; inset: 0 auto 0 0; width: var(--p, 0%); background: #fff; border-radius: inherit; }
-  .knob { position: absolute; top: 50%; left: var(--p, 0%); width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgb(0 0 0 / .55); }
+  .fill { position: absolute; inset: 0 auto 0 0; width: var(--sp, 0%); background: #fff; border-radius: inherit; }
+  .knob { position: absolute; top: 50%; left: var(--sp, 0%); width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgb(0 0 0 / .55); }
   .clipmark { display: none; position: absolute; top: -4px; bottom: -4px; left: var(--a, 0%); width: calc(var(--b, 0%) - var(--a, 0%)); border: 2px solid #fff; border-radius: 4px; }
   .creating .clipmark, .looping .clipmark { display: block; }
   .seek .bm { position: absolute; top: -4px; bottom: -4px; width: 3px; margin-left: -1.5px; background: #fff; border-radius: 2px; box-shadow: 0 0 0 1px rgb(0 0 0 / .6); }
@@ -184,6 +184,13 @@
     background: rgb(0 0 0 / .82); color: #fff; font: 600 14px system-ui, sans-serif;
   }
   .toast[hidden] { display: none; }
+  .clipban {
+    position: absolute; top: 12px; left: 12px; max-width: calc(100% - 24px); display: flex; align-items: center; gap: 10px;
+    padding: 6px 6px 6px 14px; border-radius: 999px; background: rgb(0 0 0 / .82); color: #fff; font: 600 14px system-ui, sans-serif;
+  }
+  .clipban[hidden] { display: none; }
+  .clip-view .toast { top: 60px; }
+  .clip-view .clipmark, .clip-view #seekBms { display: none; }
   .toast.noaction { padding-right: 14px; }
   .toast span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .tact { flex: none; min-height: 36px; padding: 0 12px; border: 0; border-radius: 999px; background: #fff; color: #111; font: 700 13px system-ui, sans-serif; cursor: pointer; }
@@ -230,7 +237,10 @@
   .h-in.flip .tp { right: auto; left: 50%; }
   .h-out.flip .tp { left: auto; right: 50%; }
 
-  .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 18px; }
+  .tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 18px; }
+  .tools .sbtn { width: 100%; justify-content: center; padding: 4px 10px; text-align: center; }
+  .tools .seg { grid-column: 1 / -1; }
+  .tools .seg button { flex: 1; }
   .sbtn {
     display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 12px;
     border: 1px solid var(--s-line); background: var(--s-card); color: var(--s-fg); cursor: pointer;
@@ -265,8 +275,6 @@
 
   /* su touch le lettere dei tasti non servono */
   @media (pointer: coarse) {
-    .tools { gap: 6px; }
-    .sbtn { padding: 0 12px; }
   }
 
   /* ---------- pagina ---------- */
@@ -298,6 +306,7 @@
       <div class="rip l" id="ripL" aria-hidden="true">−10 s</div>
       <div class="rip r" id="ripR" aria-hidden="true">+10 s</div>
       <div class="scrim" aria-hidden="true"></div>
+      <div class="clipban" id="clipBanner" hidden><span id="clipBannerTxt"></span><button class="tact" id="clipFull" type="button">Watch full video</button></div>
       <div class="toast" id="toast" hidden><span id="toastTxt"></span><button class="tact" id="toastBtn" type="button" hidden></button></div>
 
       <div class="cap" id="cap" hidden></div>
@@ -410,6 +419,7 @@
           <button class="sbtn" id="loopBtn" type="button" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="loop"/></svg>Loop clip</button>
           <button class="sbtn" id="clipBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="film" fill-rule="evenodd"/></svg>Make clip video</button>
           <button class="sbtn" id="linkBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="share"/></svg>Share link</button>
+          <button class="sbtn" id="bmBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="bookmark"/></svg>Bookmark</button>
           <div class="seg" role="group" aria-label="Speed">
             <button type="button" data-r="0.25" aria-label="Speed 0.25" aria-pressed="false">¼×</button>
             <button type="button" data-r="0.5" aria-label="Speed 0.5" aria-pressed="false">½×</button>
@@ -417,7 +427,6 @@
             <button type="button" data-r="1.5" aria-label="Speed 1.5" aria-pressed="false">1.5×</button>
             <button type="button" data-r="2" aria-label="Speed 2" aria-pressed="false">2×</button>
           </div>
-          <button class="sbtn" id="bmBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="bookmark"/></svg>Bookmark</button>
         </div>
         <div class="export" id="exportBox" hidden>
           <div class="ex-row">
@@ -425,6 +434,7 @@
             <span class="ex-actions">
               <button class="sbtn" id="exShare" type="button" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="share"/></svg>Share video</button>
               <button class="sbtn" id="exSave" type="button" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="download"/></svg>Download</button>
+              <button class="sbtn" id="exLink" type="button" hidden>Share link instead</button>
               <button class="sbtn" id="exCancel" type="button">Cancel</button>
             </span>
           </div>
@@ -441,7 +451,6 @@
     <h2>Guarda: comandi che emergono</h2>
     <h3>Prova</h3>
     <ul>
-      <li>Premi play, poi muovi il mouse <strong>piano</strong> verso il basso: i comandi vicini al puntatore si mettono a fuoco, quelli lontani restano tenui e sfocati.</li>
       <li>I comandi compaiono avvicinandosi alla barra: invisibili quando il puntatore è al 30% dell'altezza sopra la barra, pieni quando è sulla barra (sfumatura entro 0,6 s). Fermo per 2 secondi lontano dalla barra: spariscono. In pausa restano tutti visibili.</li>
       <li>Tastiera: con <kbd>Tab</kbd> o un tasto qualsiasi compaiono tutti i comandi. Le scorciatoie sono nel menu ⚙, alla voce "Keyboard shortcuts" (o tasto <kbd>?</kbd>).</li>
       <li>Telefono: un tocco mostra o nasconde i comandi, doppio tocco a sinistra o a destra = −10 / +10 s.</li>
@@ -457,7 +466,7 @@
       <li>Dal menu ⚙ scegli <strong>Create a clip</strong>: sotto il video si apre la striscia con le immagini del video.</li>
       <li>Trascina sulla striscia per scegliere un tratto, oppure sposta le maniglie.</li>
       <li><strong>Crea il video della clip</strong> (massimo 30 s): il tratto viene registrato mentre scorre, poi lo <strong>condividi</strong> (WhatsApp, social: su telefono) o lo <strong>scarichi</strong>.</li>
-      <li><strong>Condividi link</strong>: chi lo apre vede solo quel pezzo, in ripetizione.</li>
+      <li><strong>Share link</strong>: chi lo apre vede solo quello spezzone (barra e tempo dello spezzone), con il pulsante "Watch full video".</li>
       <li><strong>Ripeti il tratto</strong>, velocità da ¼× a 2×, <strong>Segnalibro</strong>.</li>
     </ul>
     <h3>Cosa c'è di nuovo</h3>
@@ -526,7 +535,11 @@
 
   // ---------- comandi di base ----------
   const toggle = () => { if (v.paused || v.ended) v.play().catch(() => {}); else v.pause(); };
-  const seekTo = t => { const d = dur(); if (d) v.currentTime = clamp(t, 0, d - 0.04); };
+  // vista clip (link condiviso): tutto lavora tra clipA e clipB
+  let clipView = false, clipA = 0, clipB = 0;
+  const RA = () => (clipView ? clipA : 0);
+  const RB = () => (clipView ? clipB : dur());
+  const seekTo = t => { const d = dur(); if (d) v.currentTime = clamp(t, RA(), RB() - 0.04); };
   const seekBy = d => seekTo((v.currentTime || 0) + d);
   function fullscreen() {
     if (document.fullscreenElement || document.webkitFullscreenElement) return (document.exitFullscreen || document.webkitExitFullscreen).call(document);
@@ -583,7 +596,7 @@
   let tmode = store.get('gc-tmode', 0);
   function remain(r) { r = Math.max(0, Math.round(r)); return r < 60 ? `${r} s` : `${Math.floor(r / 60)} min ${r % 60} s`; }
   function timeLabel() {
-    const d = dur(), t = v.currentTime || 0;
+    const d = RB() - RA(), t = clamp((v.currentTime || 0) - RA(), 0, Math.max(0, d));
     let s;
     if (tmode === 1) s = d ? `${remain((d - t) / (v.playbackRate || 1))} left` : '—';
     else if (tmode === 2) {
@@ -598,23 +611,27 @@
   // ---------- avanzamento ----------
   let lastSec = -1;
   function setP() {
-    const d = dur(), t = v.currentTime || 0;
-    stage.style.setProperty('--p', (d ? t / d * 100 : 0) + '%');
+    const d = RB() - RA(), t = clamp((v.currentTime || 0) - RA(), 0, Math.max(0, d));
+    stage.style.setProperty('--sp', (d > 0 ? t / d * 100 : 0) + '%');   // barra del player (clip o video intero)
+    stage.style.setProperty('--p', (dur() ? (v.currentTime || 0) / dur() * 100 : 0) + '%'); // striscia di Crea
     const sec = Math.floor(t);
     if (sec !== lastSec || seek.getAttribute('aria-valuemax') !== String(Math.round(d))) {
       lastSec = sec;
       seek.setAttribute('aria-valuemax', Math.round(d));
       seek.setAttribute('aria-valuenow', sec);
-      seek.setAttribute('aria-valuetext', `${fmt(t)} of ${fmt(d)}`);
+      seek.setAttribute('aria-valuetext', clipView ? `${fmt(t)} of ${fmt(d)}, shared clip` : `${fmt(t)} of ${fmt(d)}`);
     }
     timeLabel();
   }
-  function pTick() {
-    setP();
+  function bounds() {
     if (loopOn && v.currentTime >= outT - 0.03) v.currentTime = inT;
+    else if (clipView && !loopOn && !v.paused && v.currentTime >= clipB - 0.05) { v.pause(); v.currentTime = clipB - 0.05; say('End of the clip'); }
+  }
+  function pTick() {
+    setP(); bounds();
     if (!v.paused) requestAnimationFrame(pTick);
   }
-  v.addEventListener('timeupdate', setP);
+  v.addEventListener('timeupdate', () => { setP(); bounds(); });
   v.addEventListener('seeked', setP);
   v.addEventListener('loadedmetadata', () => { setP(); renderSel(); renderBM(); buildFilm(); });
   v.addEventListener('play', () => { syncPlay(); requestAnimationFrame(pTick); kick(); });
@@ -628,17 +645,18 @@
   });
 
   const tAt = (el, x) => { const r = el.getBoundingClientRect(); return clamp((x - r.left) / r.width, 0, 1) * dur(); };
+  const seekAt = x => { const r = track.getBoundingClientRect(); return RA() + clamp((x - r.left) / r.width, 0, 1) * (RB() - RA()); };
   let seeking = false;
   const track = seek.querySelector('.track');
   seek.addEventListener('pointerdown', e => {
     if (!dur()) return;
     e.preventDefault(); seek.setPointerCapture(e.pointerId);
-    seeking = true; seek.classList.add('drag'); seekTo(tAt(track, e.clientX)); kick();
+    seeking = true; seek.classList.add('drag'); seekTo(seekAt(e.clientX)); kick();
   });
   seek.addEventListener('pointermove', e => {
-    const t = tAt(track, e.clientX), r = track.getBoundingClientRect();
+    const t = seekAt(e.clientX), r = track.getBoundingClientRect();
     if (e.pointerType === 'mouse' || seeking) {
-      const pill = $('hpill'); pill.hidden = false; pill.textContent = fmt(t);
+      const pill = $('hpill'); pill.hidden = false; pill.textContent = fmt(t - RA());
       pill.style.left = clamp(e.clientX - r.left, 20, r.width - 20) + 'px';
     }
     if (seeking) seekTo(t);
@@ -648,11 +666,11 @@
   seek.addEventListener('lostpointercapture', endSeek);
   seek.addEventListener('pointerleave', () => { if (!seeking) $('hpill').hidden = true; });
   seek.addEventListener('keydown', e => {
-    const k = e.key, d = dur();
+    const k = e.key;
     const step = { ArrowLeft: -5, ArrowRight: 5, ArrowDown: -5, ArrowUp: 5, PageDown: -10, PageUp: 10 }[k];
     if (step != null) seekBy(step);
-    else if (k === 'Home') seekTo(0);
-    else if (k === 'End') seekTo(d);
+    else if (k === 'Home') seekTo(RA());
+    else if (k === 'End') seekTo(RB());
     else return;
     e.preventDefault(); e.stopPropagation();
   });
@@ -1023,7 +1041,7 @@
       say('Create is open. Choose where the clip starts and ends.');
     } else {
       if (studio.contains(document.activeElement)) $('menuBtn').focus({ preventScroll: true });
-      if (!clipView) setLoop(false);
+      setLoop(false);
       if (ex && ex.state === 'rec') ex.cancelled = true;
       say('Back to watching.');
     }
@@ -1142,7 +1160,7 @@
 
   // condividi il link: menu di condivisione del sistema (WhatsApp, social…), altrimenti copia
   async function shareLink() {
-    const url = `${location.origin}${location.pathname}#clip=${inT.toFixed(1)}-${outT.toFixed(1)}`;
+    const url = `${location.origin}${location.pathname}?clip=${inT.toFixed(1)}-${outT.toFixed(1)}`;
     if (navigator.share) {
       try { await navigator.share({ title: `Clip ${fmt(inT)}–${fmt(outT)}`, url }); return; }
       catch (e) { if (e.name === 'AbortError') return; }
@@ -1180,9 +1198,10 @@
     $('exTxt').textContent = text;
     $('exFill').style.width = Math.round(pct * 100) + '%';
     const ready = state === 'ready';
-    $('exShare').hidden = !(ready && canShareFile(ex.file));
+    $('exShare').hidden = !(ready && ex && ex.file && canShareFile(ex.file));
     $('exSave').hidden = !ready;
-    $('exCancel').textContent = ready ? 'Close' : 'Cancel';
+    $('exLink').hidden = state !== 'error';
+    $('exCancel').textContent = state === 'rec' ? 'Cancel' : 'Close';
     $('clipBtn').disabled = state === 'rec';
   }
   async function makeClip() {
@@ -1204,34 +1223,55 @@
 
     const ar = rig();
     const tracks = [...c.captureStream(30).getVideoTracks()];
-    if (ar) { await ar.ctx.resume().catch(() => {}); tracks.push(...ar.dest.stream.getAudioTracks().map(t => t.clone())); }
+    const own = [...tracks];                                   // tracce da chiudere alla fine
+    if (ar) {
+      await ar.ctx.resume().catch(() => {});
+      for (const t of ar.dest.stream.getAudioTracks()) { const cl = t.clone ? t.clone() : null; if (cl) { tracks.push(cl); own.push(cl); } }
+    }
     const stream = new MediaStream(tracks);
     const chunks = [];
-    const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4_000_000 });
-    ex = { state: 'rec', cancelled: false, file: null };
-    rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    let rec;
+    try { rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4_000_000 }); }
+    catch (err) { own.forEach(t => t.stop()); v.playbackRate = prev.rate; ex = { state: 'error' }; exUI('error', `Couldn't make the video on this device (${err.name}).`, 0); return; }
+    ex = { state: 'rec', cancelled: false, file: null, error: '' };
+    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    rec.onerror = e => { ex.error = (e.error && e.error.name) || 'recorder error'; };
     const stopped = new Promise(r => { rec.onstop = r; });
     v.muted = false; // si registra quello che si sente
     exUI('rec', 'Making the clip video… 0%', 0);
     say('Making the clip video');
     rec.start(250);
-    await v.play().catch(() => {});
+    await v.play().catch(err => { ex.error = err.name; });
     await new Promise(res => {
+      let lastT = v.currentTime, lastMove = performance.now();
       const step = () => {
-        if (ex.cancelled || v.ended || v.currentTime >= outT) { res(); return; }
+        if (ex.cancelled || ex.error || v.ended || v.currentTime >= outT) { res(); return; }
+        if (!dur()) { ex.error = 'the video stopped loading'; res(); return; }
+        if (v.currentTime !== lastT) { lastT = v.currentTime; lastMove = performance.now(); }
+        else if (performance.now() - lastMove > 4000) { ex.error = 'the video stopped playing'; res(); return; }
         g.drawImage(v, 0, 0, w, h);
         const pct = clamp((v.currentTime - inT) / len, 0, 1);
         exUI('rec', `Making the clip video… ${Math.round(pct * 100)}%`, pct);
-        requestAnimationFrame(step);
+        setTimeout(step, 33);            // timer, non animazione: continua anche se la pagina non è in primo piano
       };
-      requestAnimationFrame(step);
+      setTimeout(step, 33);
     });
-    v.pause(); rec.stop(); await stopped;
-    stream.getTracks().forEach(t => t.stop());
+    v.pause();
+    try { if (rec.state !== 'inactive') { rec.requestData(); rec.stop(); } } catch {}
+    await Promise.race([stopped, new Promise(r => setTimeout(r, 3000))]); // su alcuni browser onstop non arriva
+    own.forEach(t => t.stop());
     v.muted = prev.muted; v.playbackRate = prev.rate;
+    if (!dur() && hls) { const t = inT; hls.recoverMediaError(); v.addEventListener('loadedmetadata', () => seekTo(t), { once: true }); }
     if (ex.cancelled) { $('exportBox').hidden = true; $('clipBtn').disabled = false; ex = null; say('Video cancelled'); return; }
     const type = mime.split(';')[0], ext = type === 'video/mp4' ? 'mp4' : 'webm';
     const blob = new Blob(chunks, { type });
+    if (ex.error || !blob.size) {
+      ex.state = 'error';
+      exUI('error', `Couldn't make the video on this device (${ex.error || 'empty file'}). You can share the link instead.`, 0);
+      say('The clip video could not be made');
+      $('exLink').focus({ preventScroll: true });
+      return;
+    }
     const name = `clip-${fmtP(inT)}-${fmtP(outT)}`.replace(/:/g, 'm').replace(/\./g, '-') + '.' + ext;
     ex.file = new File([blob], name, { type }); ex.state = 'ready';
     exUI('ready', `Video ready: ${len.toFixed(1)} s, ${(blob.size / 1e6).toFixed(1)} MB (${ext.toUpperCase()})`, 1);
@@ -1239,8 +1279,13 @@
     ($('exShare').hidden ? $('exSave') : $('exShare')).focus({ preventScroll: true });
   }
   $('clipBtn').onclick = makeClip;
-  $('exShare').onclick = async () => { try { await navigator.share({ files: [ex.file], title: 'Clip' }); } catch {} };
+  $('exShare').onclick = async () => {
+    try { await navigator.share({ files: [ex.file] }); }
+    catch (e) { if (e.name !== 'AbortError') toast(`Sharing failed (${e.name}): use Download`, null, null, 5000); }
+  };
+  $('exLink').onclick = shareLink;
   $('exSave').onclick = () => {
+    if (!ex || !ex.file) return;
     const a = document.createElement('a'); a.href = URL.createObjectURL(ex.file); a.download = ex.file.name;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
@@ -1274,17 +1319,28 @@
   }
   $('bmBtn').onclick = addBM;
 
-  // clip condivisa: #clip=12.4-25.0
-  let clipView = false;
+  // clip condivisa: ?clip=12.4-25.0 (vale anche #clip=…): il player mostra solo quello spezzone
+  function enterClip(a, b) {
+    clipView = true; clipA = a; clipB = b;
+    stage.classList.add('clip-view');
+    $('clipBannerTxt').textContent = `Clip ${fmt(a)}–${fmt(b)}`;
+    $('clipBanner').hidden = false;
+    setRange(a, b); renderBM();
+    if (v.currentTime < a || v.currentTime > b) v.currentTime = a;
+    setP(); say(`Shared clip from ${fmt(a)} to ${fmt(b)}. Press play.`);
+  }
+  function exitClip() {
+    clipView = false;
+    stage.classList.remove('clip-view');
+    $('clipBanner').hidden = true;
+    history.replaceState(null, '', location.pathname);
+    renderBM(); setP(); say('Full video');
+  }
+  $('clipFull').onclick = exitClip;
   function readClip() {
-    const m = location.hash.match(/clip=([\d.]+)-([\d.]+)/);
+    const m = (location.search + location.hash).match(/clip=([\d.]+)-([\d.]+)/);
     if (!m) return;
-    const go = () => {
-      clipView = true; setRange(+m[1], +m[2]); setLoop(true, false);
-      toast(`Shared clip ${fmtP(inT)}–${fmtP(outT)}: press play`, 'Watch all', () => {
-        clipView = false; setLoop(false); history.replaceState(null, '', location.pathname);
-      }, 9000);
-    };
+    const go = () => { const d = dur(), a = clamp(+m[1], 0, d), b = clamp(+m[2], a + 0.5, d); enterClip(a, b); };
     if (dur()) go(); else v.addEventListener('loadedmetadata', go, { once: true });
   }
   window.addEventListener('hashchange', readClip);

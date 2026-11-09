@@ -104,16 +104,24 @@
     font: 600 12px/1 system-ui, sans-serif; font-variant-numeric: tabular-nums; background: #fff; color: #111; padding: 5px 7px; border-radius: 6px;
   }
 
-  /* scorciatoie che emergono */
-  .kh {
-    position: absolute; top: -20px; left: 50%; transform: translateX(-50%); pointer-events: none; white-space: nowrap;
-    font: 700 11px/1 ui-monospace, Menlo, Consolas, monospace; color: #111; background: #fff; border-radius: 5px; padding: 3px 5px;
-    opacity: 0; transition: opacity .15s;
+  /* pannello "?" con le scorciatoie */
+  .q { font: 700 19px/1 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .help {
+    position: absolute; right: 12px; top: 12px; width: min(600px, calc(100% - 24px)); max-height: calc(100% - 84px); overflow: auto;
+    padding: 12px 14px 14px; border-radius: 14px; background: rgb(16 17 20 / .95); color: #f5f6fc;
+    box-shadow: 0 10px 30px rgb(0 0 0 / .4); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
   }
-  .row .kh { top: -2px; left: auto; right: -2px; transform: none; }
-  .crea-btn .kh { top: -10px; right: -6px; }
-  .seek .kh { top: -14px; }
-  .hints .kh { opacity: 1; }
+  .help[hidden] { display: none; }
+  .help-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .help h2 { font-size: 15px; }
+  .help h3 { margin: 10px 0 4px; font-size: 12px; color: #b6b9c3; }
+  .help-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+  @container (max-width: 520px) { .help-cols { grid-template-columns: 1fr; } }
+  .help dl { display: grid; grid-template-columns: 7.5em 1fr; gap: 4px 10px; margin: 0; font-size: 13px; }
+  .help dt { white-space: nowrap; }
+  .help dd { margin: 0; color: #d4d6dd; }
+  .help kbd { opacity: 1; border-color: rgb(245 246 252 / .45); }
+  @media (hover: none) and (pointer: coarse) { #helpBtn { display: none; } }
 
   /* doppio tocco */
   .rip { position: absolute; top: 0; bottom: 0; width: 34%; display: grid; place-items: center; pointer-events: none; opacity: 0; transition: opacity .35s; font: 700 16px system-ui, sans-serif; }
@@ -192,8 +200,6 @@
   .seg button + button { border-left: 1px solid var(--s-line); }
   .seg button[aria-pressed="true"] { background: #fff; color: #111; }
   .seg button svg { width: 16px; height: 16px; fill: currentColor; vertical-align: middle; }
-  .seg .lbl { display: grid; place-items: center; padding: 0 10px; background: var(--s-card); color: var(--s-muted); font: 600 13px system-ui, sans-serif; border-left: 1px solid var(--s-line); }
-  .seg .lbl + button { border-left: 1px solid var(--s-line); }
   .export { margin-top: 14px; padding: 12px; border: 1px solid var(--s-line); border-radius: 12px; background: var(--s-card); }
   .export[hidden] { display: none; }
   .ex-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font: 600 14px system-ui, sans-serif; }
@@ -211,7 +217,6 @@
 
   /* su touch le lettere dei tasti non servono */
   @media (pointer: coarse) {
-    .sbtn kbd, .kh { display: none; }
     .tools { gap: 6px; }
     .sbtn { padding: 0 12px; }
   }
@@ -223,7 +228,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .em { filter: none; transform: none; }
-    .studio, .track, .kh, .rip { transition: none; }
+    .studio, .track, .rip { transition: none; }
   }
   @media (forced-colors: active) {
     .em { opacity: 1 !important; filter: none !important; transform: none !important; }
@@ -248,24 +253,55 @@
       <div class="line" aria-hidden="true"><i></i></div>
       <div class="toast" id="toast" hidden><span id="toastTxt"></span><button class="tact" id="toastBtn" type="button" hidden></button></div>
 
+      <div class="help" id="help" role="dialog" aria-labelledby="helpTitle" hidden>
+        <div class="help-head">
+          <h2 id="helpTitle">Scorciatoie da tastiera</h2>
+          <button class="btn" id="helpClose" type="button" aria-label="Chiudi le scorciatoie"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="close"/></svg></button>
+        </div>
+        <div class="help-cols"><div>
+        <h3>Guarda</h3>
+        <dl>
+          <dt><kbd>Spazio</kbd> <kbd>K</kbd></dt><dd>Play / pausa</dd>
+          <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Indietro / avanti 5 s</dd>
+          <dt><kbd>J</kbd> <kbd>L</kbd></dt><dd>Indietro / avanti 10 s</dd>
+          <dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Volume</dd>
+          <dt><kbd>M</kbd></dt><dd>Audio sì / no</dd>
+          <dt><kbd>F</kbd></dt><dd>Schermo intero</dd>
+          <dt><kbd>0</kbd>–<kbd>9</kbd></dt><dd>Vai al 0–90% del video</dd>
+          <dt><kbd>T</kbd></dt><dd>Cambia come si legge il tempo</dd>
+          <dt><kbd>B</kbd></dt><dd>Segnalibro</dd>
+        </dl>
+        </div><div>
+        <h3>Crea</h3>
+        <dl>
+          <dt><kbd>C</kbd></dt><dd>Apri / chiudi Crea</dd>
+          <dt><kbd>A</kbd></dt><dd>Ripeti il tratto</dd>
+          <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Sposta la maniglia di 0,5 s</dd>
+          <dt><kbd>Maiusc</kbd> <kbd>←</kbd> <kbd>→</kbd></dt><dd>Spostamento fine</dd>
+          <dt><kbd>Esc</kbd></dt><dd>Torna a guardare</dd>
+        </dl>
+        </div></div>
+      </div>
+
       <div class="bar" id="bar" role="group" aria-label="Comandi del video">
         <div class="seek em" id="seek" role="slider" tabindex="0" aria-label="Avanzamento"
              aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00 di 0:00" aria-keyshortcuts="ArrowLeft ArrowRight">
           <div class="track"><div class="clipmark"></div><div class="fill"></div><div id="seekBms"></div><div class="knob"></div></div>
           <div class="hpill" id="hpill" hidden></div>
-          <span class="kh">← →</span>
+          
         </div>
         <div class="row">
           <button class="btn em" id="playBtn" type="button" aria-label="Riproduci" aria-keyshortcuts="k">
-            <svg viewBox="0 0 20 20" aria-hidden="true"><path id="playPath"/></svg><span class="kh">K</span></button>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path id="playPath"/></svg></button>
           <button class="btn em" id="muteBtn" type="button" aria-label="Disattiva audio" aria-keyshortcuts="m">
-            <svg viewBox="0 0 20 20" aria-hidden="true"><path id="mutePath"/></svg><span class="kh">M</span></button>
-          <button class="tbtn em" id="timeBtn" type="button" aria-keyshortcuts="t"><span id="timeTxt">0:00 / 0:00</span><span class="sr">, cambia formato del tempo</span><span class="kh">T</span></button>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path id="mutePath"/></svg></button>
+          <button class="tbtn em" id="timeBtn" type="button" aria-keyshortcuts="t"><span id="timeTxt">0:00 / 0:00</span><span class="sr">, cambia formato del tempo</span></button>
           <span class="spacer"></span>
           <button class="crea-btn em" id="creaBtn" type="button" aria-pressed="false" aria-controls="studio" aria-keyshortcuts="c">
-            <svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="scissors"/></svg>Crea<span class="kh">C</span></button>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="scissors"/></svg>Crea</button>
+          <button class="btn em" id="helpBtn" type="button" aria-label="Scorciatoie da tastiera" aria-haspopup="dialog" aria-expanded="false" aria-controls="help" aria-keyshortcuts="Shift+?"><span class="q" aria-hidden="true">?</span></button>
           <button class="btn em" id="fsBtn" type="button" aria-label="Schermo intero" aria-keyshortcuts="f">
-            <svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="fs"/></svg><span class="kh">F</span></button>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="fs"/></svg></button>
         </div>
       </div>
     </div>
@@ -274,7 +310,7 @@
       <div class="inner"><div class="pad">
         <div class="studio-head">
           <h2 id="studioTitle">Crea</h2>
-          <button class="sbtn" id="closeStudio" type="button">Torna a guardare <kbd>Esc</kbd></button>
+          <button class="sbtn" id="closeStudio" type="button">Torna a guardare</button>
         </div>
         <div class="meta" id="meta"></div>
         <div class="filmwrap">
@@ -287,15 +323,9 @@
           </div>
         </div>
         <div class="tools">
-          <button class="sbtn" id="loopBtn" type="button" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="loop"/></svg>Ripeti il tratto <kbd>A</kbd></button>
+          <button class="sbtn" id="loopBtn" type="button" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="loop"/></svg>Ripeti il tratto</button>
           <button class="sbtn" id="clipBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="film" fill-rule="evenodd"/></svg>Crea il video della clip</button>
           <button class="sbtn" id="linkBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="share"/></svg>Condividi link</button>
-          <button class="sbtn" id="frameBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="camera"/></svg>Salva fotogramma <kbd>S</kbd></button>
-          <div class="seg" role="group" aria-label="Sposta di un fotogramma">
-            <button type="button" id="fPrev" aria-label="Fotogramma precedente" aria-keyshortcuts=","><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="fprev"/></svg></button>
-            <span class="lbl" aria-hidden="true">1 fotogramma</span>
-            <button type="button" id="fNext" aria-label="Fotogramma successivo" aria-keyshortcuts="."><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="fnext"/></svg></button>
-          </div>
           <div class="seg" role="group" aria-label="Velocità">
             <button type="button" data-r="0.25" aria-label="Velocità 0,25" aria-pressed="false">¼×</button>
             <button type="button" data-r="0.5" aria-label="Velocità 0,5" aria-pressed="false">½×</button>
@@ -303,7 +333,7 @@
             <button type="button" data-r="1.5" aria-label="Velocità 1,5" aria-pressed="false">1,5×</button>
             <button type="button" data-r="2" aria-label="Velocità 2" aria-pressed="false">2×</button>
           </div>
-          <button class="sbtn" id="bmBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="bookmark"/></svg>Segnalibro <kbd>B</kbd></button>
+          <button class="sbtn" id="bmBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="bookmark"/></svg>Segnalibro</button>
         </div>
         <div class="export" id="exportBox" hidden>
           <div class="ex-row">
@@ -329,27 +359,27 @@
     <ul>
       <li>Premi play, poi muovi il mouse <strong>piano</strong> verso il basso: i comandi vicini al puntatore si mettono a fuoco, quelli lontani restano tenui e sfocati.</li>
       <li>Resta fermo 2 secondi: rimane solo una linea sottile. In pausa i comandi restano tutti visibili.</li>
-      <li>Tastiera: premi <kbd>Tab</kbd> o un tasto qualsiasi. Compaiono i comandi e, per un attimo, la lettera di ognuno. Tieni premuto <kbd>?</kbd> per rivederle.</li>
+      <li>Tastiera: con <kbd>Tab</kbd> o un tasto qualsiasi compaiono tutti i comandi. Le scorciatoie sono raccolte in una sola voce: il pulsante <strong>?</strong> (o il tasto <kbd>?</kbd>).</li>
       <li>Telefono: un tocco mostra o nasconde i comandi, doppio tocco a sinistra o a destra = −10 / +10 s.</li>
-      <li>Tasto del tempo (<kbd>T</kbd>): "0:40 / 1:33", "ancora 53 s", "finisce alle 18:42".</li>
+      <li>Tasto del tempo: "0:40 / 1:33", "ancora 53 s", "finisce alle 18:42".</li>
     </ul>
     <h2 style="margin-top:18px">Crea: lo spettatore diventa videomaker</h2>
     <h3>Prova</h3>
     <ul>
-      <li>Premi <strong>Crea</strong> (<kbd>C</kbd>): sotto il video si apre la striscia con i fotogrammi.</li>
-      <li>Trascina sulla striscia per scegliere un tratto, oppure sposta le maniglie. Da tastiera: frecce ±0,5 s, <kbd>Maiusc</kbd>+frecce un fotogramma.</li>
+      <li>Premi <strong>Crea</strong>: sotto il video si apre la striscia con le immagini del video.</li>
+      <li>Trascina sulla striscia per scegliere un tratto, oppure sposta le maniglie.</li>
       <li><strong>Crea il video della clip</strong> (massimo 30 s): il tratto viene registrato mentre scorre, poi lo <strong>condividi</strong> (WhatsApp, social: su telefono) o lo <strong>scarichi</strong>.</li>
       <li><strong>Condividi link</strong>: chi lo apre vede solo quel pezzo, in ripetizione.</li>
-      <li><strong>Ripeti il tratto</strong> (<kbd>A</kbd>), <strong>Salva fotogramma</strong> (<kbd>S</kbd>), <strong>‹ 1 fotogramma ›</strong> (<kbd>,</kbd> <kbd>.</kbd>) per trovare l'istante esatto, velocità da ¼× a 2×, <strong>Segnalibro</strong> (<kbd>B</kbd>).</li>
+      <li><strong>Ripeti il tratto</strong>, velocità da ¼× a 2×, <strong>Segnalibro</strong>.</li>
     </ul>
     <h3>Cosa c'è di nuovo</h3>
-    <p>I comandi non sono "accesi o spenti": compaiono in proporzione all'intenzione (vicinanza e rallentamento del puntatore), con la messa a fuoco come immagine dell'attenzione. E lo spettatore può fare bene quello che oggi fa male: ritagliare un momento, condividerlo, salvarne il fotogramma.</p>
+    <p>I comandi non sono "accesi o spenti": compaiono in proporzione all'intenzione (vicinanza e rallentamento del puntatore), con la messa a fuoco come immagine dell'attenzione. E lo spettatore può fare bene quello che oggi fa male: ritagliare un momento e condividerlo.</p>
     <h3>Rischi</h3>
     <ul>
       <li>I comandi tenui non hanno contrasto pieno: diventano pieni appena li raggiungi, con la tastiera o in pausa. C'è anche "Mostra sempre i comandi".</li>
       <li>Sul telefono non esiste il passaggio del mouse: lì vale il tocco.</li>
       <li>Il link della clip qui funziona sulla pagina; nella skin lo dovrà leggere il player.</li>
-      <li>Salva fotogramma richiede un video con CORS (Mux lo ha).</li>
+      <li>Il video della clip richiede un video con CORS (Mux lo ha) e si registra in tempo reale.</li>
     </ul>
   </section>
   <div id="live" class="sr" aria-live="polite"></div>
@@ -391,10 +421,8 @@
     scissors: 'M5.5 2a3 3 0 0 1 2.7 4.3L10 8.1l5.6-5.6a1 1 0 0 1 1.4 1.4L11.4 9.5l5.6 5.6a1 1 0 0 1-1.4 1.4L10 10.9l-1.8 1.8a3 3 0 1 1-1.4-1.4l1.8-1.8-1.8-1.8A3 3 0 1 1 5.5 2zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm0 9a1 1 0 1 0 0 2 1 1 0 0 0 0-2z',
     loop: 'M5 6h8V3.5L17 7l-4 3.5V8H5a1 1 0 0 0-1 1v1H2V9a3 3 0 0 1 3-3zm10 8H7v2.5L3 13l4-3.5V12h8a1 1 0 0 0 1-1v-1h2v1a3 3 0 0 1-3 3z',
     link: 'M8.6 11.4a1 1 0 0 1 0-1.4l2.8-2.8a1 1 0 1 1 1.4 1.4L10 11.4a1 1 0 0 1-1.4 0zM6.5 9.3l-1.4 1.4a2.5 2.5 0 0 0 3.5 3.5l1.4-1.4 1.4 1.4-1.4 1.4a4.5 4.5 0 0 1-6.4-6.4l1.4-1.4zm7 1.4 1.4-1.4a2.5 2.5 0 0 0-3.5-3.5L10 7.2 8.6 5.8 10 4.4a4.5 4.5 0 0 1 6.4 6.4L15 12.2z',
-    camera: 'M7 3h6l1.5 2H17a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2.5zm3 4a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm0 2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z',
+    close: 'M5.3 4 10 8.6 14.7 4 16 5.3 11.4 10l4.6 4.7-1.3 1.3-4.7-4.6L5.3 16 4 14.7 8.6 10 4 5.3z',
     bookmark: 'M5 2h10a1 1 0 0 1 1 1v15l-6-4-6 4V3a1 1 0 0 1 1-1z',
-    fprev: 'M4 4h2v12H4zm12 0v12l-8-6z',
-    fnext: 'M14 4h2v12h-2zM4 4l8 6-8 6z',
     share: 'M10 2l4 4h-3v7H9V6H6zM4 11h2v5h8v-5h2v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z',
     download: 'M9 2h2v8h3l-4 4-4-4h3zM4 15h12v2H4z',
     film: 'M3 3h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v2h2V5zm10 0v2h2V5zM4 9v2h2V9zm10 0v2h2V9zM4 13v2h2v-2zm10 0v2h2v-2zM8 5v10h4V5z',
@@ -508,7 +536,7 @@
   const lv = new Map(ems.map(e => [e, 1]));
   const IDLE = 1800;
   let wake = 1, lastMove = -1e9, px = -1, py = -1, speed = 0, lastT = 0, inside = false;
-  let kbdFull = false, touchUntil = 0, hintsHeld = false, hintsUntil = 0, hintsShown = false;
+  let kbdFull = false, touchUntil = 0, helpOpen = false;
   let always = store.get('gc-always', false);
   let raf = 0;
   const smooth = x => x * x * (3 - 2 * x);
@@ -531,9 +559,7 @@
   function tick(now) {
     raf = 0;
     const playing = !v.paused && !v.ended;
-    const hints = hintsHeld || now < hintsUntil;
-    stage.classList.toggle('hints', hints);
-    const full = always || !playing || kbdFull || now < touchUntil || creaOpen || seeking || hints;
+    const full = always || !playing || kbdFull || now < touchUntil || creaOpen || seeking || helpOpen;
     const awake = inside && now - lastMove < IDLE;
     const wT = full || awake ? 1 : 0;
     const k = reduce.matches ? 1 : 0.16;
@@ -566,7 +592,7 @@
     player.style.setProperty('--line-o', (1 - maxL).toFixed(3));
     bar.classList.toggle('inert', maxL < 0.08);
     player.classList.toggle('nocursor', playing && !full && inside && !awake);
-    if (busy || awake || now < touchUntil || now < hintsUntil) raf = requestAnimationFrame(tick);
+    if (busy || awake || now < touchUntil) raf = requestAnimationFrame(tick);
   }
 
   // tocco e clic sul video
@@ -593,7 +619,17 @@
   }
 
   // ---------- scorciatoie che emergono ----------
-  function flashHints(ms) { hintsUntil = performance.now() + ms; kick(); }
+  // pannello "?"
+  function openHelp(open) {
+    helpOpen = open;
+    $('help').hidden = !open;
+    $('helpBtn').setAttribute('aria-expanded', String(open));
+    if (open) $('helpClose').focus({ preventScroll: true });
+    else if ($('help').contains(document.activeElement) || document.activeElement === document.body) $('helpBtn').focus({ preventScroll: true });
+    kick();
+  }
+  $('helpBtn').onclick = () => openHelp(!helpOpen);
+  $('helpClose').onclick = () => openHelp(false);
   bar.addEventListener('focusin', e => { if (e.target.matches(':focus-visible')) { kbdFull = true; kick(); } });
 
   $('always').checked = always;
@@ -853,30 +889,6 @@
     else { $('exportBox').hidden = true; ex = null; $('clipBtn').focus({ preventScroll: true }); }
   };
 
-  function saveFrame() {
-    const w = v.videoWidth, h = v.videoHeight;
-    if (!w) { toast('Il video non è ancora pronto'); return; }
-    const c = document.createElement('canvas'); c.width = w; c.height = h;
-    try { c.getContext('2d').drawImage(v, 0, 0, w, h); } catch { toast('Questo browser non permette di salvare il fotogramma'); return; }
-    const name = `fotogramma-${fmtP(v.currentTime).replace(':', 'm').replace('.', ',')}s.png`;
-    c.toBlob(async blob => {
-      if (!blob) { toast('Questo browser non permette di salvare il fotogramma'); return; }
-      const file = new File([blob], name, { type: 'image/png' });
-      if (coarse.matches && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try { await navigator.share({ files: [file] }); } catch {}
-        return;
-      }
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-      toast(`Fotogramma salvato (${w}×${h})`);
-    }, 'image/png');
-  }
-  $('frameBtn').onclick = saveFrame;
-
-  const frameStep = d => { v.pause(); seekBy(d * FR); };
-  $('fPrev').onclick = () => frameStep(-1);
-  $('fNext').onclick = () => frameStep(1);
   $$('.seg [data-r]').forEach(b => b.onclick = () => { v.playbackRate = +b.dataset.r; });
 
   // segnalibri
@@ -922,10 +934,10 @@
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.target.closest('input, textarea, select')) return;
     const k = e.key;
-    if (k === '?') { hintsHeld = true; kick(); e.preventDefault(); return; }
+    if (k === '?') { openHelp(!helpOpen); e.preventDefault(); return; }
     if (k === 'Shift') return;
     kbdFull = true;
-    if (!hintsShown) { hintsShown = true; flashHints(2500); } else kick();
+    kick();
     const onBtn = e.target.closest('button, [role="slider"]');
     const key = k.toLowerCase();
     let done = true;
@@ -943,16 +955,12 @@
     else if (/^[0-9]$/.test(k)) seekTo(dur() * +k / 10);
     else if (key === 'c') openCrea(!creaOpen, true);
     else if (key === 'b') addBM();
+    else if (k === 'Escape' && helpOpen) openHelp(false);
     else if (k === 'Escape' && creaOpen) openCrea(false);
     else if (creaOpen && key === 'a') setLoop(!loopOn);
-    else if (creaOpen && key === 's') saveFrame();
-    else if (creaOpen && k === ',') frameStep(-1);
-    else if (creaOpen && k === '.') frameStep(1);
     else done = false;
     if (done) e.preventDefault();
   });
-  document.addEventListener('keyup', e => { if (e.key === '?' || e.key === 'Shift') { hintsHeld = false; kick(); } });
-  window.addEventListener('blur', () => { hintsHeld = false; kick(); });
 
   setP(); kick();
 })();

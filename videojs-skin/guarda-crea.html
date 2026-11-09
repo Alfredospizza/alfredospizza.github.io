@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Guarda e Crea</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f6fc; --fg: #131417; --muted: #56585f; --card: #ffffff; --line: rgb(19 20 23 / 0.12);
+    --s-bg: #0f1013; --s-card: #1b1c21; --s-fg: #f5f6fc; --s-muted: #b6b9c3; --s-line: rgb(245 246 252 / 0.16);
+    --ease: cubic-bezier(.2, .8, .2, 1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #131417; --fg: #f5f6fc; --muted: #bbbdc6; --card: #1d1e23; --line: rgb(245 246 252 / 0.14); }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 16px max(16px, env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  }
+  main { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin: 0 0 4px; }
+  h2 { font-size: 1.05rem; margin: 0; }
+  h3 { font-size: 0.875rem; margin: 14px 0 4px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  p, li { color: var(--muted); }
+  p { margin: 0 0 12px; }
+  ul { margin: 0; padding-left: 20px; }
+  kbd { font: 600 0.8em ui-monospace, Menlo, Consolas, monospace; padding: 0 5px; border: 1px solid currentColor; border-radius: 5px; opacity: .75; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* focus: anello bianco + bordo nero, visibile su qualunque fondo */
+  :focus-visible { outline: 2px solid #fff; outline-offset: 2px; box-shadow: 0 0 0 4px #111; }
+
+  /* ---------- palco: player + striscia Crea ---------- */
+  .stage { position: relative; border-radius: 16px; overflow: hidden; background: #000; }
+  .stage:fullscreen { border-radius: 0; display: flex; flex-direction: column; width: 100%; height: 100%; }
+  .stage:-webkit-full-screen { border-radius: 0; display: flex; flex-direction: column; width: 100%; height: 100%; }
+  .player {
+    position: relative; color: #fff; container-type: inline-size;
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation;
+  }
+  .stage:fullscreen .player { flex: 1; min-height: 0; }
+  .stage:-webkit-full-screen .player { flex: 1; min-height: 0; }
+  .player video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #000; }
+  .stage:fullscreen .player video { height: 100%; aspect-ratio: auto; }
+  .stage:-webkit-full-screen .player video { height: 100%; aspect-ratio: auto; }
+  .player.nocursor, .player.nocursor * { cursor: none !important; }
+  .hit { position: absolute; inset: 0; }
+
+  /* velo sotto i comandi: segue il comando più visibile */
+  .scrim {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 150px; pointer-events: none;
+    background: linear-gradient(to top, rgb(0 0 0 / .8), rgb(0 0 0 / .6) 55%, rgb(0 0 0 / 0));
+    opacity: var(--scrim, 1);
+  }
+  /* a riposo resta solo questa linea */
+  .line { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgb(255 255 255 / .2); opacity: var(--line-o, 0); pointer-events: none; }
+  .line i { display: block; height: 100%; width: var(--p, 0%); background: rgb(255 255 255 / .9); }
+
+  /* ---------- comandi che emergono ---------- */
+  .bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 8px 8px; display: grid; gap: 0; }
+  .bar.inert { pointer-events: none; }
+  .em {
+    --lv: 1;
+    opacity: var(--lv);
+    filter: blur(calc((1 - var(--lv)) * 3px));
+    transform: translateY(calc((1 - var(--lv)) * 6px));
+  }
+  .row { display: flex; align-items: center; gap: 2px; }
+  .spacer { flex: 1; }
+  .btn {
+    position: relative; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; flex: none;
+    display: grid; place-items: center; background: transparent; color: inherit; cursor: pointer;
+  }
+  .btn:hover { background: rgb(255 255 255 / .14); }
+  .btn svg, .crea-btn svg { width: 22px; height: 22px; fill: currentColor; }
+  .tbtn {
+    position: relative; height: 44px; padding: 0 10px; border: 0; border-radius: 999px; background: transparent; color: #fff; cursor: pointer;
+    font: 600 14px/1 system-ui, -apple-system, "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .tbtn:hover { background: rgb(255 255 255 / .14); }
+  .crea-btn {
+    position: relative; display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px 0 10px; margin: 0 4px;
+    border-radius: 999px; border: 1.5px solid rgb(255 255 255 / .75); background: transparent; color: #fff; cursor: pointer;
+    font: 600 14px system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .crea-btn svg { width: 18px; height: 18px; }
+  .crea-btn:hover { background: rgb(255 255 255 / .14); }
+  .crea-btn[aria-pressed="true"] { background: #fff; color: #111; border-color: #fff; }
+
+  /* barra di avanzamento */
+  .seek { position: relative; height: 30px; margin: 0 8px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
+  .track { position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgb(255 255 255 / .3); transition: height .15s; }
+  .seek:hover .track, .seek:focus-visible .track, .seek.drag .track { height: 7px; }
+  .fill { position: absolute; inset: 0 auto 0 0; width: var(--p, 0%); background: #fff; border-radius: inherit; }
+  .knob { position: absolute; top: 50%; left: var(--p, 0%); width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgb(0 0 0 / .55); }
+  .clipmark { display: none; position: absolute; top: -4px; bottom: -4px; left: var(--a, 0%); width: calc(var(--b, 0%) - var(--a, 0%)); border: 2px solid #fff; border-radius: 4px; }
+  .creating .clipmark, .looping .clipmark { display: block; }
+  .seek .bm { position: absolute; top: -4px; bottom: -4px; width: 3px; margin-left: -1.5px; background: #fff; border-radius: 2px; box-shadow: 0 0 0 1px rgb(0 0 0 / .6); }
+  .hpill {
+    position: absolute; bottom: 30px; transform: translateX(-50%); pointer-events: none;
+    font: 600 12px/1 system-ui, sans-serif; font-variant-numeric: tabular-nums; background: #fff; color: #111; padding: 5px 7px; border-radius: 6px;
+  }
+
+  /* scorciatoie che emergono */
+  .kh {
+    position: absolute; top: -20px; left: 50%; transform: translateX(-50%); pointer-events: none; white-space: nowrap;
+    font: 700 11px/1 ui-monospace, Menlo, Consolas, monospace; color: #111; background: #fff; border-radius: 5px; padding: 3px 5px;
+    opacity: 0; transition: opacity .15s;
+  }
+  .row .kh { top: -2px; left: auto; right: -2px; transform: none; }
+  .crea-btn .kh { top: -10px; right: -6px; }
+  .seek .kh { top: -14px; }
+  .hints .kh { opacity: 1; }
+
+  /* doppio tocco */
+  .rip { position: absolute; top: 0; bottom: 0; width: 34%; display: grid; place-items: center; pointer-events: none; opacity: 0; transition: opacity .35s; font: 700 16px system-ui, sans-serif; }
+  .rip.l { left: 0; background: radial-gradient(circle at 0 50%, rgb(255 255 255 / .22), transparent 70%); }
+  .rip.r { right: 0; background: radial-gradient(circle at 100% 50%, rgb(255 255 255 / .22), transparent 70%); }
+  .rip.on { opacity: 1; transition: none; }
+
+  .toast {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 24px);
+    display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 14px; border-radius: 999px;
+    background: rgb(0 0 0 / .82); color: #fff; font: 600 14px system-ui, sans-serif;
+  }
+  .toast[hidden] { display: none; }
+  .toast.noaction { padding-right: 14px; }
+  .toast span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .tact { flex: none; min-height: 36px; padding: 0 12px; border: 0; border-radius: 999px; background: #fff; color: #111; font: 700 13px system-ui, sans-serif; cursor: pointer; }
+
+  @container (max-width: 420px) {
+    .tbtn { padding: 0 6px; font-size: 13px; }
+    .crea-btn { padding: 0 10px 0 8px; }
+  }
+
+  /* ---------- Crea ---------- */
+  .studio { display: grid; grid-template-rows: 0fr; background: var(--s-bg); color: var(--s-fg); transition: grid-template-rows .35s var(--ease); }
+  .studio.open { grid-template-rows: 1fr; }
+  .studio > .inner { overflow: hidden; min-height: 0; }
+  .pad { padding: 12px 14px 16px; }
+  .studio-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .meta { display: flex; flex-wrap: wrap; gap: 4px 16px; font: 600 13px system-ui, sans-serif; font-variant-numeric: tabular-nums; color: var(--s-muted); margin-top: 6px; }
+  .meta b { color: var(--s-fg); }
+
+  .filmwrap { position: relative; padding-top: 30px; margin-top: 4px; }
+  .film { display: flex; height: 64px; border-radius: 10px; overflow: hidden; background: #26272d; }
+  .tile { flex: 1 1 0; min-width: 0; background-repeat: no-repeat; }
+  .tile + .tile { box-shadow: inset 1px 0 0 rgb(0 0 0 / .35); }
+  .ov { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; touch-action: none; cursor: crosshair; }
+  .shade { position: absolute; top: 0; bottom: 0; background: rgb(0 0 0 / .62); pointer-events: none; }
+  .shade.l { left: 0; width: var(--a, 0%); border-radius: 10px 0 0 10px; }
+  .shade.r { left: var(--b, 0%); right: 0; border-radius: 0 10px 10px 0; }
+  .sel { position: absolute; top: 0; bottom: 0; left: var(--a, 0%); width: calc(var(--b, 0%) - var(--a, 0%)); border-top: 3px solid #fff; border-bottom: 3px solid #fff; pointer-events: none; }
+  .ph { position: absolute; top: -6px; bottom: -6px; left: var(--p, 0%); width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / .6); pointer-events: none; }
+  .ov .obm { position: absolute; bottom: -12px; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: #fff; pointer-events: none; }
+  .h { position: absolute; top: -4px; bottom: -4px; width: 44px; margin-left: -22px; display: grid; place-items: center; cursor: ew-resize; touch-action: none; }
+  .h-in { left: var(--a, 0%); }
+  .h-out { left: var(--b, 0%); }
+  .h::before { content: ""; width: 12px; height: 100%; background: #fff; border-radius: 4px; box-shadow: 0 0 0 1px rgb(0 0 0 / .5); }
+  .h::after { content: ""; position: absolute; width: 2px; height: 18px; background: #111; border-radius: 1px; }
+  .h:focus-visible { outline: none; box-shadow: none; }
+  .h:focus-visible::before { box-shadow: 0 0 0 2px #111, 0 0 0 4px #fff; }
+  .tp {
+    position: absolute; bottom: calc(100% + 6px); pointer-events: none; white-space: nowrap;
+    font: 600 12px/1 system-ui, sans-serif; font-variant-numeric: tabular-nums; background: #fff; color: #111; padding: 5px 7px; border-radius: 6px;
+  }
+  .tp { opacity: 0; transition: opacity .15s; }
+  .h:focus-visible .tp, .h.drag .tp { opacity: 1; }
+  .h-in .tp { right: 50%; }
+  .h-out .tp { left: 50%; }
+  .h-in.flip .tp { right: auto; left: 50%; }
+  .h-out.flip .tp { left: auto; right: 50%; }
+
+  .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 18px; }
+  .sbtn {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 12px;
+    border: 1px solid var(--s-line); background: var(--s-card); color: var(--s-fg); cursor: pointer;
+    font: 600 14px system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .sbtn:hover { border-color: rgb(245 246 252 / .45); }
+  .sbtn[aria-pressed="true"] { background: #fff; color: #111; border-color: #fff; }
+  .sbtn svg { width: 18px; height: 18px; fill: currentColor; flex: none; }
+  .sbtn.icon { padding: 0 12px; }
+  .grp { display: inline-flex; gap: 4px; }
+  .seg { display: inline-flex; border: 1px solid var(--s-line); border-radius: 12px; overflow: hidden; }
+  .seg button { min-height: 44px; min-width: 48px; border: 0; background: var(--s-card); color: var(--s-fg); font: 600 14px system-ui, sans-serif; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--s-line); }
+  .seg button[aria-pressed="true"] { background: #fff; color: #111; }
+  .bmlist { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .bmlist:empty { display: none; }
+  .chip { display: inline-flex; align-items: center; border: 1px solid var(--s-line); border-radius: 999px; background: var(--s-card); }
+  .chip button { min-height: 36px; border: 0; background: transparent; color: var(--s-fg); cursor: pointer; font: 600 13px system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+  .chip .go { padding: 0 6px 0 12px; }
+  .chip .del { width: 36px; color: var(--s-muted); font-size: 16px; }
+
+  /* su touch le lettere dei tasti non servono */
+  @media (pointer: coarse) {
+    .sbtn kbd, .kh { display: none; }
+    .tools { gap: 6px; }
+    .sbtn { padding: 0 12px; }
+  }
+
+  /* ---------- pagina ---------- */
+  .opt { display: flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 10px; font-weight: 600; cursor: pointer; }
+  .opt input { width: 20px; height: 20px; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; margin-top: 8px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .em { filter: none; transform: none; }
+    .studio, .track, .kh, .rip { transition: none; }
+  }
+  @media (forced-colors: active) {
+    .em { opacity: 1 !important; filter: none !important; transform: none !important; }
+    .scrim, .line { display: none; }
+    .fill, .knob, .h::before { background: CanvasText; forced-color-adjust: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Guarda e Crea</h1>
+  <p>Prototipo fuori dalla skin. Un player che sparisce quando guardi e diventa uno strumento quando vuoi creare.</p>
+
+  <div class="stage" id="stage">
+    <div class="player" id="player">
+      <video id="v" playsinline crossorigin="anonymous" preload="metadata"
+        poster="https://image.mux.com/1U7atblCas8wrFyf4jKbsZ7b00bTQLeBGl9xw9yN7Qt8/thumbnail.webp?time=47"></video>
+      <div class="hit" id="hit" aria-hidden="true"></div>
+      <div class="rip l" id="ripL" aria-hidden="true">−10 s</div>
+      <div class="rip r" id="ripR" aria-hidden="true">+10 s</div>
+      <div class="scrim" aria-hidden="true"></div>
+      <div class="line" aria-hidden="true"><i></i></div>
+      <div class="toast" id="toast" hidden><span id="toastTxt"></span><button class="tact" id="toastBtn" type="button" hidden></button></div>
+
+      <div class="bar" id="bar" role="group" aria-label="Comandi del video">
+        <div class="seek em" id="seek" role="slider" tabindex="0" aria-label="Avanzamento"
+             aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00 di 0:00" aria-keyshortcuts="ArrowLeft ArrowRight">
+          <div class="track"><div class="clipmark"></div><div class="fill"></div><div id="seekBms"></div><div class="knob"></div></div>
+          <div class="hpill" id="hpill" hidden></div>
+          <span class="kh">← →</span>
+        </div>
+        <div class="row">
+          <button class="btn em" id="playBtn" type="button" aria-label="Riproduci" aria-keyshortcuts="k">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path id="playPath"/></svg><span class="kh">K</span></button>
+          <button class="btn em" id="muteBtn" type="button" aria-label="Disattiva audio" aria-keyshortcuts="m">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path id="mutePath"/></svg><span class="kh">M</span></button>
+          <button class="tbtn em" id="timeBtn" type="button" aria-keyshortcuts="t"><span id="timeTxt">0:00 / 0:00</span><span class="sr">, cambia formato del tempo</span><span class="kh">T</span></button>
+          <span class="spacer"></span>
+          <button class="crea-btn em" id="creaBtn" type="button" aria-pressed="false" aria-controls="studio" aria-keyshortcuts="c">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="scissors"/></svg>Crea<span class="kh">C</span></button>
+          <button class="btn em" id="fsBtn" type="button" aria-label="Schermo intero" aria-keyshortcuts="f">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="fs"/></svg><span class="kh">F</span></button>
+        </div>
+      </div>
+    </div>
+
+    <section class="studio" id="studio" aria-labelledby="studioTitle" inert>
+      <div class="inner"><div class="pad">
+        <div class="studio-head">
+          <h2 id="studioTitle">Crea</h2>
+          <button class="sbtn" id="closeStudio" type="button">Torna a guardare <kbd>Esc</kbd></button>
+        </div>
+        <div class="meta" id="meta"></div>
+        <div class="filmwrap">
+          <div class="film" id="film"></div>
+          <div class="ov" id="ov">
+            <div class="shade l"></div><div class="shade r"></div><div class="sel"></div>
+            <div id="ovBms"></div><div class="ph"></div>
+            <div class="h h-in" id="hIn" role="slider" tabindex="0" aria-label="Inizio clip" aria-valuemin="0"><span class="tp" id="tpIn"></span></div>
+            <div class="h h-out" id="hOut" role="slider" tabindex="0" aria-label="Fine clip" aria-valuemin="0"><span class="tp" id="tpOut"></span></div>
+          </div>
+        </div>
+        <div class="tools">
+          <span class="grp">
+            <button class="sbtn" id="setIn" type="button">Inizio qui <kbd>I</kbd></button>
+            <button class="sbtn" id="setOut" type="button">Fine qui <kbd>O</kbd></button>
+          </span>
+          <button class="sbtn" id="loopBtn" type="button" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="loop"/></svg>Ripeti il tratto <kbd>A</kbd></button>
+          <button class="sbtn" id="linkBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="link"/></svg>Copia link della clip</button>
+          <button class="sbtn" id="frameBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="camera"/></svg>Salva fotogramma <kbd>S</kbd></button>
+          <span class="grp">
+            <button class="sbtn icon" id="fPrev" type="button" aria-label="Fotogramma precedente" aria-keyshortcuts=","><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="fprev"/></svg><kbd>,</kbd></button>
+            <button class="sbtn icon" id="fNext" type="button" aria-label="Fotogramma successivo" aria-keyshortcuts="."><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="fnext"/></svg><kbd>.</kbd></button>
+          </span>
+          <div class="seg" role="group" aria-label="Velocità">
+            <button type="button" data-r="0.25" aria-label="Velocità 0,25" aria-pressed="false">¼×</button>
+            <button type="button" data-r="0.5" aria-label="Velocità 0,5" aria-pressed="false">½×</button>
+            <button type="button" data-r="1" aria-label="Velocità normale" aria-pressed="true">1×</button>
+          </div>
+          <button class="sbtn" id="bmBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="bookmark"/></svg>Segnalibro <kbd>B</kbd></button>
+        </div>
+        <div class="bmlist" id="bmList" role="list" aria-label="Segnalibri"></div>
+      </div></div>
+    </section>
+  </div>
+
+  <label class="opt"><input type="checkbox" id="always"> Mostra sempre i comandi</label>
+
+  <section class="panel">
+    <h2>Guarda: comandi che emergono</h2>
+    <h3>Prova</h3>
+    <ul>
+      <li>Premi play, poi muovi il mouse <strong>piano</strong> verso il basso: i comandi vicini al puntatore si mettono a fuoco, quelli lontani restano tenui e sfocati.</li>
+      <li>Resta fermo 2 secondi: rimane solo una linea sottile. In pausa i comandi restano tutti visibili.</li>
+      <li>Tastiera: premi <kbd>Tab</kbd> o un tasto qualsiasi. Compaiono i comandi e, per un attimo, la lettera di ognuno. Tieni premuto <kbd>?</kbd> per rivederle.</li>
+      <li>Telefono: un tocco mostra o nasconde i comandi, doppio tocco a sinistra o a destra = −10 / +10 s.</li>
+      <li>Tasto del tempo (<kbd>T</kbd>): "0:40 / 1:33", "ancora 53 s", "finisce alle 18:42".</li>
+    </ul>
+    <h2 style="margin-top:18px">Crea: lo spettatore diventa videomaker</h2>
+    <h3>Prova</h3>
+    <ul>
+      <li>Premi <strong>Crea</strong> (<kbd>C</kbd>): sotto il video si apre la striscia con i fotogrammi.</li>
+      <li>Trascina sulla striscia per scegliere un tratto, oppure sposta le maniglie. Da tastiera: frecce ±0,5 s, <kbd>Maiusc</kbd>+frecce un fotogramma.</li>
+      <li><strong>Ripeti il tratto</strong> (<kbd>A</kbd>), <strong>Copia link della clip</strong> (aprilo in un'altra scheda: parte solo quel pezzo), <strong>Salva fotogramma</strong> (<kbd>S</kbd>), <kbd>,</kbd> e <kbd>.</kbd> per un fotogramma alla volta, velocità ¼× ½× 1×, <strong>Segnalibro</strong> (<kbd>B</kbd>).</li>
+    </ul>
+    <h3>Cosa c'è di nuovo</h3>
+    <p>I comandi non sono "accesi o spenti": compaiono in proporzione all'intenzione (vicinanza e rallentamento del puntatore), con la messa a fuoco come immagine dell'attenzione. E lo spettatore può fare bene quello che oggi fa male: ritagliare un momento, condividerlo, salvarne il fotogramma.</p>
+    <h3>Rischi</h3>
+    <ul>
+      <li>I comandi tenui non hanno contrasto pieno: diventano pieni appena li raggiungi, con la tastiera o in pausa. C'è anche "Mostra sempre i comandi".</li>
+      <li>Sul telefono non esiste il passaggio del mouse: lì vale il tocco.</li>
+      <li>Il link della clip qui funziona sulla pagina; nella skin lo dovrà leggere il player.</li>
+      <li>Salva fotogramma richiede un video con CORS (Mux lo ha).</li>
+    </ul>
+  </section>
+  <div id="live" class="sr" aria-live="polite"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+<script>
+(() => {
+  const PID = '1U7atblCas8wrFyf4jKbsZ7b00bTQLeBGl9xw9yN7Qt8';
+  const SRC = `https://stream.mux.com/${PID}.m3u8`;
+  const SB = `https://image.mux.com/${PID}/storyboard.vtt?format=webp`;
+  const $ = id => document.getElementById(id);
+  const $$ = sel => [...document.querySelectorAll(sel)];
+  const v = $('v'), stage = $('stage'), player = $('player'), bar = $('bar'), seek = $('seek'), studio = $('studio'), ov = $('ov');
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const FR = 1 / 30;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const coarse = matchMedia('(pointer: coarse)');
+  const store = {
+    get(k, d) { try { const x = localStorage.getItem(k); return x == null ? d : JSON.parse(x); } catch { return d; } },
+    set(k, x) { try { localStorage.setItem(k, JSON.stringify(x)); } catch {} },
+  };
+
+  if (window.Hls && Hls.isSupported()) { const h = new Hls(); h.loadSource(SRC); h.attachMedia(v); }
+  else v.src = SRC;
+
+  const fmt = t => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
+  const fmtP = t => { t = Math.max(0, t || 0); const m = Math.floor(t / 60); return m + ':' + (t - m * 60).toFixed(1).padStart(4, '0'); };
+  const say = msg => { $('live').textContent = ''; setTimeout(() => { $('live').textContent = msg; }, 30); };
+  const dur = () => (isFinite(v.duration) ? v.duration : 0);
+
+  // ---------- icone ----------
+  const IC = {
+    play: 'M6 3.8v12.4c0 .8.9 1.3 1.6.9l10-6.2c.6-.4.6-1.4 0-1.8l-10-6.2C6.9 2.5 6 3 6 3.8z',
+    pause: 'M5 3h3c.6 0 1 .4 1 1v12c0 .6-.4 1-1 1H5c-.6 0-1-.4-1-1V4c0-.6.4-1 1-1zm7 0h3c.6 0 1 .4 1 1v12c0 .6-.4 1-1 1h-3c-.6 0-1-.4-1-1V4c0-.6.4-1 1-1z',
+    vol: 'M3 7.5h3l4-3.5v12l-4-3.5H3zm10.5-1.8a5.5 5.5 0 0 1 0 8.6l-1.2-1.4a3.6 3.6 0 0 0 0-5.8z',
+    muted: 'M3 7.5h3l4-3.5v12l-4-3.5H3zm9.3.2 1.3-1.3 1.9 1.9 1.9-1.9 1.3 1.3-1.9 1.9 1.9 1.9-1.3 1.3-1.9-1.9-1.9 1.9-1.3-1.3 1.9-1.9z',
+    fs: 'M3 3h5v2H5v3H3zm9 0h5v5h-2V5h-3zM3 12h2v3h3v2H3zm12 0h2v5h-5v-2h3z',
+    scissors: 'M5.5 2a3 3 0 0 1 2.7 4.3L10 8.1l5.6-5.6a1 1 0 0 1 1.4 1.4L11.4 9.5l5.6 5.6a1 1 0 0 1-1.4 1.4L10 10.9l-1.8 1.8a3 3 0 1 1-1.4-1.4l1.8-1.8-1.8-1.8A3 3 0 1 1 5.5 2zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm0 9a1 1 0 1 0 0 2 1 1 0 0 0 0-2z',
+    loop: 'M5 6h8V3.5L17 7l-4 3.5V8H5a1 1 0 0 0-1 1v1H2V9a3 3 0 0 1 3-3zm10 8H7v2.5L3 13l4-3.5V12h8a1 1 0 0 0 1-1v-1h2v1a3 3 0 0 1-3 3z',
+    link: 'M8.6 11.4a1 1 0 0 1 0-1.4l2.8-2.8a1 1 0 1 1 1.4 1.4L10 11.4a1 1 0 0 1-1.4 0zM6.5 9.3l-1.4 1.4a2.5 2.5 0 0 0 3.5 3.5l1.4-1.4 1.4 1.4-1.4 1.4a4.5 4.5 0 0 1-6.4-6.4l1.4-1.4zm7 1.4 1.4-1.4a2.5 2.5 0 0 0-3.5-3.5L10 7.2 8.6 5.8 10 4.4a4.5 4.5 0 0 1 6.4 6.4L15 12.2z',
+    camera: 'M7 3h6l1.5 2H17a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2.5zm3 4a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm0 2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z',
+    bookmark: 'M5 2h10a1 1 0 0 1 1 1v15l-6-4-6 4V3a1 1 0 0 1 1-1z',
+    fprev: 'M4 4h2v12H4zm12 0v12l-8-6z',
+    fnext: 'M14 4h2v12h-2zM4 4l8 6-8 6z',
+  };
+  $$('[data-ic]').forEach(p => p.setAttribute('d', IC[p.dataset.ic]));
+
+  // ---------- comandi di base ----------
+  const toggle = () => { if (v.paused || v.ended) v.play().catch(() => {}); else v.pause(); };
+  const seekTo = t => { const d = dur(); if (d) v.currentTime = clamp(t, 0, d - 0.04); };
+  const seekBy = d => seekTo((v.currentTime || 0) + d);
+  function fullscreen() {
+    if (document.fullscreenElement || document.webkitFullscreenElement) return (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    if (stage.requestFullscreen) return stage.requestFullscreen();
+    if (stage.webkitRequestFullscreen) return stage.webkitRequestFullscreen();
+    if (v.webkitEnterFullscreen) v.webkitEnterFullscreen(); // iPhone: schermo intero del sistema
+  }
+  function syncPlay() {
+    const p = v.paused || v.ended;
+    $('playBtn').setAttribute('aria-label', p ? 'Riproduci' : 'Pausa');
+    $('playPath').setAttribute('d', p ? IC.play : IC.pause);
+  }
+  function syncMute() {
+    const m = v.muted || v.volume === 0;
+    $('muteBtn').setAttribute('aria-label', m ? 'Attiva audio' : 'Disattiva audio');
+    $('mutePath').setAttribute('d', m ? IC.muted : IC.vol);
+  }
+  $('playBtn').onclick = toggle;
+  $('muteBtn').onclick = () => { v.muted = !v.muted; };
+  $('fsBtn').onclick = fullscreen;
+  v.addEventListener('volumechange', syncMute);
+  syncPlay(); syncMute();
+
+  // ---------- tempo "umano" ----------
+  let tmode = store.get('gc-tmode', 0);
+  function remain(r) { r = Math.max(0, Math.round(r)); return r < 60 ? `${r} s` : `${Math.floor(r / 60)} min ${r % 60} s`; }
+  function timeLabel() {
+    const d = dur(), t = v.currentTime || 0;
+    let s;
+    if (tmode === 1) s = d ? `ancora ${remain((d - t) / (v.playbackRate || 1))}` : '—';
+    else if (tmode === 2) {
+      const end = new Date(Date.now() + (d - t) * 1000 / (v.playbackRate || 1));
+      s = d ? `finisce alle ${end.getHours()}:${String(end.getMinutes()).padStart(2, '0')}` : '—';
+    } else s = `${fmt(t)} / ${fmt(d)}`;
+    const el = $('timeTxt'); if (el.textContent !== s) el.textContent = s;
+  }
+  function cycleTime() { tmode = (tmode + 1) % 3; store.set('gc-tmode', tmode); timeLabel(); say($('timeTxt').textContent); }
+  $('timeBtn').onclick = cycleTime;
+
+  // ---------- avanzamento ----------
+  let lastSec = -1;
+  function setP() {
+    const d = dur(), t = v.currentTime || 0;
+    stage.style.setProperty('--p', (d ? t / d * 100 : 0) + '%');
+    const sec = Math.floor(t);
+    if (sec !== lastSec || seek.getAttribute('aria-valuemax') !== String(Math.round(d))) {
+      lastSec = sec;
+      seek.setAttribute('aria-valuemax', Math.round(d));
+      seek.setAttribute('aria-valuenow', sec);
+      seek.setAttribute('aria-valuetext', `${fmt(t)} di ${fmt(d)}`);
+    }
+    timeLabel();
+  }
+  function pTick() {
+    setP();
+    if (loopOn && v.currentTime >= outT - 0.03) v.currentTime = inT;
+    if (!v.paused) requestAnimationFrame(pTick);
+  }
+  v.addEventListener('timeupdate', setP);
+  v.addEventListener('seeked', setP);
+  v.addEventListener('loadedmetadata', () => { setP(); renderSel(); renderBM(); buildFilm(); });
+  v.addEventListener('play', () => { syncPlay(); requestAnimationFrame(pTick); kick(); });
+  v.addEventListener('pause', () => { syncPlay(); kick(); });
+  v.addEventListener('ended', () => { syncPlay(); kick(); });
+  v.addEventListener('ratechange', () => {
+    $$('.seg button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.r === v.playbackRate)));
+    timeLabel();
+  });
+
+  const tAt = (el, x) => { const r = el.getBoundingClientRect(); return clamp((x - r.left) / r.width, 0, 1) * dur(); };
+  let seeking = false;
+  const track = seek.querySelector('.track');
+  seek.addEventListener('pointerdown', e => {
+    if (!dur()) return;
+    e.preventDefault(); seek.setPointerCapture(e.pointerId);
+    seeking = true; seek.classList.add('drag'); seekTo(tAt(track, e.clientX)); kick();
+  });
+  seek.addEventListener('pointermove', e => {
+    const t = tAt(track, e.clientX), r = track.getBoundingClientRect();
+    if (e.pointerType === 'mouse' || seeking) {
+      const pill = $('hpill'); pill.hidden = false; pill.textContent = fmt(t);
+      pill.style.left = clamp(e.clientX - r.left, 20, r.width - 20) + 'px';
+    }
+    if (seeking) seekTo(t);
+  });
+  const endSeek = () => { seeking = false; seek.classList.remove('drag'); kick(); };
+  seek.addEventListener('pointerup', endSeek);
+  seek.addEventListener('lostpointercapture', endSeek);
+  seek.addEventListener('pointerleave', () => { if (!seeking) $('hpill').hidden = true; });
+  seek.addEventListener('keydown', e => {
+    const k = e.key, d = dur();
+    const step = { ArrowLeft: -5, ArrowRight: 5, ArrowDown: -5, ArrowUp: 5, PageDown: -10, PageUp: 10 }[k];
+    if (step != null) seekBy(step);
+    else if (k === 'Home') seekTo(0);
+    else if (k === 'End') seekTo(d);
+    else return;
+    e.preventDefault(); e.stopPropagation();
+  });
+
+  // ---------- comandi che emergono ----------
+  const ems = $$('.em');
+  const lv = new Map(ems.map(e => [e, 1]));
+  const IDLE = 1800;
+  let wake = 1, lastMove = -1e9, px = -1, py = -1, speed = 0, lastT = 0, inside = false;
+  let kbdFull = false, touchUntil = 0, hintsHeld = false, hintsUntil = 0, hintsShown = false;
+  let always = store.get('gc-always', false);
+  let raf = 0;
+  const smooth = x => x * x * (3 - 2 * x);
+
+  player.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+    const r = player.getBoundingClientRect(), now = performance.now();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    if (px >= 0) { const dt = Math.max(8, now - lastT); speed = speed * 0.7 + (Math.hypot(x - px, y - py) / dt) * 0.3; }
+    px = x; py = y; lastT = now; lastMove = now; inside = true;
+    if (kbdFull && !(bar.contains(document.activeElement) && document.activeElement.matches(':focus-visible'))) kbdFull = false;
+    kick();
+  });
+  player.addEventListener('pointerleave', e => {
+    if (e.pointerType === 'mouse') { inside = false; lastMove = performance.now() - IDLE + 400; }
+    kick();
+  });
+
+  function kick() { if (!raf) raf = requestAnimationFrame(tick); }
+  function tick(now) {
+    raf = 0;
+    const playing = !v.paused && !v.ended;
+    const hints = hintsHeld || now < hintsUntil;
+    stage.classList.toggle('hints', hints);
+    const full = always || !playing || kbdFull || now < touchUntil || creaOpen || seeking || hints;
+    const awake = inside && now - lastMove < IDLE;
+    const wT = full || awake ? 1 : 0;
+    const k = reduce.matches ? 1 : 0.16;
+    wake += (wT - wake) * (wT > wake ? Math.min(1, k * 2) : k * 0.5);
+    if (Math.abs(wT - wake) < 0.004) wake = wT;
+    let busy = wake !== wT;
+
+    const r = player.getBoundingClientRect();
+    const R = clamp(r.width * 0.3, 150, 320);
+    // rallentare nella metà bassa = intenzione di usare i comandi
+    const intent = speed < 0.3 && py > r.height * 0.5 ? 0.3 : 0;
+    let maxL = 0;
+    for (const e of ems) {
+      let t = 1;
+      if (!full) {
+        const b = e.getBoundingClientRect();
+        const dx = Math.max(b.left - r.left - px, 0, px - (b.right - r.left));
+        const dy = Math.max(b.top - r.top - py, 0, py - (b.bottom - r.top));
+        const prox = 1 - smooth(clamp(Math.hypot(dx, dy) / R, 0, 1));
+        t = wake * clamp(0.18 + 0.82 * prox + intent * (1 - prox), 0, 1);
+      }
+      let c = lv.get(e);
+      c += (t - c) * (reduce.matches ? 1 : 0.2);
+      if (Math.abs(t - c) < 0.004) c = t; else busy = true;
+      lv.set(e, c);
+      e.style.setProperty('--lv', c.toFixed(3));
+      if (c > maxL) maxL = c;
+    }
+    player.style.setProperty('--scrim', Math.min(1, maxL * 1.15).toFixed(3));
+    player.style.setProperty('--line-o', (1 - maxL).toFixed(3));
+    bar.classList.toggle('inert', maxL < 0.08);
+    player.classList.toggle('nocursor', playing && !full && inside && !awake);
+    if (busy || awake || now < touchUntil || now < hintsUntil) raf = requestAnimationFrame(tick);
+  }
+
+  // tocco e clic sul video
+  let lastPType = 'mouse', lastTap = 0;
+  const hit = $('hit');
+  hit.addEventListener('pointerdown', e => { lastPType = e.pointerType; });
+  hit.addEventListener('click', e => {
+    const now = performance.now();
+    if (lastPType !== 'touch') { toggle(); return; }
+    const r = player.getBoundingClientRect(), x = (e.clientX - r.left) / r.width;
+    if (now - lastTap < 320 && (x < 1 / 3 || x > 2 / 3)) {
+      const d = x < 1 / 3 ? -10 : 10; seekBy(d); ripple(d);
+      touchUntil = now + 2500; lastTap = 0; kick(); return;
+    }
+    lastTap = now;
+    touchUntil = now < touchUntil ? 0 : now + 3500;
+    kick();
+  });
+  bar.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') { touchUntil = performance.now() + 3500; kick(); } });
+  function ripple(d) {
+    const el = $(d < 0 ? 'ripL' : 'ripR');
+    el.classList.add('on'); setTimeout(() => el.classList.remove('on'), 380);
+    say(d < 0 ? 'Indietro 10 secondi' : 'Avanti 10 secondi');
+  }
+
+  // ---------- scorciatoie che emergono ----------
+  function flashHints(ms) { hintsUntil = performance.now() + ms; kick(); }
+  bar.addEventListener('focusin', e => { if (e.target.matches(':focus-visible')) { kbdFull = true; kick(); } });
+
+  $('always').checked = always;
+  $('always').onchange = e => { always = e.target.checked; store.set('gc-always', always); kick(); };
+
+  // ---------- pillola ----------
+  let toastTimer;
+  function toast(text, actionLabel, action, ms = 3500) {
+    $('toastTxt').textContent = text;
+    const b = $('toastBtn');
+    if (actionLabel) { b.hidden = false; b.textContent = actionLabel; b.onclick = () => { action(); hideToast(); }; }
+    else b.hidden = true;
+    $('toast').classList.toggle('noaction', !actionLabel);
+    $('toast').hidden = false; say(text);
+    clearTimeout(toastTimer); toastTimer = setTimeout(hideToast, ms);
+  }
+  function hideToast() { $('toast').hidden = true; }
+
+  // ---------- Crea ----------
+  let creaOpen = false, inT = 0, outT = 0, loopOn = false, rangeSet = false;
+  const MIN = 0.5;
+  function openCrea(open, byKey) {
+    if (open === creaOpen) return;
+    creaOpen = open;
+    studio.classList.toggle('open', open);
+    studio.inert = !open;
+    stage.classList.toggle('creating', open);
+    $('creaBtn').setAttribute('aria-pressed', String(open));
+    if (open) {
+      if (!rangeSet) { const t = v.currentTime || 0; setRange(t, t + 8); }
+      buildFilm();
+      if (byKey) setTimeout(() => $('hIn').focus({ preventScroll: true }), reduce.matches ? 0 : 250);
+      say('Crea aperto. Scegli inizio e fine della clip.');
+    } else {
+      if (studio.contains(document.activeElement)) $('creaBtn').focus({ preventScroll: true });
+      if (!clipView) setLoop(false);
+      say('Torni a guardare.');
+    }
+    kick();
+  }
+  $('creaBtn').onclick = e => openCrea(!creaOpen, e.detail === 0);
+  $('closeStudio').onclick = () => openCrea(false);
+
+  function setRange(a, b) {
+    const d = dur();
+    if (!d) { inT = a; outT = b; return; }
+    a = clamp(a, 0, d - MIN); b = clamp(b, a + MIN, d);
+    inT = a; outT = b; rangeSet = true; renderSel();
+  }
+  function renderSel() {
+    const d = dur(); if (!d) return;
+    stage.style.setProperty('--a', inT / d * 100 + '%');
+    stage.style.setProperty('--b', outT / d * 100 + '%');
+    $('tpIn').textContent = fmtP(inT); $('tpOut').textContent = fmtP(outT);
+    $('hIn').classList.toggle('flip', inT / d < 0.12);
+    $('hOut').classList.toggle('flip', outT / d > 0.88);
+    for (const [el, t, name] of [[$('hIn'), inT, 'Inizio clip'], [$('hOut'), outT, 'Fine clip']]) {
+      el.setAttribute('aria-valuemax', Math.round(d));
+      el.setAttribute('aria-valuenow', t.toFixed(1));
+      el.setAttribute('aria-valuetext', `${name} ${fmtP(t).replace('.', ',')}`);
+    }
+    $('meta').innerHTML = `<span>Inizio <b>${fmtP(inT)}</b></span><span>Fine <b>${fmtP(outT)}</b></span><span>Durata <b>${(outT - inT).toFixed(1).replace('.', ',')} s</b></span>`;
+  }
+
+  // striscia di fotogrammi dallo storyboard Mux
+  let sb = null;
+  const ts = s => { const p = s.split(':').map(Number); return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p[0] * 60 + p[1]; };
+  async function loadSB() {
+    try {
+      const txt = await (await fetch(SB)).text();
+      const re = /([\d:.]+)\s*-->\s*([\d:.]+)\s*\r?\n([^\r\n#]+)#xywh=(\d+),(\d+),(\d+),(\d+)/g;
+      const cues = []; let m, url;
+      while ((m = re.exec(txt))) { url = new URL(m[3].trim(), SB).href; cues.push({ s: ts(m[1]), e: ts(m[2]), x: +m[4], y: +m[5], w: +m[6], h: +m[7] }); }
+      if (!cues.length) return;
+      const img = new Image(); img.crossOrigin = 'anonymous'; img.src = url; await img.decode();
+      sb = { url, cues, W: img.naturalWidth, H: img.naturalHeight };
+      buildFilm();
+    } catch (err) { console.warn('storyboard', err); }
+  }
+  function buildFilm() {
+    const film = $('film');
+    if (!sb || !creaOpen) return;
+    const W = film.clientWidth, H = film.clientHeight; if (!W) return;
+    const n = Math.max(4, Math.round(W / (H * 16 / 9)));
+    const key = n + 'x' + W; if (film.dataset.key === key) return; film.dataset.key = key;
+    const tw = W / n, d = dur() || sb.cues[sb.cues.length - 1].e;
+    let html = '';
+    for (let k = 0; k < n; k++) {
+      const t = (k + 0.5) / n * d;
+      const c = sb.cues.find(c => t >= c.s && t < c.e) || sb.cues[sb.cues.length - 1];
+      const s = Math.max(tw / c.w, H / c.h);
+      const ox = (tw - c.w * s) / 2 - c.x * s, oy = (H - c.h * s) / 2 - c.y * s;
+      html += `<div class="tile" style="background-image:url('${sb.url}');background-size:${(sb.W * s).toFixed(1)}px ${(sb.H * s).toFixed(1)}px;background-position:${ox.toFixed(1)}px ${oy.toFixed(1)}px"></div>`;
+    }
+    film.innerHTML = html;
+  }
+  new ResizeObserver(() => { buildFilm(); kick(); }).observe(stage);
+  loadSB();
+
+  // trascinare sulla striscia
+  let drag = null;
+  ov.addEventListener('pointerdown', e => {
+    if (!dur()) return;
+    e.preventDefault(); ov.setPointerCapture(e.pointerId);
+    const h = e.target.closest('.h');
+    drag = { mode: h ? (h.id === 'hIn' ? 'in' : 'out') : 'new', t0: tAt(ov, e.clientX), x0: e.clientX, moved: false };
+    if (h) { h.focus({ preventScroll: true }); h.classList.add('drag'); v.pause(); }
+  });
+  ov.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const t = tAt(ov, e.clientX);
+    if (Math.abs(e.clientX - drag.x0) > 5) drag.moved = true;
+    if (drag.mode === 'in') { setRange(Math.min(t, outT - MIN), outT); seekTo(inT); }
+    else if (drag.mode === 'out') { setRange(inT, Math.max(t, inT + MIN)); seekTo(outT); }
+    else if (drag.moved) { v.pause(); setRange(Math.min(drag.t0, t), Math.max(drag.t0, t)); seekTo(t); }
+  });
+  ov.addEventListener('pointerup', () => {
+    if (!drag) return;
+    if (drag.mode === 'new' && !drag.moved) seekTo(drag.t0);
+    else if (drag.moved) say(`Clip da ${fmtP(inT)} a ${fmtP(outT)}`);
+    drag = null; $$('.h.drag').forEach(h => h.classList.remove('drag'));
+  });
+  ov.addEventListener('lostpointercapture', () => { drag = null; $$('.h.drag').forEach(h => h.classList.remove('drag')); });
+
+  // maniglie da tastiera
+  for (const [id, which] of [['hIn', 'in'], ['hOut', 'out']]) {
+    $(id).addEventListener('keydown', e => {
+      const d = dur(); if (!d) return;
+      let t = which === 'in' ? inT : outT;
+      const k = e.key;
+      if (k === 'ArrowLeft' || k === 'ArrowDown') t -= e.shiftKey ? FR : 0.5;
+      else if (k === 'ArrowRight' || k === 'ArrowUp') t += e.shiftKey ? FR : 0.5;
+      else if (k === 'PageDown') t -= 5;
+      else if (k === 'PageUp') t += 5;
+      else if (k === 'Home') t = 0;
+      else if (k === 'End') t = d;
+      else return;
+      e.preventDefault(); e.stopPropagation();
+      v.pause();
+      if (which === 'in') { setRange(Math.min(t, outT - MIN), outT); seekTo(inT); }
+      else { setRange(inT, Math.max(t, inT + MIN)); seekTo(outT); }
+    });
+  }
+
+  const setIn = () => { setRange(Math.min(v.currentTime, outT - MIN), Math.max(outT, v.currentTime + MIN)); say(`Inizio ${fmtP(inT)}`); };
+  const setOut = () => { setRange(Math.min(inT, v.currentTime - MIN), v.currentTime); say(`Fine ${fmtP(outT)}`); };
+  $('setIn').onclick = setIn; $('setOut').onclick = setOut;
+
+  function setLoop(on, play = true) {
+    loopOn = on;
+    $('loopBtn').setAttribute('aria-pressed', String(on));
+    stage.classList.toggle('looping', on);
+    if (on) { seekTo(inT); if (play) v.play().catch(() => {}); say(`Ripeto da ${fmtP(inT)} a ${fmtP(outT)}`); }
+  }
+  $('loopBtn').onclick = () => setLoop(!loopOn);
+
+  async function copyLink() {
+    const url = `${location.origin}${location.pathname}#clip=${inT.toFixed(1)}-${outT.toFixed(1)}`;
+    if (coarse.matches && navigator.share) { try { await navigator.share({ title: 'Clip', url }); } catch {} return; }
+    try { await navigator.clipboard.writeText(url); toast(`Link copiato: ${fmtP(inT)}–${fmtP(outT)}`); }
+    catch { toast(url, null, null, 8000); }
+  }
+  $('linkBtn').onclick = copyLink;
+
+  function saveFrame() {
+    const w = v.videoWidth, h = v.videoHeight;
+    if (!w) { toast('Il video non è ancora pronto'); return; }
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    try { c.getContext('2d').drawImage(v, 0, 0, w, h); } catch { toast('Questo browser non permette di salvare il fotogramma'); return; }
+    const name = `fotogramma-${fmtP(v.currentTime).replace(':', 'm').replace('.', ',')}s.png`;
+    c.toBlob(async blob => {
+      if (!blob) { toast('Questo browser non permette di salvare il fotogramma'); return; }
+      const file = new File([blob], name, { type: 'image/png' });
+      if (coarse.matches && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file] }); } catch {}
+        return;
+      }
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      toast(`Fotogramma salvato (${w}×${h})`);
+    }, 'image/png');
+  }
+  $('frameBtn').onclick = saveFrame;
+
+  const frameStep = d => { v.pause(); seekBy(d * FR); };
+  $('fPrev').onclick = () => frameStep(-1);
+  $('fNext').onclick = () => frameStep(1);
+  $$('.seg button').forEach(b => b.onclick = () => { v.playbackRate = +b.dataset.r; });
+
+  // segnalibri
+  let bms = store.get('gc-bm', []);
+  function renderBM() {
+    const d = dur();
+    $('seekBms').innerHTML = d ? bms.map(t => `<span class="bm" style="left:${t / d * 100}%"></span>`).join('') : '';
+    $('ovBms').innerHTML = d ? bms.map(t => `<span class="obm" style="left:${t / d * 100}%"></span>`).join('') : '';
+    $('bmList').innerHTML = bms.map((t, i) =>
+      `<span class="chip" role="listitem"><button class="go" type="button" data-i="${i}" aria-label="Vai al segnalibro ${fmt(t)}">${fmt(t)}</button><button class="del" type="button" data-del="${i}" aria-label="Elimina segnalibro ${fmt(t)}">×</button></span>`).join('');
+  }
+  $('bmList').addEventListener('click', e => {
+    const go = e.target.closest('[data-i]'), del = e.target.closest('[data-del]');
+    if (go) seekTo(bms[+go.dataset.i]);
+    if (del) { const t = bms.splice(+del.dataset.del, 1)[0]; store.set('gc-bm', bms); renderBM(); say(`Segnalibro ${fmt(t)} eliminato`); $('bmBtn').focus(); }
+  });
+  function addBM() {
+    const t = Math.round((v.currentTime || 0) * 10) / 10;
+    if (bms.some(x => Math.abs(x - t) < 0.5)) { toast('C\'è già un segnalibro qui'); return; }
+    bms.push(t); bms.sort((a, b) => a - b); store.set('gc-bm', bms); renderBM();
+    toast(`Segnalibro a ${fmt(t)}`, 'Annulla', () => { bms = bms.filter(x => x !== t); store.set('gc-bm', bms); renderBM(); });
+  }
+  $('bmBtn').onclick = addBM;
+
+  // clip condivisa: #clip=12.4-25.0
+  let clipView = false;
+  function readClip() {
+    const m = location.hash.match(/clip=([\d.]+)-([\d.]+)/);
+    if (!m) return;
+    const go = () => {
+      clipView = true; setRange(+m[1], +m[2]); setLoop(true, false);
+      toast(`Clip condivisa ${fmtP(inT)}–${fmtP(outT)}: premi play`, 'Guarda tutto', () => {
+        clipView = false; setLoop(false); history.replaceState(null, '', location.pathname);
+      }, 9000);
+    };
+    if (dur()) go(); else v.addEventListener('loadedmetadata', go, { once: true });
+  }
+  window.addEventListener('hashchange', readClip);
+  readClip();
+
+  // ---------- tastiera ----------
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target.closest('input, textarea, select')) return;
+    const k = e.key;
+    if (k === '?') { hintsHeld = true; kick(); e.preventDefault(); return; }
+    if (k === 'Shift') return;
+    kbdFull = true;
+    if (!hintsShown) { hintsShown = true; flashHints(2500); } else kick();
+    const onBtn = e.target.closest('button, [role="slider"]');
+    const key = k.toLowerCase();
+    let done = true;
+    if (k === ' ' && !onBtn) toggle();
+    else if (key === 'k') toggle();
+    else if (key === 'm') v.muted = !v.muted;
+    else if (key === 'f') fullscreen();
+    else if (key === 't') cycleTime();
+    else if (key === 'j') seekBy(-10);
+    else if (key === 'l') seekBy(10);
+    else if (k === 'ArrowLeft' && !onBtn) seekBy(-5);
+    else if (k === 'ArrowRight' && !onBtn) seekBy(5);
+    else if (k === 'ArrowUp' && !onBtn) { v.muted = false; v.volume = clamp(v.volume + 0.1, 0, 1); toast(`Volume ${Math.round(v.volume * 100)}%`); }
+    else if (k === 'ArrowDown' && !onBtn) { v.volume = clamp(v.volume - 0.1, 0, 1); toast(`Volume ${Math.round(v.volume * 100)}%`); }
+    else if (/^[0-9]$/.test(k)) seekTo(dur() * +k / 10);
+    else if (key === 'c') openCrea(!creaOpen, true);
+    else if (key === 'b') addBM();
+    else if (k === 'Escape' && creaOpen) openCrea(false);
+    else if (creaOpen && key === 'i') setIn();
+    else if (creaOpen && key === 'o') setOut();
+    else if (creaOpen && key === 'a') setLoop(!loopOn);
+    else if (creaOpen && key === 's') saveFrame();
+    else if (creaOpen && k === ',') frameStep(-1);
+    else if (creaOpen && k === '.') frameStep(1);
+    else done = false;
+    if (done) e.preventDefault();
+  });
+  document.addEventListener('keyup', e => { if (e.key === '?' || e.key === 'Shift') { hintsHeld = false; kick(); } });
+  window.addEventListener('blur', () => { hintsHeld = false; kick(); });
+
+  setP(); kick();
+})();
+</script>
+</body>
+</html>

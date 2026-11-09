@@ -181,6 +181,8 @@
     font: 600 14px system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   .sbtn:hover { border-color: rgb(245 246 252 / .45); }
+  .sbtn[hidden] { display: none; }
+  .sbtn:disabled { opacity: .5; cursor: progress; }
   .sbtn[aria-pressed="true"] { background: #fff; color: #111; border-color: #fff; }
   .sbtn svg { width: 18px; height: 18px; fill: currentColor; flex: none; }
   .sbtn.icon { padding: 0 12px; }
@@ -189,6 +191,17 @@
   .seg button { min-height: 44px; min-width: 48px; border: 0; background: var(--s-card); color: var(--s-fg); font: 600 14px system-ui, sans-serif; cursor: pointer; }
   .seg button + button { border-left: 1px solid var(--s-line); }
   .seg button[aria-pressed="true"] { background: #fff; color: #111; }
+  .seg button svg { width: 16px; height: 16px; fill: currentColor; vertical-align: middle; }
+  .seg .lbl { display: grid; place-items: center; padding: 0 10px; background: var(--s-card); color: var(--s-muted); font: 600 13px system-ui, sans-serif; border-left: 1px solid var(--s-line); }
+  .seg .lbl + button { border-left: 1px solid var(--s-line); }
+  .export { margin-top: 14px; padding: 12px; border: 1px solid var(--s-line); border-radius: 12px; background: var(--s-card); }
+  .export[hidden] { display: none; }
+  .ex-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font: 600 14px system-ui, sans-serif; }
+  .ex-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ex-actions .sbtn { background: var(--s-bg); }
+  #exShare, #exSave { background: #fff; color: #111; border-color: #fff; }
+  .ex-bar { height: 4px; border-radius: 2px; background: var(--s-line); margin-top: 10px; overflow: hidden; }
+  .ex-bar i { display: block; height: 100%; width: 0; background: #fff; }
   .bmlist { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
   .bmlist:empty { display: none; }
   .chip { display: inline-flex; align-items: center; border: 1px solid var(--s-line); border-radius: 999px; background: var(--s-card); }
@@ -274,23 +287,34 @@
           </div>
         </div>
         <div class="tools">
-          <span class="grp">
-            <button class="sbtn" id="setIn" type="button">Inizio qui <kbd>I</kbd></button>
-            <button class="sbtn" id="setOut" type="button">Fine qui <kbd>O</kbd></button>
-          </span>
           <button class="sbtn" id="loopBtn" type="button" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="loop"/></svg>Ripeti il tratto <kbd>A</kbd></button>
-          <button class="sbtn" id="linkBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="link"/></svg>Copia link della clip</button>
+          <button class="sbtn" id="clipBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="film" fill-rule="evenodd"/></svg>Crea il video della clip</button>
+          <button class="sbtn" id="linkBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="share"/></svg>Condividi link</button>
           <button class="sbtn" id="frameBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="camera"/></svg>Salva fotogramma <kbd>S</kbd></button>
-          <span class="grp">
-            <button class="sbtn icon" id="fPrev" type="button" aria-label="Fotogramma precedente" aria-keyshortcuts=","><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="fprev"/></svg><kbd>,</kbd></button>
-            <button class="sbtn icon" id="fNext" type="button" aria-label="Fotogramma successivo" aria-keyshortcuts="."><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="fnext"/></svg><kbd>.</kbd></button>
-          </span>
+          <div class="seg" role="group" aria-label="Sposta di un fotogramma">
+            <button type="button" id="fPrev" aria-label="Fotogramma precedente" aria-keyshortcuts=","><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="fprev"/></svg></button>
+            <span class="lbl" aria-hidden="true">1 fotogramma</span>
+            <button type="button" id="fNext" aria-label="Fotogramma successivo" aria-keyshortcuts="."><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="fnext"/></svg></button>
+          </div>
           <div class="seg" role="group" aria-label="Velocità">
             <button type="button" data-r="0.25" aria-label="Velocità 0,25" aria-pressed="false">¼×</button>
             <button type="button" data-r="0.5" aria-label="Velocità 0,5" aria-pressed="false">½×</button>
             <button type="button" data-r="1" aria-label="Velocità normale" aria-pressed="true">1×</button>
+            <button type="button" data-r="1.5" aria-label="Velocità 1,5" aria-pressed="false">1,5×</button>
+            <button type="button" data-r="2" aria-label="Velocità 2" aria-pressed="false">2×</button>
           </div>
           <button class="sbtn" id="bmBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="bookmark"/></svg>Segnalibro <kbd>B</kbd></button>
+        </div>
+        <div class="export" id="exportBox" hidden>
+          <div class="ex-row">
+            <span id="exTxt" role="status"></span>
+            <span class="ex-actions">
+              <button class="sbtn" id="exShare" type="button" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="share"/></svg>Condividi il video</button>
+              <button class="sbtn" id="exSave" type="button" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="download"/></svg>Scarica</button>
+              <button class="sbtn" id="exCancel" type="button">Annulla</button>
+            </span>
+          </div>
+          <div class="ex-bar" aria-hidden="true"><i id="exFill"></i></div>
         </div>
         <div class="bmlist" id="bmList" role="list" aria-label="Segnalibri"></div>
       </div></div>
@@ -314,7 +338,9 @@
     <ul>
       <li>Premi <strong>Crea</strong> (<kbd>C</kbd>): sotto il video si apre la striscia con i fotogrammi.</li>
       <li>Trascina sulla striscia per scegliere un tratto, oppure sposta le maniglie. Da tastiera: frecce ±0,5 s, <kbd>Maiusc</kbd>+frecce un fotogramma.</li>
-      <li><strong>Ripeti il tratto</strong> (<kbd>A</kbd>), <strong>Copia link della clip</strong> (aprilo in un'altra scheda: parte solo quel pezzo), <strong>Salva fotogramma</strong> (<kbd>S</kbd>), <kbd>,</kbd> e <kbd>.</kbd> per un fotogramma alla volta, velocità ¼× ½× 1×, <strong>Segnalibro</strong> (<kbd>B</kbd>).</li>
+      <li><strong>Crea il video della clip</strong> (massimo 30 s): il tratto viene registrato mentre scorre, poi lo <strong>condividi</strong> (WhatsApp, social: su telefono) o lo <strong>scarichi</strong>.</li>
+      <li><strong>Condividi link</strong>: chi lo apre vede solo quel pezzo, in ripetizione.</li>
+      <li><strong>Ripeti il tratto</strong> (<kbd>A</kbd>), <strong>Salva fotogramma</strong> (<kbd>S</kbd>), <strong>‹ 1 fotogramma ›</strong> (<kbd>,</kbd> <kbd>.</kbd>) per trovare l'istante esatto, velocità da ¼× a 2×, <strong>Segnalibro</strong> (<kbd>B</kbd>).</li>
     </ul>
     <h3>Cosa c'è di nuovo</h3>
     <p>I comandi non sono "accesi o spenti": compaiono in proporzione all'intenzione (vicinanza e rallentamento del puntatore), con la messa a fuoco come immagine dell'attenzione. E lo spettatore può fare bene quello che oggi fa male: ritagliare un momento, condividerlo, salvarne il fotogramma.</p>
@@ -369,6 +395,9 @@
     bookmark: 'M5 2h10a1 1 0 0 1 1 1v15l-6-4-6 4V3a1 1 0 0 1 1-1z',
     fprev: 'M4 4h2v12H4zm12 0v12l-8-6z',
     fnext: 'M14 4h2v12h-2zM4 4l8 6-8 6z',
+    share: 'M10 2l4 4h-3v7H9V6H6zM4 11h2v5h8v-5h2v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z',
+    download: 'M9 2h2v8h3l-4 4-4-4h3zM4 15h12v2H4z',
+    film: 'M3 3h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v2h2V5zm10 0v2h2V5zM4 9v2h2V9zm10 0v2h2V9zM4 13v2h2v-2zm10 0v2h2v-2zM8 5v10h4V5z',
   };
   $$('[data-ic]').forEach(p => p.setAttribute('d', IC[p.dataset.ic]));
 
@@ -440,7 +469,7 @@
   v.addEventListener('pause', () => { syncPlay(); kick(); });
   v.addEventListener('ended', () => { syncPlay(); kick(); });
   v.addEventListener('ratechange', () => {
-    $$('.seg button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.r === v.playbackRate)));
+    $$('.seg [data-r]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.r === v.playbackRate)));
     timeLabel();
   });
 
@@ -601,6 +630,7 @@
     } else {
       if (studio.contains(document.activeElement)) $('creaBtn').focus({ preventScroll: true });
       if (!clipView) setLoop(false);
+      if (ex && ex.state === 'rec') ex.cancelled = true;
       say('Torni a guardare.');
     }
     kick();
@@ -709,10 +739,6 @@
     });
   }
 
-  const setIn = () => { setRange(Math.min(v.currentTime, outT - MIN), Math.max(outT, v.currentTime + MIN)); say(`Inizio ${fmtP(inT)}`); };
-  const setOut = () => { setRange(Math.min(inT, v.currentTime - MIN), v.currentTime); say(`Fine ${fmtP(outT)}`); };
-  $('setIn').onclick = setIn; $('setOut').onclick = setOut;
-
   function setLoop(on, play = true) {
     loopOn = on;
     $('loopBtn').setAttribute('aria-pressed', String(on));
@@ -721,13 +747,111 @@
   }
   $('loopBtn').onclick = () => setLoop(!loopOn);
 
-  async function copyLink() {
+  // condividi il link: menu di condivisione del sistema (WhatsApp, social…), altrimenti copia
+  async function shareLink() {
     const url = `${location.origin}${location.pathname}#clip=${inT.toFixed(1)}-${outT.toFixed(1)}`;
-    if (coarse.matches && navigator.share) { try { await navigator.share({ title: 'Clip', url }); } catch {} return; }
+    if (navigator.share) {
+      try { await navigator.share({ title: `Clip ${fmt(inT)}–${fmt(outT)}`, url }); return; }
+      catch (e) { if (e.name === 'AbortError') return; }
+    }
     try { await navigator.clipboard.writeText(url); toast(`Link copiato: ${fmtP(inT)}–${fmtP(outT)}`); }
     catch { toast(url, null, null, 8000); }
   }
-  $('linkBtn').onclick = copyLink;
+  $('linkBtn').onclick = shareLink;
+
+  // ---------- video della clip: registrato nel browser, poi condividi o scarica ----------
+  const MAXCLIP = 30;
+  let ex = null, audioRig = null;
+  function rig() {
+    if (audioRig !== null) return audioRig;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    audioRig = false;
+    if (AC) {
+      try {
+        const ctx = new AC(), src = ctx.createMediaElementSource(v), dest = ctx.createMediaStreamDestination();
+        src.connect(ctx.destination); src.connect(dest);
+        audioRig = { ctx, dest };
+      } catch (e) { console.warn('audio', e); }
+    }
+    return audioRig;
+  }
+  const pickMime = () => ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4',
+    'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t));
+  const canShareFile = f => !!(navigator.canShare && navigator.share && navigator.canShare({ files: [f] }));
+  function exUI(state, text, pct) {
+    $('exportBox').hidden = false;
+    $('exTxt').textContent = text;
+    $('exFill').style.width = Math.round(pct * 100) + '%';
+    const ready = state === 'ready';
+    $('exShare').hidden = !(ready && canShareFile(ex.file));
+    $('exSave').hidden = !ready;
+    $('exCancel').textContent = ready ? 'Chiudi' : 'Annulla';
+    $('clipBtn').disabled = state === 'rec';
+  }
+  async function makeClip() {
+    if (ex && ex.state === 'rec') return;
+    const len = outT - inT;
+    if (len > MAXCLIP + 0.05) { toast(`Per il video scegli un tratto di massimo ${MAXCLIP} s`); return; }
+    if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) { toast('Questo browser non sa creare video'); return; }
+    const mime = pickMime();
+    const w0 = v.videoWidth, h0 = v.videoHeight;
+    if (!mime || !w0) { toast(!w0 ? 'Il video non è ancora pronto' : 'Questo browser non sa creare video'); return; }
+    const sc = Math.min(1, 1280 / w0), w = Math.round(w0 * sc / 2) * 2, h = Math.round(h0 * sc / 2) * 2;
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d');
+    const prev = { muted: v.muted, rate: v.playbackRate };
+    setLoop(false); v.pause(); v.playbackRate = 1;
+    seekTo(inT);
+    await new Promise(r => { v.addEventListener('seeked', r, { once: true }); setTimeout(r, 1500); });
+    try { g.drawImage(v, 0, 0, w, h); } catch { toast('Questo browser non permette di creare il video'); v.playbackRate = prev.rate; return; }
+
+    const ar = rig();
+    const tracks = [...c.captureStream(30).getVideoTracks()];
+    if (ar) { await ar.ctx.resume().catch(() => {}); tracks.push(...ar.dest.stream.getAudioTracks().map(t => t.clone())); }
+    const stream = new MediaStream(tracks);
+    const chunks = [];
+    const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4_000_000 });
+    ex = { state: 'rec', cancelled: false, file: null };
+    rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    const stopped = new Promise(r => { rec.onstop = r; });
+    v.muted = false; // si registra quello che si sente
+    exUI('rec', 'Creo il video della clip… 0%', 0);
+    say('Creo il video della clip');
+    rec.start(250);
+    await v.play().catch(() => {});
+    await new Promise(res => {
+      const step = () => {
+        if (ex.cancelled || v.ended || v.currentTime >= outT) { res(); return; }
+        g.drawImage(v, 0, 0, w, h);
+        const pct = clamp((v.currentTime - inT) / len, 0, 1);
+        exUI('rec', `Creo il video della clip… ${Math.round(pct * 100)}%`, pct);
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+    v.pause(); rec.stop(); await stopped;
+    stream.getTracks().forEach(t => t.stop());
+    v.muted = prev.muted; v.playbackRate = prev.rate;
+    if (ex.cancelled) { $('exportBox').hidden = true; $('clipBtn').disabled = false; ex = null; say('Video annullato'); return; }
+    const type = mime.split(';')[0], ext = type === 'video/mp4' ? 'mp4' : 'webm';
+    const blob = new Blob(chunks, { type });
+    const name = `clip-${fmtP(inT)}-${fmtP(outT)}`.replace(/:/g, 'm').replace(/\./g, ',') + '.' + ext;
+    ex.file = new File([blob], name, { type }); ex.state = 'ready';
+    exUI('ready', `Video pronto: ${len.toFixed(1).replace('.', ',')} s, ${(blob.size / 1e6).toFixed(1).replace('.', ',')} MB (${ext.toUpperCase()})`, 1);
+    say('Video della clip pronto');
+    ($('exShare').hidden ? $('exSave') : $('exShare')).focus({ preventScroll: true });
+  }
+  $('clipBtn').onclick = makeClip;
+  $('exShare').onclick = async () => { try { await navigator.share({ files: [ex.file], title: 'Clip' }); } catch {} };
+  $('exSave').onclick = () => {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(ex.file); a.download = ex.file.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  };
+  $('exCancel').onclick = () => {
+    if (ex && ex.state === 'rec') ex.cancelled = true;
+    else { $('exportBox').hidden = true; ex = null; $('clipBtn').focus({ preventScroll: true }); }
+  };
 
   function saveFrame() {
     const w = v.videoWidth, h = v.videoHeight;
@@ -753,7 +877,7 @@
   const frameStep = d => { v.pause(); seekBy(d * FR); };
   $('fPrev').onclick = () => frameStep(-1);
   $('fNext').onclick = () => frameStep(1);
-  $$('.seg button').forEach(b => b.onclick = () => { v.playbackRate = +b.dataset.r; });
+  $$('.seg [data-r]').forEach(b => b.onclick = () => { v.playbackRate = +b.dataset.r; });
 
   // segnalibri
   let bms = store.get('gc-bm', []);
@@ -820,8 +944,6 @@
     else if (key === 'c') openCrea(!creaOpen, true);
     else if (key === 'b') addBM();
     else if (k === 'Escape' && creaOpen) openCrea(false);
-    else if (creaOpen && key === 'i') setIn();
-    else if (creaOpen && key === 'o') setOut();
     else if (creaOpen && key === 'a') setLoop(!loopOn);
     else if (creaOpen && key === 's') saveFrame();
     else if (creaOpen && k === ',') frameStep(-1);

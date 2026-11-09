@@ -448,7 +448,7 @@
       <li>Tasto del tempo: "0:40 / 1:33", "ancora 53 s", "finisce alle 18:42".</li>
     </ul>
     <h3>Un solo menu</h3>
-    <p>Il player è in <strong>inglese</strong>. L'ingranaggio in basso a destra apre un menu verticale: <strong>Create a clip</strong>, <strong>Subtitles</strong> (Off / English / Italiano), <strong>Read subtitles aloud</strong>, <strong>Quality</strong>, <strong>Speed</strong>, <strong>Keyboard shortcuts</strong>. I sottotitoli salgono quando compaiono i comandi, così non vengono mai coperti (qui le tracce sono di prova).</p>
+    <p>Il player è in <strong>inglese</strong>. L'ingranaggio in basso a destra apre un menu verticale: <strong>Create a clip</strong>, <strong>Subtitles</strong> (Off / English / Italiano: l'inglese è generato da Mux dal parlato del video, l'italiano è la traduzione), <strong>Read subtitles aloud</strong>, <strong>Quality</strong>, <strong>Speed</strong>, <strong>Keyboard shortcuts</strong>. I sottotitoli salgono quando compaiono i comandi, così non vengono mai coperti.</p>
     <h3>Leggi i sottotitoli ad alta voce</h3>
     <p>Con <strong>Read subtitles aloud</strong> la voce del browser legge ogni frase dei sottotitoli e l'audio del video si abbassa mentre parla. Legge la lingua scelta nei sottotitoli, anche se sono nascosti. I suoni tra parentesi, come [music], non li legge perché si sentono già. Serve a chi vede poco o non riesce a leggere in fretta. L'audio originale scende al 15% con una sfumatura (Web Audio, funziona anche su iPhone) e la velocità della voce si adatta alla durata della frase, così finisce prima della successiva. Limite: la voce è quella sintetica del sistema.</p>
     <h2 style="margin-top:18px">Crea: lo spettatore diventa videomaker</h2>
@@ -492,7 +492,7 @@
   };
 
   let hls = null;
-  if (window.Hls && Hls.isSupported()) { hls = new Hls(); hls.loadSource(SRC); hls.attachMedia(v); }
+  if (window.Hls && Hls.isSupported()) { hls = new Hls({ enableWebVTT: false, enableIMSC1: false, enableCEA708Captions: false }); hls.loadSource(SRC); hls.attachMedia(v); }
   else v.src = SRC;
 
   const fmt = t => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
@@ -843,27 +843,22 @@
   });
   if (hls) { hls.on(Hls.Events.MANIFEST_PARSED, buildQ); hls.on(Hls.Events.LEVEL_SWITCHED, syncQ); } else buildQ();
 
-  // ---------- sottotitoli: tracce di prova in inglese e italiano ----------
+  // ---------- sottotitoli: dal parlato del video (Mux, riconoscimento automatico) + traduzione italiana ----------
+  // EN: generati da Mux ("English (Generated)") e ripuliti (frasi spezzate riunite, righe bilanciate).
+  // IT: traduzione con gli stessi tempi. Nella skin vera la traccia EN arriva direttamente dal flusso Mux.
   const CC_NAMES = { off: 'Off', en: 'English', it: 'Italiano' };
-  const TEXTS = {
-    en: ['Demo subtitles', '[instrumental music]', 'The dialogue would appear here'],
-    it: ['Sottotitoli di prova', '[musica strumentale]', 'Qui andrebbero i dialoghi del video'],
-  };
-  const vt = x => { const m = Math.floor(x / 60); return `00:${String(m).padStart(2, '0')}:${(x - m * 60).toFixed(3).padStart(6, '0')}`; };
-  const tracks = {};
+  const tracks = {}, ours = new Set();
   for (const lang of ['en', 'it']) {
-    const [first, music, talk] = TEXTS[lang];
-    const cues = [[0.5, 4.5, first]];
-    for (let t = 6, n = 0; t < 92; t += 9, n++) cues.push([t, t + 6, n % 2 ? talk : music]);
-    const VTT = 'WEBVTT\n\n' + cues.map(([a, b, t]) => `${vt(a)} --> ${vt(b)}\n${t}`).join('\n\n') + '\n';
     const el = document.createElement('track');
     el.kind = 'subtitles'; el.srclang = lang; el.label = CC_NAMES[lang];
-    el.src = URL.createObjectURL(new Blob([VTT], { type: 'text/vtt' }));
+    el.src = `guarda-crea.${lang}.vtt`;
     v.appendChild(el);
     el.track.mode = 'hidden';
     el.track.addEventListener('cuechange', () => { renderCue(); if (readOn && lang === readLang()) speakCue(el.track, lang); });
-    tracks[lang] = el.track;
+    tracks[lang] = el.track; ours.add(el.track);
   }
+  // le tracce del flusso HLS (Safari nativo) non devono comparire due volte: le disegniamo noi
+  v.textTracks.addEventListener('addtrack', e => { if (!ours.has(e.track)) e.track.mode = 'disabled'; });
   let ccLang = store.get('gc-cclang', 'off');
   if (!CC_NAMES[ccLang]) ccLang = 'off';
   let ccLast = ccLang === 'off' ? 'en' : ccLang;
@@ -888,8 +883,10 @@
   // ---------- leggi i sottotitoli ad alta voce (voce del browser, audio originale abbassato) ----------
   const TTS = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
   let readOn = false, ducked = false;
-  const DUCK = 0.15; // audio originale al 15% mentre parla la voce: la voce resta sopra
-  const CPS = 15;    // caratteri al secondo di una voce a velocità 1
+  const DUCK = 0.08; // audio originale all'8% finché si parla: la voce resta ben sopra
+  const HOLD = 1200; // ms di silenzio prima di rialzare l'audio originale (niente "su e giù" tra le frasi)
+  const CPS = { en: 15, it: 14 }; // caratteri al secondo a velocità 1: si correggono da soli misurando la voce reale
+  const LAG = 0.3;                // ritardo tipico prima che la voce parta (s)
   const readLang = () => (ccLang !== 'off' ? ccLang : ccLast);
   const BCP = { en: 'en-US', it: 'it-IT' };
   function pickVoice(lang) {
@@ -901,30 +898,78 @@
     const ar = audioRig;
     if (ar && ar.gain) ar.gain.gain.setTargetAtTime(to, ar.ctx.currentTime, tau);
   }
-  function duck() { if (!ducked) { ducked = true; ramp(DUCK, 0.06); } }
-  function unduck() { if (ducked) { ducked = false; ramp(1, 0.18); } }
-  function speak(text, lang, rate = 1) {
+  // L'originale resta basso per tutta la frase parlata (anche prima che la voce parta e nelle brevi pause),
+  // e torna su solo dopo HOLD ms senza parlato.
+  let holdTimer = 0;
+  const isSound = t => /^\s*[\[(][^\])]*[\])]\s*$/.test(t);
+  function speechCueActive() {
+    const tr = tracks[readLang()], c = tr && tr.activeCues && tr.activeCues[0];
+    return !!c && !isSound(c.text);
+  }
+  function duck() { clearTimeout(holdTimer); if (!ducked) { ducked = true; ramp(DUCK, 0.05); } }
+  function unduck(now) {
+    clearTimeout(holdTimer);
+    const up = () => { if (ducked) { ducked = false; ramp(1, 0.3); } };
+    if (now) return up();
+    holdTimer = setTimeout(() => {
+      if (readOn && !v.paused && (speechSynthesis.speaking || queued || speechCueActive())) return;
+      up();
+    }, HOLD);
+  }
+  // Come nel doppiaggio: la frase in corso si finisce sempre; la successiva aspetta in coda (una sola)
+  // e la voce recupera nelle pause tra le frasi. Se il ritardo diventa troppo grande, la frase si salta.
+  let utterId = 0, queued = null;
+  const MAX_LATE = 1.5; // secondi di ritardo massimo rispetto alla fine della frase
+  function speak(text, lang, rate = 1, onDone) {
+    const id = ++utterId;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = BCP[lang]; const voice = pickVoice(lang); if (voice) u.voice = voice;
     u.rate = rate;
     u.volume = v.muted ? 0 : v.volume;   // la voce segue il volume del player
-    u.onend = unduck; u.onerror = unduck;
+    let t0 = 0;
+    u.onstart = () => { t0 = performance.now(); };
+    const finish = ok => {
+      if (id !== utterId) return;        // eventi di una voce già interrotta: li ignoro
+      const secs = t0 ? (performance.now() - t0) / 1000 : 0;
+      if (ok && secs > 0.8 && text.length > 20) {
+        const measured = text.length / (secs * rate); // taratura: quanto è veloce davvero questa voce?
+        CPS[lang] = clamp(CPS[lang] * 0.6 + measured * 0.4, 8, 25);
+      }
+      if (onDone && onDone()) return;    // è partita la frase in coda: l'audio resta basso
+      unduck();
+    };
+    u.onend = () => finish(true);
+    u.onerror = () => finish(false);
     duck();                              // abbasso subito, senza aspettare che la voce parta
     speechSynthesis.speak(u);
   }
+  function startItem(it) {
+    const now = v.currentTime, c = it.cue;
+    if (v.paused || now > c.endTime + MAX_LATE) return false;
+    const next = [...it.track.cues].find(x => x.startTime > c.startTime + 0.01);
+    const until = next ? Math.min(next.startTime, c.endTime + 1) : c.endTime + 1;
+    const left = Math.max(0.6, (until - now) / (v.playbackRate || 1) - LAG);
+    const rate = clamp(c.text.length / CPS[it.lang] / left, 1, 1.7);
+    speak(c.text.replace(/\n/g, ' '), it.lang, rate, () => {
+      if (!queued) return false;
+      const q = queued; queued = null;
+      return startItem(q);
+    });
+    return true;
+  }
   function speakCue(track, lang) {
     const c = track.activeCues && track.activeCues[0];
-    if (!c) { return; }
+    if (!c) return;
     if (v.paused || v.muted || v.volume === 0) return;
     // i suoni descritti tra parentesi, come [music], si sentono già: non li leggiamo
-    if (/^\s*[\[(][^\])]*[\])]\s*$/.test(c.text)) return;
-    // sincronia: la frase deve finire prima della prossima, quindi adatto la velocità al tempo che resta
-    const left = Math.max(0.6, (c.endTime - v.currentTime) / (v.playbackRate || 1));
-    const rate = clamp(c.text.length / CPS / left, 1, 1.6);
-    speak(c.text.replace(/\n/g, ' '), lang, rate);
+    if (isSound(c.text)) return;
+    duck();                                                // l'originale scende appena inizia la frase
+    const it = { cue: c, track, lang };
+    if (speechSynthesis.speaking) { queued = it; return; } // la frase in corso finisce, questa aspetta
+    startItem(it);
   }
-  function stopVoice() { if (TTS) speechSynthesis.cancel(); unduck(); }
+  function stopVoice() { queued = null; utterId++; if (TTS) speechSynthesis.cancel(); unduck(true); }
   function syncRead() {
     $('miRead').setAttribute('aria-checked', String(readOn));
     $('mvRead').textContent = readOn ? `On · ${CC_NAMES[readLang()]}` : 'Off';
@@ -1126,6 +1171,7 @@
     }
     return audioRig;
   }
+  window.__gcGain = () => (audioRig && audioRig.gain ? audioRig.gain.gain.value : null); // per le prove
   const pickMime = () => ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4',
     'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t));
   const canShareFile = f => !!(navigator.canShare && navigator.share && navigator.canShare({ files: [f] }));

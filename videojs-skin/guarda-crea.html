@@ -47,6 +47,7 @@
   .stage:fullscreen .player video { height: 100%; aspect-ratio: auto; }
   .stage:-webkit-full-screen .player video { height: 100%; aspect-ratio: auto; }
   .player.nocursor, .player.nocursor * { cursor: none !important; }
+  .player:focus { outline: none; }
   .hit { position: absolute; inset: 0; }
 
   /* velo sotto i comandi: segue il comando più visibile */
@@ -55,9 +56,6 @@
     background: linear-gradient(to top, rgb(0 0 0 / .8), rgb(0 0 0 / .6) 55%, rgb(0 0 0 / 0));
     opacity: var(--scrim, 1);
   }
-  /* a riposo resta solo questa linea */
-  .line { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgb(255 255 255 / .2); opacity: var(--line-o, 0); pointer-events: none; }
-  .line i { display: block; height: 100%; width: var(--p, 0%); background: rgb(255 255 255 / .9); }
 
   /* ---------- comandi che emergono ---------- */
   .bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 8px 8px; display: grid; gap: 0; }
@@ -124,6 +122,7 @@
   .help dl { display: grid; grid-template-columns: 7.5em 1fr; gap: 4px 10px; margin: 0; font-size: 13px; }
   .help dt { white-space: nowrap; }
   .help dd { margin: 0; color: #d4d6dd; }
+  .help .hnote { grid-column: 1 / -1; margin: 6px 0 0; font-size: 12px; color: #b6b9c3; }
   .help kbd { opacity: 1; border-color: rgb(245 246 252 / .45); }
 
   /* menu unico, verticale */
@@ -162,11 +161,16 @@
 
   /* sottotitoli: salgono quando compaiono i comandi */
   .cap {
-    position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(14px + var(--scrim, 1) * 78px); max-width: 86%;
-    text-align: center; pointer-events: none; color: #fff; background: rgb(0 0 0 / .8); padding: 4px 10px; border-radius: 6px;
-    font: 600 clamp(14px, 3.2cqi, 24px)/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; transition: bottom .2s var(--ease);
+    position: absolute; left: 8%; right: 8%; bottom: calc(5% + var(--scrim, 1) * 72px);
+    text-align: center; pointer-events: none; text-wrap: balance;
+    font: 600 clamp(16px, 2.4cqi + 6px, 34px)/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .01em;
   }
   .cap[hidden] { display: none; }
+  /* ogni riga ha il suo riquadro, stretto sul testo */
+  .cap span {
+    color: #fff; background: rgb(0 0 0 / .78); padding: .08em .45em; border-radius: .2em;
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  }
 
   /* doppio tocco */
   .rip { position: absolute; top: 0; bottom: 0; width: 34%; display: grid; place-items: center; pointer-events: none; opacity: 0; transition: opacity .35s; font: 700 16px system-ui, sans-serif; }
@@ -276,7 +280,7 @@
   }
   @media (forced-colors: active) {
     .em { opacity: 1 !important; filter: none !important; transform: none !important; }
-    .scrim, .line { display: none; }
+    .scrim { display: none; }
     .fill, .knob, .h::before { background: CanvasText; forced-color-adjust: none; }
   }
 </style>
@@ -287,14 +291,13 @@
   <p>Prototipo fuori dalla skin. Un player che sparisce quando guardi e diventa uno strumento quando vuoi creare.</p>
 
   <div class="stage" id="stage" lang="en">
-    <div class="player" id="player">
+    <div class="player" id="player" tabindex="-1">
       <video id="v" playsinline crossorigin="anonymous" preload="metadata"
         poster="https://image.mux.com/1U7atblCas8wrFyf4jKbsZ7b00bTQLeBGl9xw9yN7Qt8/thumbnail.webp?time=47"></video>
       <div class="hit" id="hit" aria-hidden="true"></div>
       <div class="rip l" id="ripL" aria-hidden="true">−10 s</div>
       <div class="rip r" id="ripR" aria-hidden="true">+10 s</div>
       <div class="scrim" aria-hidden="true"></div>
-      <div class="line" aria-hidden="true"><i></i></div>
       <div class="toast" id="toast" hidden><span id="toastTxt"></span><button class="tact" id="toastBtn" type="button" hidden></button></div>
 
       <div class="cap" id="cap" hidden></div>
@@ -333,6 +336,7 @@
           <button class="btn" id="helpClose" type="button" aria-label="Close shortcuts"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="close"/></svg></button>
         </div>
         <div class="help-cols"><div>
+        <p class="hnote">Shortcuts work when the player has focus.</p>
         <h3>Watch</h3>
         <dl>
           <dt><kbd>Space</kbd> <kbd>K</kbd></dt><dd>Play / pause</dd>
@@ -438,7 +442,7 @@
     <h3>Prova</h3>
     <ul>
       <li>Premi play, poi muovi il mouse <strong>piano</strong> verso il basso: i comandi vicini al puntatore si mettono a fuoco, quelli lontani restano tenui e sfocati.</li>
-      <li>Resta fermo 2 secondi: rimane solo una linea sottile. In pausa i comandi restano tutti visibili.</li>
+      <li>I comandi compaiono avvicinandosi alla barra: invisibili quando il puntatore è al 30% dell'altezza sopra la barra, pieni quando è sulla barra (sfumatura entro 0,6 s). Fermo per 2 secondi lontano dalla barra: spariscono. In pausa restano tutti visibili.</li>
       <li>Tastiera: con <kbd>Tab</kbd> o un tasto qualsiasi compaiono tutti i comandi. Le scorciatoie sono nel menu ⚙, alla voce "Keyboard shortcuts" (o tasto <kbd>?</kbd>).</li>
       <li>Telefono: un tocco mostra o nasconde i comandi, doppio tocco a sinistra o a destra = −10 / +10 s.</li>
       <li>Tasto del tempo: "0:40 / 1:33", "ancora 53 s", "finisce alle 18:42".</li>
@@ -446,7 +450,7 @@
     <h3>Un solo menu</h3>
     <p>Il player è in <strong>inglese</strong>. L'ingranaggio in basso a destra apre un menu verticale: <strong>Create a clip</strong>, <strong>Subtitles</strong> (Off / English / Italiano), <strong>Read subtitles aloud</strong>, <strong>Quality</strong>, <strong>Speed</strong>, <strong>Keyboard shortcuts</strong>. I sottotitoli salgono quando compaiono i comandi, così non vengono mai coperti (qui le tracce sono di prova).</p>
     <h3>Leggi i sottotitoli ad alta voce</h3>
-    <p>Con <strong>Read subtitles aloud</strong> la voce del browser legge ogni frase dei sottotitoli e l'audio del video si abbassa mentre parla. Legge la lingua scelta nei sottotitoli, anche se sono nascosti. I suoni tra parentesi, come [music], non li legge perché si sentono già. Serve a chi vede poco o non riesce a leggere in fretta. Limiti: la voce è quella sintetica del sistema e su iPhone l'audio del video non si abbassa (iOS non lo permette).</p>
+    <p>Con <strong>Read subtitles aloud</strong> la voce del browser legge ogni frase dei sottotitoli e l'audio del video si abbassa mentre parla. Legge la lingua scelta nei sottotitoli, anche se sono nascosti. I suoni tra parentesi, come [music], non li legge perché si sentono già. Serve a chi vede poco o non riesce a leggere in fretta. L'audio originale scende al 15% con una sfumatura (Web Audio, funziona anche su iPhone) e la velocità della voce si adatta alla durata della frase, così finisce prima della successiva. Limite: la voce è quella sintetica del sistema.</p>
     <h2 style="margin-top:18px">Crea: lo spettatore diventa videomaker</h2>
     <h3>Prova</h3>
     <ul>
@@ -655,13 +659,11 @@
 
   // ---------- comandi che emergono ----------
   const ems = $$('.em');
-  const lv = new Map(ems.map(e => [e, 1]));
   const IDLE = 1800;
   let wake = 1, lastMove = -1e9, px = -1, py = -1, speed = 0, lastT = 0, inside = false;
   let kbdFull = false, touchUntil = 0, helpOpen = false;
   let always = store.get('gc-always', false);
   let raf = 0;
-  const smooth = x => x * x * (3 - 2 * x);
 
   player.addEventListener('pointermove', e => {
     if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
@@ -678,49 +680,39 @@
   });
 
   function kick() { if (!raf) raf = requestAnimationFrame(tick); }
+  // Un solo livello per tutti i comandi:
+  // 1 con il puntatore sulla barra, 0 quando è al 30% dell'altezza sopra la barra, sfumato in mezzo.
+  // Ogni cambio arriva a destinazione in al massimo 0,6 s.
+  const FADE = 0.6, ZONE = 0.3;
+  let level = 1, lastNow = 0;
   function tick(now) {
     raf = 0;
+    const dt = lastNow ? Math.min(0.1, (now - lastNow) / 1000) : 0.016; lastNow = now;
     const playing = !v.paused && !v.ended;
     const full = always || !playing || kbdFull || now < touchUntil || creaOpen || seeking || vDrag || helpOpen || menuOpen;
-    const awake = inside && now - lastMove < IDLE;
-    const wT = full || awake ? 1 : 0;
-    const k = reduce.matches ? 1 : 0.16;
-    wake += (wT - wake) * (wT > wake ? Math.min(1, k * 2) : k * 0.5);
-    if (Math.abs(wT - wake) < 0.004) wake = wT;
-    let busy = wake !== wT;
-
     const r = player.getBoundingClientRect();
-    const R = clamp(r.width * 0.3, 150, 320);
-    // rallentare nella metà bassa = intenzione di usare i comandi
-    const intent = speed < 0.3 && py > r.height * 0.5 ? 0.3 : 0;
-    let maxL = 0;
-    for (const e of ems) {
-      let t = 1;
-      if (!full) {
-        const b = e.getBoundingClientRect();
-        const dx = Math.max(b.left - r.left - px, 0, px - (b.right - r.left));
-        const dy = Math.max(b.top - r.top - py, 0, py - (b.bottom - r.top));
-        const prox = 1 - smooth(clamp(Math.hypot(dx, dy) / R, 0, 1));
-        t = wake * clamp(0.18 + 0.82 * prox + intent * (1 - prox), 0, 1);
-      }
-      let c = lv.get(e);
-      c += (t - c) * (reduce.matches ? 1 : 0.2);
-      if (Math.abs(t - c) < 0.004) c = t; else busy = true;
-      lv.set(e, c);
-      e.style.setProperty('--lv', c.toFixed(3));
-      if (c > maxL) maxL = c;
-    }
-    player.style.setProperty('--scrim', Math.min(1, maxL * 1.15).toFixed(3));
-    player.style.setProperty('--line-o', (1 - maxL).toFixed(3));
-    bar.classList.toggle('inert', maxL < 0.08);
+    const barTop = bar.getBoundingClientRect().top - r.top;
+    const onBar = inside && py >= barTop - 4;
+    const awake = inside && (onBar || now - lastMove < IDLE);
+    let t;
+    if (full || onBar) t = 1;
+    else if (!awake) t = 0;
+    else t = clamp(1 - (barTop - py) / (r.height * ZONE), 0, 1);
+    const a = reduce.matches ? 1 : 1 - Math.exp(-dt / (FADE / 3)); // ~95% in 0,6 s
+    level += (t - level) * a;
+    if (Math.abs(t - level) < 0.003) level = t;
+    const lv = level.toFixed(3);
+    for (const e of ems) e.style.setProperty('--lv', lv);
+    player.style.setProperty('--scrim', lv);
+    bar.classList.toggle('inert', level < 0.08);
     player.classList.toggle('nocursor', playing && !full && inside && !awake);
-    if (busy || awake || now < touchUntil) raf = requestAnimationFrame(tick);
+    if (level !== t || (awake && !onBar) || now < touchUntil) raf = requestAnimationFrame(tick);
   }
 
   // tocco e clic sul video
   let lastPType = 'mouse', lastTap = 0;
   const hit = $('hit');
-  hit.addEventListener('pointerdown', e => { lastPType = e.pointerType; });
+  hit.addEventListener('pointerdown', e => { lastPType = e.pointerType; player.focus({ preventScroll: true }); });
   hit.addEventListener('click', e => {
     if (swallow) { swallow = false; return; }
     const now = performance.now();
@@ -761,10 +753,17 @@
     const view = $(id), f = focusSel ? view.querySelector(focusSel) : null;
     (f || view.querySelector('button')).focus({ preventScroll: true });
   }
+  function labelRows() {
+    $('miCC').setAttribute('aria-label', `Subtitles: ${CC_NAMES[ccLang]}`);
+    $('miRead').setAttribute('aria-label', readOn ? `Read subtitles aloud, ${CC_NAMES[readLang()]}` : 'Read subtitles aloud');
+    $('miQ').setAttribute('aria-label', `Quality: ${$('mvQ').textContent}`);
+    $('miR').setAttribute('aria-label', `Speed: ${$('mvR').textContent}`);
+  }
   function syncMenu() {
     $('mlCrea').textContent = creaOpen ? 'Back to watching' : 'Create a clip';
     $('mvCC').textContent = CC_NAMES[ccLang];
     syncRead();
+    labelRows();
     $$('#mC [data-cc]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.cc === ccLang)));
   }
   function openMenu(open) {
@@ -834,6 +833,7 @@
       if (q === -1) b.textContent = auto && cur ? `Auto · ${cur}` : 'Auto';
     });
     $('mvQ').textContent = auto ? (cur ? `Auto · ${cur}` : 'Auto') : cur;
+    if (menuOpen) labelRows();
   }
   $('qList').addEventListener('click', e => {
     const b = e.target.closest('[data-q]'); if (!b) return;
@@ -872,7 +872,11 @@
     const c = tr && tr.activeCues && tr.activeCues[0];
     const box = $('cap');
     box.hidden = !c;
-    box.textContent = c ? c.text : '';
+    box.replaceChildren();
+    if (c) c.text.split('\n').slice(0, 2).forEach((line, i) => {
+      if (i) box.append(document.createElement('br'));
+      const sp = document.createElement('span'); sp.textContent = line; box.append(sp);
+    });
     box.lang = ccLang === 'off' ? '' : ccLang;
   }
   function setCC(lang) {
@@ -883,50 +887,63 @@
 
   // ---------- leggi i sottotitoli ad alta voce (voce del browser, audio originale abbassato) ----------
   const TTS = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
-  let readOn = false, ducked = false, prevVol = 1;
-  const DUCK = 0.3;
+  let readOn = false, ducked = false;
+  const DUCK = 0.15; // audio originale al 15% mentre parla la voce: la voce resta sopra
+  const CPS = 15;    // caratteri al secondo di una voce a velocità 1
   const readLang = () => (ccLang !== 'off' ? ccLang : ccLast);
   const BCP = { en: 'en-US', it: 'it-IT' };
   function pickVoice(lang) {
     const vs = speechSynthesis.getVoices();
     return vs.find(x => x.lang === BCP[lang] && x.localService) || vs.find(x => x.lang && x.lang.toLowerCase().startsWith(lang)) || null;
   }
-  function duck() { if (!ducked) { prevVol = v.volume; ducked = true; v.volume = prevVol * DUCK; } }
-  function unduck() {
-    if (!ducked) return;
-    ducked = false;
-    if (Math.abs(v.volume - prevVol * DUCK) < 0.01) v.volume = prevVol; // non toccare se nel frattempo l'utente l'ha cambiato
+  // abbassamento morbido con Web Audio (funziona anche su iPhone, dove il volume della pagina non si può cambiare)
+  function ramp(to, tau) {
+    const ar = audioRig;
+    if (ar && ar.gain) ar.gain.gain.setTargetAtTime(to, ar.ctx.currentTime, tau);
   }
-  function speak(text, lang) {
+  function duck() { if (!ducked) { ducked = true; ramp(DUCK, 0.06); } }
+  function unduck() { if (ducked) { ducked = false; ramp(1, 0.18); } }
+  function speak(text, lang, rate = 1) {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = BCP[lang]; const voice = pickVoice(lang); if (voice) u.voice = voice;
-    u.rate = 1.05;
-    u.onstart = duck; u.onend = unduck; u.onerror = unduck;
+    u.rate = rate;
+    u.volume = v.muted ? 0 : v.volume;   // la voce segue il volume del player
+    u.onend = unduck; u.onerror = unduck;
+    duck();                              // abbasso subito, senza aspettare che la voce parta
     speechSynthesis.speak(u);
   }
   function speakCue(track, lang) {
     const c = track.activeCues && track.activeCues[0];
-    if (!c || v.paused) return;
+    if (!c) { return; }
+    if (v.paused || v.muted || v.volume === 0) return;
     // i suoni descritti tra parentesi, come [music], si sentono già: non li leggiamo
     if (/^\s*[\[(][^\])]*[\])]\s*$/.test(c.text)) return;
-    speak(c.text, lang);
+    // sincronia: la frase deve finire prima della prossima, quindi adatto la velocità al tempo che resta
+    const left = Math.max(0.6, (c.endTime - v.currentTime) / (v.playbackRate || 1));
+    const rate = clamp(c.text.length / CPS / left, 1, 1.6);
+    speak(c.text.replace(/\n/g, ' '), lang, rate);
   }
+  function stopVoice() { if (TTS) speechSynthesis.cancel(); unduck(); }
   function syncRead() {
     $('miRead').setAttribute('aria-checked', String(readOn));
     $('mvRead').textContent = readOn ? `On · ${CC_NAMES[readLang()]}` : 'Off';
+    labelRows();
   }
   function setRead(on) {
     if (!TTS) { toast('This browser cannot read aloud'); return; }
-    readOn = on; store.set('gc-read', on);
-    if (on) speak(readLang() === 'it' ? 'Leggo i sottotitoli ad alta voce' : 'Reading subtitles aloud', readLang()); // nel gesto: sblocca la voce su iPhone
-    else { speechSynthesis.cancel(); unduck(); say('Read aloud off'); }
+    readOn = on;
+    if (on) {
+      const ar = rig(); if (ar) ar.ctx.resume().catch(() => {});   // nel gesto: sblocca audio e voce su iPhone
+      speak(readLang() === 'it' ? 'Leggo i sottotitoli ad alta voce' : 'Reading subtitles aloud', readLang());
+      if (speechSynthesis.getVoices().length && !pickVoice(readLang())) toast(`No ${CC_NAMES[readLang()]} voice on this device: using the default voice`, null, null, 5000);
+    } else { stopVoice(); say('Read aloud off'); }
     syncRead();
   }
   if (!TTS) $('miRead').hidden = true;
   else if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => {};
-  v.addEventListener('pause', () => { if (readOn) { speechSynthesis.cancel(); unduck(); } });
-  v.addEventListener('seeking', () => { if (readOn) { speechSynthesis.cancel(); unduck(); } });
+  ['pause', 'seeking', 'ended'].forEach(ev => v.addEventListener(ev, () => { if (readOn) stopVoice(); }));
+  v.addEventListener('volumechange', () => { if (readOn && (v.muted || v.volume === 0)) stopVoice(); });
   bar.addEventListener('focusin', e => { if (e.target.matches(':focus-visible')) { kbdFull = true; kick(); } });
 
   $('always').checked = always;
@@ -1100,8 +1117,11 @@
     if (AC) {
       try {
         const ctx = new AC(), src = ctx.createMediaElementSource(v), dest = ctx.createMediaStreamDestination();
-        src.connect(ctx.destination); src.connect(dest);
-        audioRig = { ctx, dest };
+        const gain = ctx.createGain();           // abbassa l'audio originale mentre parla la voce
+        src.connect(gain); gain.connect(ctx.destination);
+        src.connect(dest);                       // il video della clip si registra senza l'abbassamento
+        audioRig = { ctx, dest, gain };
+        v.addEventListener('play', () => ctx.resume().catch(() => {}));
       } catch (e) { console.warn('audio', e); }
     }
     return audioRig;
@@ -1228,6 +1248,8 @@
   document.addEventListener('keydown', e => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.target.closest('input, textarea, select')) return;
+    // WCAG 2.1.4: le scorciatoie a un tasto valgono solo quando il player ha il focus
+    if (!stage.contains(document.activeElement)) return;
     const k = e.key;
     if (k === '?') { openHelp(!helpOpen); e.preventDefault(); return; }
     if (k === 'Shift') return;

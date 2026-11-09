@@ -323,12 +323,18 @@
         <div class="mview" id="mA" role="menu" aria-label="Audio" hidden>
           <button class="mrow mhead" type="button" role="menuitem" data-back="miAudio"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="back"/></svg><span class="ml">Audio</span></button>
           <button class="mrow mopt" type="button" role="menuitemradio" data-au="en" aria-checked="true">English (original)</button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-au="es" aria-checked="false"><span lang="es">Español</span>&nbsp;(voice-over)</button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-au="fr" aria-checked="false"><span lang="fr">Français</span>&nbsp;(voice-over)</button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-au="de" aria-checked="false"><span lang="de">Deutsch</span>&nbsp;(voice-over)</button>
           <button class="mrow mopt" type="button" role="menuitemradio" data-au="it" aria-checked="false"><span lang="it">Italiano</span>&nbsp;(voice-over)</button>
         </div>
         <div class="mview" id="mC" role="menu" aria-label="Subtitles" hidden>
           <button class="mrow mhead" type="button" role="menuitem" data-back="miCC"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="back"/></svg><span class="ml">Subtitles</span></button>
           <button class="mrow mopt" type="button" role="menuitemradio" data-cc="off" aria-checked="true">Off</button>
           <button class="mrow mopt" type="button" role="menuitemradio" data-cc="en" aria-checked="false" lang="en">English</button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-cc="es" aria-checked="false" lang="es">Español</button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-cc="fr" aria-checked="false" lang="fr">Français</button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-cc="de" aria-checked="false" lang="de">Deutsch</button>
           <button class="mrow mopt" type="button" role="menuitemradio" data-cc="it" aria-checked="false" lang="it">Italiano</button>
         </div>
         <div class="mview" id="mQ" role="menu" aria-label="Quality" hidden>
@@ -880,12 +886,13 @@
   // ---------- sottotitoli: dal parlato del video (Mux, riconoscimento automatico) + traduzione italiana ----------
   // EN: generati da Mux ("English (Generated)") e ripuliti (frasi spezzate riunite, righe bilanciate).
   // IT: traduzione con gli stessi tempi. Nella skin vera la traccia EN arriva direttamente dal flusso Mux.
-  const CC_NAMES = { off: 'Off', en: 'English', it: 'Italiano' };
+  const LANGS = ['en', 'es', 'fr', 'de', 'it'];
+  const CC_NAMES = { off: 'Off', en: 'English', es: 'Español', fr: 'Français', de: 'Deutsch', it: 'Italiano' };
   const tracks = {}, ours = new Set();
-  for (const lang of ['en', 'it']) {
+  for (const lang of LANGS) {
     const el = document.createElement('track');
     el.kind = 'subtitles'; el.srclang = lang; el.label = CC_NAMES[lang];
-    el.src = `guarda-crea.${lang}.vtt`;
+    el.src = `cue/cue.${lang}.vtt`;
     v.appendChild(el);
     el.track.mode = 'hidden';
     el.track.addEventListener('cuechange', () => { renderCue(); if (readOn && lang === readLang()) speakCue(el.track, lang); });
@@ -919,10 +926,10 @@
   let readOn = false, ducked = false;
   const DUCK = 0.08; // audio originale all'8% finché si parla: la voce resta ben sopra
   const HOLD = 1200; // ms di silenzio prima di rialzare l'audio originale (niente "su e giù" tra le frasi)
-  const CPS = { en: 15, it: 14 }; // caratteri al secondo a velocità 1: si correggono da soli misurando la voce reale
+  const CPS = { en: 15, es: 15, fr: 15, de: 14, it: 14 }; // caratteri al secondo a velocità 1: si correggono da soli misurando la voce reale
   const LAG = 0.3;                // ritardo tipico prima che la voce parta (s)
   const readLang = () => (ccLang !== 'off' ? ccLang : ccLast);
-  const BCP = { en: 'en-US', it: 'it-IT' };
+  const BCP = { en: 'en-US', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', it: 'it-IT' };
   function pickVoice(lang) {
     const vs = speechSynthesis.getVoices();
     return vs.find(x => x.lang === BCP[lang] && x.localService) || vs.find(x => x.lang && x.lang.toLowerCase().startsWith(lang)) || null;
@@ -930,10 +937,10 @@
   // ---------- doppiaggio italiano (ElevenLabs, voce "Luca", Eleven v4) come seconda traccia audio ----------
   // File già mixato: voce italiana sopra l'originale al 12%. Nel prototipo è un <audio> tenuto in sincronia col video;
   // nella skin vera sarà una traccia audio alternativa dello stesso asset Mux.
-  const AUDIO_NAMES = { en: 'English', it: 'Italiano' };
+  const AUDIO_NAMES = { en: 'English', es: 'Español', fr: 'Français', de: 'Deutsch', it: 'Italiano' };
   let audioLang = 'en', dub = null;
   function syncDub(force) {
-    if (!dub || audioLang !== 'it') return;
+    if (!dub || audioLang === 'en') return;
     if (dub.playbackRate !== v.playbackRate) dub.playbackRate = v.playbackRate;
     dub.volume = v.volume; dub.muted = v.muted;
     if (force || Math.abs(dub.currentTime - v.currentTime) > 0.25) { try { dub.currentTime = v.currentTime; } catch {} }
@@ -942,11 +949,14 @@
   }
   function setAudio(lang) {
     audioLang = lang;
-    const ar = lang === 'it' ? rig() : audioRig;
-    if (lang === 'it') {
+    const ar = lang !== 'en' ? rig() : audioRig;
+    if (lang !== 'en') {
       if (readOn) setRead(false);                       // la lettura ad alta voce non serve con il doppiaggio
       if (ar) { ar.ctx.resume().catch(() => {}); ar.gain.gain.setTargetAtTime(0, ar.ctx.currentTime, 0.05); }
-      if (!dub) { dub = new Audio('guarda-crea.it-dub.m4a'); dub.preload = 'auto'; }
+      if (!dub || dub.dataset.lang !== lang) {
+        if (dub) dub.pause();
+        dub = new Audio(`cue/cue.${lang}-dub.m4a`); dub.preload = 'auto'; dub.dataset.lang = lang;
+      }
       syncDub(true);
     } else {
       if (dub) dub.pause();
@@ -961,7 +971,7 @@
 
   // abbassamento morbido con Web Audio (funziona anche su iPhone, dove il volume della pagina non si può cambiare)
   function ramp(to, tau) {
-    if (audioLang === 'it') to = 0;                     // con il doppiaggio l'originale resta muto
+    if (audioLang !== 'en') to = 0;                     // con il doppiaggio l'originale resta muto
     const ar = audioRig;
     if (ar && ar.gain) ar.gain.gain.setTargetAtTime(to, ar.ctx.currentTime, tau);
   }
@@ -1044,7 +1054,7 @@
   }
   function setRead(on) {
     if (!TTS) { toast('This browser cannot read aloud'); return; }
-    if (on && audioLang === 'it') setAudio('en');
+    if (on && audioLang !== 'en') setAudio('en');
     readOn = on;
     if (on) {
       const ar = rig(); if (ar) ar.ctx.resume().catch(() => {});   // nel gesto: sblocca audio e voce su iPhone

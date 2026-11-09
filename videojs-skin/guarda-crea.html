@@ -82,6 +82,18 @@
   }
   .tbtn:hover { background: rgb(255 255 255 / .14); }
 
+  /* volume: il cursore si apre accanto all'altoparlante */
+  .vol { display: flex; align-items: center; }
+  .vslider { width: 0; height: 44px; overflow: hidden; display: flex; align-items: center; cursor: pointer; touch-action: none; transition: width .2s var(--ease); }
+  .vol:hover .vslider, .vol:focus-within .vslider, .vslider.drag { width: 84px; }
+  .vtrack { position: relative; flex: none; width: 68px; height: 4px; margin: 0 8px; border-radius: 2px; background: rgb(255 255 255 / .3); }
+  .vfill { position: absolute; inset: 0 auto 0 0; width: var(--vol, 100%); background: #fff; border-radius: inherit; }
+  .vknob { position: absolute; top: 50%; left: var(--vol, 100%); width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgb(0 0 0 / .5); }
+  .vslider:focus-visible { outline: none; box-shadow: none; }
+  .vslider:focus-visible .vtrack { outline: 2px solid #fff; outline-offset: 6px; }
+  @media (hover: none) and (pointer: coarse) { .vslider { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .vslider { transition: none; } }
+
   /* barra di avanzamento */
   .seek { position: relative; height: 30px; margin: 0 8px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
   .track { position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgb(255 255 255 / .3); transition: height .15s; }
@@ -274,7 +286,7 @@
   <h1>Guarda e Crea</h1>
   <p>Prototipo fuori dalla skin. Un player che sparisce quando guardi e diventa uno strumento quando vuoi creare.</p>
 
-  <div class="stage" id="stage">
+  <div class="stage" id="stage" lang="en">
     <div class="player" id="player">
       <video id="v" playsinline crossorigin="anonymous" preload="metadata"
         poster="https://image.mux.com/1U7atblCas8wrFyf4jKbsZ7b00bTQLeBGl9xw9yN7Qt8/thumbnail.webp?time=47"></video>
@@ -287,75 +299,86 @@
 
       <div class="cap" id="cap" hidden></div>
       <div class="menu" id="menu" hidden>
-        <div class="mview" id="mMain" role="menu" aria-label="Impostazioni">
-          <button class="mrow" id="miCrea" type="button" role="menuitem"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="scissors"/></svg><span class="ml" id="mlCrea">Crea una clip</span></button>
-          <button class="mrow" id="miCC" type="button" role="menuitemcheckbox" aria-checked="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="cc"/></svg><span class="ml">Sottotitoli</span><span class="mv" id="mvCC">No</span></button>
-          <button class="mrow" id="miQ" type="button" role="menuitem" aria-haspopup="menu"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="gear" fill-rule="evenodd"/></svg><span class="ml">Qualità</span><span class="mv" id="mvQ">Auto</span><svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path data-ic="chev"/></svg></button>
-          <button class="mrow" id="miR" type="button" role="menuitem" aria-haspopup="menu"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="speed"/></svg><span class="ml">Velocità</span><span class="mv" id="mvR">Normale</span><svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path data-ic="chev"/></svg></button>
-          <button class="mrow" id="miHelp" type="button" role="menuitem"><span class="qi" aria-hidden="true">?</span><span class="ml">Scorciatoie da tastiera</span></button>
+        <div class="mview" id="mMain" role="menu" aria-label="Settings">
+          <button class="mrow" id="miCrea" type="button" role="menuitem"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="scissors"/></svg><span class="ml" id="mlCrea">Create a clip</span></button>
+          <button class="mrow" id="miCC" type="button" role="menuitem" aria-haspopup="menu"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="cc"/></svg><span class="ml">Subtitles</span><span class="mv" id="mvCC">Off</span><svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path data-ic="chev"/></svg></button>
+          <button class="mrow" id="miQ" type="button" role="menuitem" aria-haspopup="menu"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="gear" fill-rule="evenodd"/></svg><span class="ml">Quality</span><span class="mv" id="mvQ">Auto</span><svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path data-ic="chev"/></svg></button>
+          <button class="mrow" id="miR" type="button" role="menuitem" aria-haspopup="menu"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="speed"/></svg><span class="ml">Speed</span><span class="mv" id="mvR">Normal</span><svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path data-ic="chev"/></svg></button>
+          <button class="mrow" id="miHelp" type="button" role="menuitem"><span class="qi" aria-hidden="true">?</span><span class="ml">Keyboard shortcuts</span></button>
         </div>
-        <div class="mview" id="mQ" role="menu" aria-label="Qualità" hidden>
-          <button class="mrow mhead" type="button" role="menuitem" data-back="miQ"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="back"/></svg><span class="ml">Qualità</span></button>
+        <div class="mview" id="mC" role="menu" aria-label="Subtitles" hidden>
+          <button class="mrow mhead" type="button" role="menuitem" data-back="miCC"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="back"/></svg><span class="ml">Subtitles</span></button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-cc="off" aria-checked="true">Off</button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-cc="en" aria-checked="false" lang="en">English</button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-cc="it" aria-checked="false" lang="it">Italiano</button>
+        </div>
+        <div class="mview" id="mQ" role="menu" aria-label="Quality" hidden>
+          <button class="mrow mhead" type="button" role="menuitem" data-back="miQ"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="back"/></svg><span class="ml">Quality</span></button>
           <div id="qList"></div>
         </div>
-        <div class="mview" id="mR" role="menu" aria-label="Velocità" hidden>
-          <button class="mrow mhead" type="button" role="menuitem" data-back="miR"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="back"/></svg><span class="ml">Velocità</span></button>
-          <button class="mrow mopt" type="button" role="menuitemradio" data-r="0.5" aria-checked="false">0,5×</button>
-          <button class="mrow mopt" type="button" role="menuitemradio" data-r="0.75" aria-checked="false">0,75×</button>
-          <button class="mrow mopt" type="button" role="menuitemradio" data-r="1" aria-checked="true">Normale</button>
-          <button class="mrow mopt" type="button" role="menuitemradio" data-r="1.25" aria-checked="false">1,25×</button>
-          <button class="mrow mopt" type="button" role="menuitemradio" data-r="1.5" aria-checked="false">1,5×</button>
+        <div class="mview" id="mR" role="menu" aria-label="Speed" hidden>
+          <button class="mrow mhead" type="button" role="menuitem" data-back="miR"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="back"/></svg><span class="ml">Speed</span></button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-r="0.5" aria-checked="false">0.5×</button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-r="0.75" aria-checked="false">0.75×</button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-r="1" aria-checked="true">Normal</button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-r="1.25" aria-checked="false">1.25×</button>
+          <button class="mrow mopt" type="button" role="menuitemradio" data-r="1.5" aria-checked="false">1.5×</button>
           <button class="mrow mopt" type="button" role="menuitemradio" data-r="2" aria-checked="false">2×</button>
         </div>
       </div>
       <div class="help" id="help" role="dialog" aria-labelledby="helpTitle" hidden>
         <div class="help-head">
-          <h2 id="helpTitle">Scorciatoie da tastiera</h2>
-          <button class="btn" id="helpClose" type="button" aria-label="Chiudi le scorciatoie"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="close"/></svg></button>
+          <h2 id="helpTitle">Keyboard shortcuts</h2>
+          <button class="btn" id="helpClose" type="button" aria-label="Close shortcuts"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="close"/></svg></button>
         </div>
         <div class="help-cols"><div>
-        <h3>Guarda</h3>
+        <h3>Watch</h3>
         <dl>
-          <dt><kbd>Spazio</kbd> <kbd>K</kbd></dt><dd>Play / pausa</dd>
-          <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Indietro / avanti 5 s</dd>
-          <dt><kbd>J</kbd> <kbd>L</kbd></dt><dd>Indietro / avanti 10 s</dd>
+          <dt><kbd>Space</kbd> <kbd>K</kbd></dt><dd>Play / pause</dd>
+          <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Back / forward 5 s</dd>
+          <dt><kbd>J</kbd> <kbd>L</kbd></dt><dd>Back / forward 10 s</dd>
           <dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Volume</dd>
-          <dt><kbd>M</kbd></dt><dd>Audio sì / no</dd>
-          <dt><kbd>F</kbd></dt><dd>Schermo intero</dd>
-          <dt><kbd>0</kbd>–<kbd>9</kbd></dt><dd>Vai al 0–90% del video</dd>
-          <dt><kbd>T</kbd></dt><dd>Cambia come si legge il tempo</dd>
-          <dt><kbd>C</kbd></dt><dd>Sottotitoli</dd>
-          <dt><kbd>B</kbd></dt><dd>Segnalibro</dd>
+          <dt><kbd>M</kbd></dt><dd>Mute / unmute</dd>
+          <dt><kbd>F</kbd></dt><dd>Full screen</dd>
+          <dt><kbd>0</kbd>–<kbd>9</kbd></dt><dd>Jump to 0–90%</dd>
+          <dt><kbd>T</kbd></dt><dd>Change time format</dd>
+          <dt><kbd>C</kbd></dt><dd>Subtitles on / off</dd>
+          <dt><kbd>B</kbd></dt><dd>Bookmark</dd>
         </dl>
         </div><div>
-        <h3>Crea</h3>
+        <h3>Create</h3>
         <dl>
-          <dt><kbd>X</kbd></dt><dd>Apri / chiudi Crea</dd>
-          <dt><kbd>A</kbd></dt><dd>Ripeti il tratto</dd>
-          <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Sposta la maniglia di 0,5 s</dd>
-          <dt><kbd>Maiusc</kbd> <kbd>←</kbd> <kbd>→</kbd></dt><dd>Spostamento fine</dd>
-          <dt><kbd>Esc</kbd></dt><dd>Torna a guardare</dd>
+          <dt><kbd>X</kbd></dt><dd>Open / close Create</dd>
+          <dt><kbd>A</kbd></dt><dd>Loop the clip</dd>
+          <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Move handle 0.5 s</dd>
+          <dt><kbd>Shift</kbd> <kbd>←</kbd> <kbd>→</kbd></dt><dd>Fine move</dd>
+          <dt><kbd>Esc</kbd></dt><dd>Back to watching</dd>
         </dl>
         </div></div>
       </div>
 
-      <div class="bar" id="bar" role="group" aria-label="Comandi del video">
-        <div class="seek em" id="seek" role="slider" tabindex="0" aria-label="Avanzamento"
-             aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00 di 0:00" aria-keyshortcuts="ArrowLeft ArrowRight">
+      <div class="bar" id="bar" role="group" aria-label="Video controls">
+        <div class="seek em" id="seek" role="slider" tabindex="0" aria-label="Seek"
+             aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00 of 0:00" aria-keyshortcuts="ArrowLeft ArrowRight">
           <div class="track"><div class="clipmark"></div><div class="fill"></div><div id="seekBms"></div><div class="knob"></div></div>
           <div class="hpill" id="hpill" hidden></div>
           
         </div>
         <div class="row">
-          <button class="btn em" id="playBtn" type="button" aria-label="Riproduci" aria-keyshortcuts="k">
+          <button class="btn em" id="playBtn" type="button" aria-label="Play" aria-keyshortcuts="k">
             <svg viewBox="0 0 20 20" aria-hidden="true"><path id="playPath"/></svg></button>
-          <button class="btn em" id="muteBtn" type="button" aria-label="Disattiva audio" aria-keyshortcuts="m">
-            <svg viewBox="0 0 20 20" aria-hidden="true"><path id="mutePath"/></svg></button>
-          <button class="tbtn em" id="timeBtn" type="button" aria-keyshortcuts="t"><span id="timeTxt">0:00 / 0:00</span><span class="sr">, cambia formato del tempo</span></button>
+          <div class="vol em" id="vol">
+            <button class="btn" id="muteBtn" type="button" aria-label="Mute" aria-keyshortcuts="m">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path id="mutePath"/></svg></button>
+            <div class="vslider" id="vslider" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-valuetext="100%" aria-keyshortcuts="ArrowUp ArrowDown">
+              <div class="vtrack"><div class="vfill"></div><div class="vknob"></div></div>
+            </div>
+          </div>
+          <button class="tbtn em" id="timeBtn" type="button" aria-keyshortcuts="t"><span id="timeTxt">0:00 / 0:00</span><span class="sr">, change time format</span></button>
           <span class="spacer"></span>
-          <button class="btn em" id="menuBtn" type="button" aria-label="Impostazioni" aria-haspopup="menu" aria-expanded="false" aria-controls="menu">
+          <button class="btn em" id="menuBtn" type="button" aria-label="Settings" aria-haspopup="menu" aria-expanded="false" aria-controls="menu">
             <svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="gear" fill-rule="evenodd"/></svg></button>
-          <button class="btn em" id="fsBtn" type="button" aria-label="Schermo intero" aria-keyshortcuts="f">
+          <button class="btn em" id="fsBtn" type="button" aria-label="Full screen" aria-keyshortcuts="f">
             <svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="fs"/></svg></button>
         </div>
       </div>
@@ -364,8 +387,8 @@
     <section class="studio" id="studio" aria-labelledby="studioTitle" inert>
       <div class="inner"><div class="pad">
         <div class="studio-head">
-          <h2 id="studioTitle">Crea</h2>
-          <button class="sbtn" id="closeStudio" type="button">Torna a guardare</button>
+          <h2 id="studioTitle">Create</h2>
+          <button class="sbtn" id="closeStudio" type="button">Back to watching</button>
         </div>
         <div class="meta" id="meta"></div>
         <div class="filmwrap">
@@ -373,35 +396,35 @@
           <div class="ov" id="ov">
             <div class="shade l"></div><div class="shade r"></div><div class="sel"></div>
             <div id="ovBms"></div><div class="ph"></div>
-            <div class="h h-in" id="hIn" role="slider" tabindex="0" aria-label="Inizio clip" aria-valuemin="0"><span class="tp" id="tpIn"></span></div>
-            <div class="h h-out" id="hOut" role="slider" tabindex="0" aria-label="Fine clip" aria-valuemin="0"><span class="tp" id="tpOut"></span></div>
+            <div class="h h-in" id="hIn" role="slider" tabindex="0" aria-label="Clip start" aria-valuemin="0"><span class="tp" id="tpIn"></span></div>
+            <div class="h h-out" id="hOut" role="slider" tabindex="0" aria-label="Clip end" aria-valuemin="0"><span class="tp" id="tpOut"></span></div>
           </div>
         </div>
         <div class="tools">
-          <button class="sbtn" id="loopBtn" type="button" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="loop"/></svg>Ripeti il tratto</button>
-          <button class="sbtn" id="clipBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="film" fill-rule="evenodd"/></svg>Crea il video della clip</button>
-          <button class="sbtn" id="linkBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="share"/></svg>Condividi link</button>
-          <div class="seg" role="group" aria-label="Velocità">
-            <button type="button" data-r="0.25" aria-label="Velocità 0,25" aria-pressed="false">¼×</button>
-            <button type="button" data-r="0.5" aria-label="Velocità 0,5" aria-pressed="false">½×</button>
-            <button type="button" data-r="1" aria-label="Velocità normale" aria-pressed="true">1×</button>
-            <button type="button" data-r="1.5" aria-label="Velocità 1,5" aria-pressed="false">1,5×</button>
-            <button type="button" data-r="2" aria-label="Velocità 2" aria-pressed="false">2×</button>
+          <button class="sbtn" id="loopBtn" type="button" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="loop"/></svg>Loop clip</button>
+          <button class="sbtn" id="clipBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="film" fill-rule="evenodd"/></svg>Make clip video</button>
+          <button class="sbtn" id="linkBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="share"/></svg>Share link</button>
+          <div class="seg" role="group" aria-label="Speed">
+            <button type="button" data-r="0.25" aria-label="Speed 0.25" aria-pressed="false">¼×</button>
+            <button type="button" data-r="0.5" aria-label="Speed 0.5" aria-pressed="false">½×</button>
+            <button type="button" data-r="1" aria-label="Normal speed" aria-pressed="true">1×</button>
+            <button type="button" data-r="1.5" aria-label="Speed 1.5" aria-pressed="false">1.5×</button>
+            <button type="button" data-r="2" aria-label="Speed 2" aria-pressed="false">2×</button>
           </div>
-          <button class="sbtn" id="bmBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="bookmark"/></svg>Segnalibro</button>
+          <button class="sbtn" id="bmBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="bookmark"/></svg>Bookmark</button>
         </div>
         <div class="export" id="exportBox" hidden>
           <div class="ex-row">
             <span id="exTxt" role="status"></span>
             <span class="ex-actions">
-              <button class="sbtn" id="exShare" type="button" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="share"/></svg>Condividi il video</button>
-              <button class="sbtn" id="exSave" type="button" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="download"/></svg>Scarica</button>
-              <button class="sbtn" id="exCancel" type="button">Annulla</button>
+              <button class="sbtn" id="exShare" type="button" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="share"/></svg>Share video</button>
+              <button class="sbtn" id="exSave" type="button" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path data-ic="download"/></svg>Download</button>
+              <button class="sbtn" id="exCancel" type="button">Cancel</button>
             </span>
           </div>
           <div class="ex-bar" aria-hidden="true"><i id="exFill"></i></div>
         </div>
-        <div class="bmlist" id="bmList" role="list" aria-label="Segnalibri"></div>
+        <div class="bmlist" id="bmList" role="list" aria-label="Bookmarks"></div>
       </div></div>
     </section>
   </div>
@@ -414,16 +437,16 @@
     <ul>
       <li>Premi play, poi muovi il mouse <strong>piano</strong> verso il basso: i comandi vicini al puntatore si mettono a fuoco, quelli lontani restano tenui e sfocati.</li>
       <li>Resta fermo 2 secondi: rimane solo una linea sottile. In pausa i comandi restano tutti visibili.</li>
-      <li>Tastiera: con <kbd>Tab</kbd> o un tasto qualsiasi compaiono tutti i comandi. Le scorciatoie sono nel menu ⚙, alla voce "Scorciatoie da tastiera" (o tasto <kbd>?</kbd>).</li>
+      <li>Tastiera: con <kbd>Tab</kbd> o un tasto qualsiasi compaiono tutti i comandi. Le scorciatoie sono nel menu ⚙, alla voce "Keyboard shortcuts" (o tasto <kbd>?</kbd>).</li>
       <li>Telefono: un tocco mostra o nasconde i comandi, doppio tocco a sinistra o a destra = −10 / +10 s.</li>
       <li>Tasto del tempo: "0:40 / 1:33", "ancora 53 s", "finisce alle 18:42".</li>
     </ul>
     <h3>Un solo menu</h3>
-    <p>L'ingranaggio in basso a destra apre un menu verticale: <strong>Crea una clip</strong>, <strong>Sottotitoli</strong>, <strong>Qualità</strong>, <strong>Velocità</strong>, <strong>Scorciatoie da tastiera</strong>. I sottotitoli salgono quando compaiono i comandi, così non vengono mai coperti (qui la traccia è di prova).</p>
+    <p>Il player è in <strong>inglese</strong>. L'ingranaggio in basso a destra apre un menu verticale: <strong>Create a clip</strong>, <strong>Subtitles</strong> (Off / English / Italiano), <strong>Quality</strong>, <strong>Speed</strong>, <strong>Keyboard shortcuts</strong>. I sottotitoli salgono quando compaiono i comandi, così non vengono mai coperti (qui le tracce sono di prova).</p>
     <h2 style="margin-top:18px">Crea: lo spettatore diventa videomaker</h2>
     <h3>Prova</h3>
     <ul>
-      <li>Dal menu ⚙ scegli <strong>Crea una clip</strong>: sotto il video si apre la striscia con le immagini del video.</li>
+      <li>Dal menu ⚙ scegli <strong>Create a clip</strong>: sotto il video si apre la striscia con le immagini del video.</li>
       <li>Trascina sulla striscia per scegliere un tratto, oppure sposta le maniglie.</li>
       <li><strong>Crea il video della clip</strong> (massimo 30 s): il tratto viene registrato mentre scorre, poi lo <strong>condividi</strong> (WhatsApp, social: su telefono) o lo <strong>scarichi</strong>.</li>
       <li><strong>Condividi link</strong>: chi lo apre vede solo quel pezzo, in ripetizione.</li>
@@ -504,19 +527,48 @@
   }
   function syncPlay() {
     const p = v.paused || v.ended;
-    $('playBtn').setAttribute('aria-label', p ? 'Riproduci' : 'Pausa');
+    $('playBtn').setAttribute('aria-label', p ? 'Play' : 'Pause');
     $('playPath').setAttribute('d', p ? IC.play : IC.pause);
   }
   function syncMute() {
     const m = v.muted || v.volume === 0;
-    $('muteBtn').setAttribute('aria-label', m ? 'Attiva audio' : 'Disattiva audio');
+    $('muteBtn').setAttribute('aria-label', m ? 'Unmute' : 'Mute');
     $('mutePath').setAttribute('d', m ? IC.muted : IC.vol);
   }
   $('playBtn').onclick = toggle;
-  $('muteBtn').onclick = () => { v.muted = !v.muted; };
+  $('muteBtn').onclick = () => {
+    if (v.muted || v.volume === 0) { v.muted = false; if (v.volume === 0) v.volume = 0.5; }
+    else v.muted = true;
+  };
+  // cursore del volume
+  const vs = $('vslider'), vtrack = vs.querySelector('.vtrack');
+  let vDrag = false;
+  function syncVol() {
+    const lvl = v.muted ? 0 : v.volume, pct = Math.round(lvl * 100);
+    vs.style.setProperty('--vol', pct + '%');
+    vs.setAttribute('aria-valuenow', pct);
+    vs.setAttribute('aria-valuetext', v.muted ? 'Muted' : pct + '%');
+  }
+  function setVol(x) { x = clamp(x, 0, 1); v.volume = x; v.muted = x === 0; }
+  const volAt = cx => { const r = vtrack.getBoundingClientRect(); return (cx - r.left) / r.width; };
+  vs.addEventListener('pointerdown', e => { e.preventDefault(); vs.setPointerCapture(e.pointerId); vDrag = true; vs.classList.add('drag'); setVol(volAt(e.clientX)); kick(); });
+  vs.addEventListener('pointermove', e => { if (vDrag) setVol(volAt(e.clientX)); });
+  const endV = () => { vDrag = false; vs.classList.remove('drag'); kick(); };
+  vs.addEventListener('pointerup', endV);
+  vs.addEventListener('lostpointercapture', endV);
+  vs.addEventListener('keydown', e => {
+    const cur = v.muted ? 0 : v.volume, k = e.key;
+    const step = { ArrowRight: .05, ArrowUp: .05, ArrowLeft: -.05, ArrowDown: -.05, PageUp: .1, PageDown: -.1 }[k];
+    if (step != null) setVol(cur + step);
+    else if (k === 'Home') setVol(0);
+    else if (k === 'End') setVol(1);
+    else return;
+    e.preventDefault(); e.stopPropagation();
+  });
+  v.addEventListener('volumechange', syncVol);
   $('fsBtn').onclick = fullscreen;
   v.addEventListener('volumechange', syncMute);
-  syncPlay(); syncMute();
+  syncPlay(); syncMute(); syncVol();
 
   // ---------- tempo "umano" ----------
   let tmode = store.get('gc-tmode', 0);
@@ -524,10 +576,10 @@
   function timeLabel() {
     const d = dur(), t = v.currentTime || 0;
     let s;
-    if (tmode === 1) s = d ? `ancora ${remain((d - t) / (v.playbackRate || 1))}` : '—';
+    if (tmode === 1) s = d ? `${remain((d - t) / (v.playbackRate || 1))} left` : '—';
     else if (tmode === 2) {
       const end = new Date(Date.now() + (d - t) * 1000 / (v.playbackRate || 1));
-      s = d ? `finisce alle ${end.getHours()}:${String(end.getMinutes()).padStart(2, '0')}` : '—';
+      s = d ? `ends at ${end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}` : '—';
     } else s = `${fmt(t)} / ${fmt(d)}`;
     const el = $('timeTxt'); if (el.textContent !== s) el.textContent = s;
   }
@@ -544,7 +596,7 @@
       lastSec = sec;
       seek.setAttribute('aria-valuemax', Math.round(d));
       seek.setAttribute('aria-valuenow', sec);
-      seek.setAttribute('aria-valuetext', `${fmt(t)} di ${fmt(d)}`);
+      seek.setAttribute('aria-valuetext', `${fmt(t)} of ${fmt(d)}`);
     }
     timeLabel();
   }
@@ -561,7 +613,7 @@
   v.addEventListener('ended', () => { syncPlay(); kick(); });
   v.addEventListener('ratechange', () => {
     $$('[data-r]').forEach(b => b.setAttribute(b.getAttribute('role') === 'menuitemradio' ? 'aria-checked' : 'aria-pressed', String(+b.dataset.r === v.playbackRate)));
-    const r = v.playbackRate; $('mvR').textContent = r === 1 ? 'Normale' : String(r).replace('.', ',') + '×';
+    const r = v.playbackRate; $('mvR').textContent = r === 1 ? 'Normal' : r + '×';
     syncQ();
     timeLabel();
   });
@@ -624,7 +676,7 @@
   function tick(now) {
     raf = 0;
     const playing = !v.paused && !v.ended;
-    const full = always || !playing || kbdFull || now < touchUntil || creaOpen || seeking || helpOpen || menuOpen;
+    const full = always || !playing || kbdFull || now < touchUntil || creaOpen || seeking || vDrag || helpOpen || menuOpen;
     const awake = inside && now - lastMove < IDLE;
     const wT = full || awake ? 1 : 0;
     const k = reduce.matches ? 1 : 0.16;
@@ -681,7 +733,7 @@
   function ripple(d) {
     const el = $(d < 0 ? 'ripL' : 'ripR');
     el.classList.add('on'); setTimeout(() => el.classList.remove('on'), 380);
-    say(d < 0 ? 'Indietro 10 secondi' : 'Avanti 10 secondi');
+    say(d < 0 ? 'Back 10 seconds' : 'Forward 10 seconds');
   }
 
   // ---------- scorciatoie che emergono ----------
@@ -698,16 +750,16 @@
 
   // ---------- menu unico, verticale (come YouTube) ----------
   let menuOpen = false, swallow = false;
-  const VIEWS = ['mMain', 'mQ', 'mR'];
+  const VIEWS = ['mMain', 'mC', 'mQ', 'mR'];
   function showView(id, focusSel) {
     VIEWS.forEach(x => { $(x).hidden = x !== id; });
     const view = $(id), f = focusSel ? view.querySelector(focusSel) : null;
     (f || view.querySelector('button')).focus({ preventScroll: true });
   }
   function syncMenu() {
-    $('mlCrea').textContent = creaOpen ? 'Torna a guardare' : 'Crea una clip';
-    $('miCC').setAttribute('aria-checked', String(ccOn));
-    $('mvCC').textContent = ccOn ? 'Sì' : 'No';
+    $('mlCrea').textContent = creaOpen ? 'Back to watching' : 'Create a clip';
+    $('mvCC').textContent = CC_NAMES[ccLang];
+    $$('#mC [data-cc]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.cc === ccLang)));
   }
   function openMenu(open) {
     if (open && helpOpen) openHelp(false);
@@ -720,7 +772,11 @@
   }
   $('menuBtn').onclick = () => openMenu(!menuOpen);
   $('miCrea').onclick = e => { openMenu(false); openCrea(!creaOpen, e.detail === 0); };
-  $('miCC').onclick = () => { setCC(!ccOn); syncMenu(); };
+  $('miCC').onclick = () => showView('mC', '[aria-checked="true"]');
+  $('mC').addEventListener('click', e => {
+    const b = e.target.closest('[data-cc]'); if (!b) return;
+    setCC(b.dataset.cc); syncMenu(); showView('mMain', '#miCC');
+  });
   $('miQ').onclick = () => showView('mQ', '[aria-checked="true"]');
   $('miR').onclick = () => showView('mR', '[aria-checked="true"]');
   $('miHelp').onclick = () => openHelp(true);
@@ -775,33 +831,48 @@
   $('qList').addEventListener('click', e => {
     const b = e.target.closest('[data-q]'); if (!b) return;
     if (hls) hls.currentLevel = +b.dataset.q;
-    syncQ(); say(+b.dataset.q === -1 ? 'Qualità automatica' : `Qualità ${b.textContent}`);
+    syncQ(); say(+b.dataset.q === -1 ? 'Automatic quality' : `Quality ${b.textContent}`);
     showView('mMain', '#miQ');
   });
   if (hls) { hls.on(Hls.Events.MANIFEST_PARSED, buildQ); hls.on(Hls.Events.LEVEL_SWITCHED, syncQ); } else buildQ();
 
-  // ---------- sottotitoli (traccia di prova) ----------
-  const cues = [[0.5, 4.5, 'Sottotitoli di prova']];
-  for (let t = 6, n = 0; t < 92; t += 9, n++) cues.push([t, t + 6, n % 2 ? 'Qui andrebbero i dialoghi del video' : '[musica strumentale]']);
-  const vt = s => { const m = Math.floor(s / 60); return `00:${String(m).padStart(2, '0')}:${(s - m * 60).toFixed(3).padStart(6, '0')}`; };
-  const VTT = 'WEBVTT\n\n' + cues.map(([a, b, t]) => `${vt(a)} --> ${vt(b)}\n${t}`).join('\n\n') + '\n';
-  const trEl = document.createElement('track');
-  trEl.kind = 'subtitles'; trEl.srclang = 'it'; trEl.label = 'Italiano (prova)';
-  trEl.src = URL.createObjectURL(new Blob([VTT], { type: 'text/vtt' }));
-  v.appendChild(trEl);
-  const tt = trEl.track; tt.mode = 'hidden';
-  let ccOn = store.get('gc-cc', false);
+  // ---------- sottotitoli: tracce di prova in inglese e italiano ----------
+  const CC_NAMES = { off: 'Off', en: 'English', it: 'Italiano' };
+  const TEXTS = {
+    en: ['Demo subtitles', '[instrumental music]', 'The dialogue would appear here'],
+    it: ['Sottotitoli di prova', '[musica strumentale]', 'Qui andrebbero i dialoghi del video'],
+  };
+  const vt = x => { const m = Math.floor(x / 60); return `00:${String(m).padStart(2, '0')}:${(x - m * 60).toFixed(3).padStart(6, '0')}`; };
+  const tracks = {};
+  for (const lang of ['en', 'it']) {
+    const [first, music, talk] = TEXTS[lang];
+    const cues = [[0.5, 4.5, first]];
+    for (let t = 6, n = 0; t < 92; t += 9, n++) cues.push([t, t + 6, n % 2 ? talk : music]);
+    const VTT = 'WEBVTT\n\n' + cues.map(([a, b, t]) => `${vt(a)} --> ${vt(b)}\n${t}`).join('\n\n') + '\n';
+    const el = document.createElement('track');
+    el.kind = 'subtitles'; el.srclang = lang; el.label = CC_NAMES[lang];
+    el.src = URL.createObjectURL(new Blob([VTT], { type: 'text/vtt' }));
+    v.appendChild(el);
+    el.track.mode = 'hidden';
+    el.track.addEventListener('cuechange', () => renderCue());
+    tracks[lang] = el.track;
+  }
+  let ccLang = store.get('gc-cclang', 'off');
+  if (!CC_NAMES[ccLang]) ccLang = 'off';
+  let ccLast = ccLang === 'off' ? 'en' : ccLang;
   function renderCue() {
-    const c = tt.activeCues && tt.activeCues[0];
+    const tr = tracks[ccLang];
+    const c = tr && tr.activeCues && tr.activeCues[0];
     const box = $('cap');
-    box.hidden = !(ccOn && c);
-    box.textContent = ccOn && c ? c.text : '';
+    box.hidden = !c;
+    box.textContent = c ? c.text : '';
+    box.lang = ccLang === 'off' ? '' : ccLang;
   }
-  function setCC(on) {
-    ccOn = on; store.set('gc-cc', on);
-    renderCue(); say(on ? 'Sottotitoli attivi' : 'Sottotitoli disattivati');
+  function setCC(lang) {
+    ccLang = lang; if (lang !== 'off') ccLast = lang;
+    store.set('gc-cclang', lang);
+    renderCue(); say(lang === 'off' ? 'Subtitles off' : `Subtitles: ${CC_NAMES[lang]}`);
   }
-  tt.addEventListener('cuechange', renderCue);
   bar.addEventListener('focusin', e => { if (e.target.matches(':focus-visible')) { kbdFull = true; kick(); } });
 
   $('always').checked = always;
@@ -833,12 +904,12 @@
       if (!rangeSet) { const t = v.currentTime || 0; setRange(t, t + 8); }
       buildFilm();
       if (byKey) setTimeout(() => $('hIn').focus({ preventScroll: true }), reduce.matches ? 0 : 250);
-      say('Crea aperto. Scegli inizio e fine della clip.');
+      say('Create is open. Choose where the clip starts and ends.');
     } else {
       if (studio.contains(document.activeElement)) $('menuBtn').focus({ preventScroll: true });
       if (!clipView) setLoop(false);
       if (ex && ex.state === 'rec') ex.cancelled = true;
-      say('Torni a guardare.');
+      say('Back to watching.');
     }
     kick();
   }
@@ -857,12 +928,12 @@
     $('tpIn').textContent = fmtP(inT); $('tpOut').textContent = fmtP(outT);
     $('hIn').classList.toggle('flip', inT / d < 0.12);
     $('hOut').classList.toggle('flip', outT / d > 0.88);
-    for (const [el, t, name] of [[$('hIn'), inT, 'Inizio clip'], [$('hOut'), outT, 'Fine clip']]) {
+    for (const [el, t, name] of [[$('hIn'), inT, 'Clip start'], [$('hOut'), outT, 'Clip end']]) {
       el.setAttribute('aria-valuemax', Math.round(d));
       el.setAttribute('aria-valuenow', t.toFixed(1));
-      el.setAttribute('aria-valuetext', `${name} ${fmtP(t).replace('.', ',')}`);
+      el.setAttribute('aria-valuetext', `${name} ${fmtP(t)}`);
     }
-    $('meta').innerHTML = `<span>Inizio <b>${fmtP(inT)}</b></span><span>Fine <b>${fmtP(outT)}</b></span><span>Durata <b>${(outT - inT).toFixed(1).replace('.', ',')} s</b></span>`;
+    $('meta').innerHTML = `<span>Start <b>${fmtP(inT)}</b></span><span>End <b>${fmtP(outT)}</b></span><span>Length <b>${(outT - inT).toFixed(1)} s</b></span>`;
   }
 
   // striscia di fotogrammi dallo storyboard Mux
@@ -920,7 +991,7 @@
   ov.addEventListener('pointerup', () => {
     if (!drag) return;
     if (drag.mode === 'new' && !drag.moved) seekTo(drag.t0);
-    else if (drag.moved) say(`Clip da ${fmtP(inT)} a ${fmtP(outT)}`);
+    else if (drag.moved) say(`Clip from ${fmtP(inT)} to ${fmtP(outT)}`);
     drag = null; $$('.h.drag').forEach(h => h.classList.remove('drag'));
   });
   ov.addEventListener('lostpointercapture', () => { drag = null; $$('.h.drag').forEach(h => h.classList.remove('drag')); });
@@ -949,7 +1020,7 @@
     loopOn = on;
     $('loopBtn').setAttribute('aria-pressed', String(on));
     stage.classList.toggle('looping', on);
-    if (on) { seekTo(inT); if (play) v.play().catch(() => {}); say(`Ripeto da ${fmtP(inT)} a ${fmtP(outT)}`); }
+    if (on) { seekTo(inT); if (play) v.play().catch(() => {}); say(`Looping ${fmtP(inT)} to ${fmtP(outT)}`); }
   }
   $('loopBtn').onclick = () => setLoop(!loopOn);
 
@@ -960,7 +1031,7 @@
       try { await navigator.share({ title: `Clip ${fmt(inT)}–${fmt(outT)}`, url }); return; }
       catch (e) { if (e.name === 'AbortError') return; }
     }
-    try { await navigator.clipboard.writeText(url); toast(`Link copiato: ${fmtP(inT)}–${fmtP(outT)}`); }
+    try { await navigator.clipboard.writeText(url); toast(`Link copied: ${fmtP(inT)}–${fmtP(outT)}`); }
     catch { toast(url, null, null, 8000); }
   }
   $('linkBtn').onclick = shareLink;
@@ -991,17 +1062,17 @@
     const ready = state === 'ready';
     $('exShare').hidden = !(ready && canShareFile(ex.file));
     $('exSave').hidden = !ready;
-    $('exCancel').textContent = ready ? 'Chiudi' : 'Annulla';
+    $('exCancel').textContent = ready ? 'Close' : 'Cancel';
     $('clipBtn').disabled = state === 'rec';
   }
   async function makeClip() {
     if (ex && ex.state === 'rec') return;
     const len = outT - inT;
-    if (len > MAXCLIP + 0.05) { toast(`Per il video scegli un tratto di massimo ${MAXCLIP} s`); return; }
-    if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) { toast('Questo browser non sa creare video'); return; }
+    if (len > MAXCLIP + 0.05) { toast(`For a video, pick a clip of ${MAXCLIP} s or less`); return; }
+    if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) { toast('This browser cannot make videos'); return; }
     const mime = pickMime();
     const w0 = v.videoWidth, h0 = v.videoHeight;
-    if (!mime || !w0) { toast(!w0 ? 'Il video non è ancora pronto' : 'Questo browser non sa creare video'); return; }
+    if (!mime || !w0) { toast(!w0 ? 'The video is not ready yet' : 'This browser cannot make videos'); return; }
     const sc = Math.min(1, 1280 / w0), w = Math.round(w0 * sc / 2) * 2, h = Math.round(h0 * sc / 2) * 2;
     const c = document.createElement('canvas'); c.width = w; c.height = h;
     const g = c.getContext('2d');
@@ -1009,7 +1080,7 @@
     setLoop(false); v.pause(); v.playbackRate = 1;
     seekTo(inT);
     await new Promise(r => { v.addEventListener('seeked', r, { once: true }); setTimeout(r, 1500); });
-    try { g.drawImage(v, 0, 0, w, h); } catch { toast('Questo browser non permette di creare il video'); v.playbackRate = prev.rate; return; }
+    try { g.drawImage(v, 0, 0, w, h); } catch { toast('This browser does not allow making the video'); v.playbackRate = prev.rate; return; }
 
     const ar = rig();
     const tracks = [...c.captureStream(30).getVideoTracks()];
@@ -1021,8 +1092,8 @@
     rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
     const stopped = new Promise(r => { rec.onstop = r; });
     v.muted = false; // si registra quello che si sente
-    exUI('rec', 'Creo il video della clip… 0%', 0);
-    say('Creo il video della clip');
+    exUI('rec', 'Making the clip video… 0%', 0);
+    say('Making the clip video');
     rec.start(250);
     await v.play().catch(() => {});
     await new Promise(res => {
@@ -1030,7 +1101,7 @@
         if (ex.cancelled || v.ended || v.currentTime >= outT) { res(); return; }
         g.drawImage(v, 0, 0, w, h);
         const pct = clamp((v.currentTime - inT) / len, 0, 1);
-        exUI('rec', `Creo il video della clip… ${Math.round(pct * 100)}%`, pct);
+        exUI('rec', `Making the clip video… ${Math.round(pct * 100)}%`, pct);
         requestAnimationFrame(step);
       };
       requestAnimationFrame(step);
@@ -1038,13 +1109,13 @@
     v.pause(); rec.stop(); await stopped;
     stream.getTracks().forEach(t => t.stop());
     v.muted = prev.muted; v.playbackRate = prev.rate;
-    if (ex.cancelled) { $('exportBox').hidden = true; $('clipBtn').disabled = false; ex = null; say('Video annullato'); return; }
+    if (ex.cancelled) { $('exportBox').hidden = true; $('clipBtn').disabled = false; ex = null; say('Video cancelled'); return; }
     const type = mime.split(';')[0], ext = type === 'video/mp4' ? 'mp4' : 'webm';
     const blob = new Blob(chunks, { type });
-    const name = `clip-${fmtP(inT)}-${fmtP(outT)}`.replace(/:/g, 'm').replace(/\./g, ',') + '.' + ext;
+    const name = `clip-${fmtP(inT)}-${fmtP(outT)}`.replace(/:/g, 'm').replace(/\./g, '-') + '.' + ext;
     ex.file = new File([blob], name, { type }); ex.state = 'ready';
-    exUI('ready', `Video pronto: ${len.toFixed(1).replace('.', ',')} s, ${(blob.size / 1e6).toFixed(1).replace('.', ',')} MB (${ext.toUpperCase()})`, 1);
-    say('Video della clip pronto');
+    exUI('ready', `Video ready: ${len.toFixed(1)} s, ${(blob.size / 1e6).toFixed(1)} MB (${ext.toUpperCase()})`, 1);
+    say('Clip video ready');
     ($('exShare').hidden ? $('exSave') : $('exShare')).focus({ preventScroll: true });
   }
   $('clipBtn').onclick = makeClip;
@@ -1068,18 +1139,18 @@
     $('seekBms').innerHTML = d ? bms.map(t => `<span class="bm" style="left:${t / d * 100}%"></span>`).join('') : '';
     $('ovBms').innerHTML = d ? bms.map(t => `<span class="obm" style="left:${t / d * 100}%"></span>`).join('') : '';
     $('bmList').innerHTML = bms.map((t, i) =>
-      `<span class="chip" role="listitem"><button class="go" type="button" data-i="${i}" aria-label="Vai al segnalibro ${fmt(t)}">${fmt(t)}</button><button class="del" type="button" data-del="${i}" aria-label="Elimina segnalibro ${fmt(t)}">×</button></span>`).join('');
+      `<span class="chip" role="listitem"><button class="go" type="button" data-i="${i}" aria-label="Go to bookmark ${fmt(t)}">${fmt(t)}</button><button class="del" type="button" data-del="${i}" aria-label="Delete bookmark ${fmt(t)}">×</button></span>`).join('');
   }
   $('bmList').addEventListener('click', e => {
     const go = e.target.closest('[data-i]'), del = e.target.closest('[data-del]');
     if (go) seekTo(bms[+go.dataset.i]);
-    if (del) { const t = bms.splice(+del.dataset.del, 1)[0]; store.set('gc-bm', bms); renderBM(); say(`Segnalibro ${fmt(t)} eliminato`); $('bmBtn').focus(); }
+    if (del) { const t = bms.splice(+del.dataset.del, 1)[0]; store.set('gc-bm', bms); renderBM(); say(`Bookmark ${fmt(t)} deleted`); $('bmBtn').focus(); }
   });
   function addBM() {
     const t = Math.round((v.currentTime || 0) * 10) / 10;
-    if (bms.some(x => Math.abs(x - t) < 0.5)) { toast('C\'è già un segnalibro qui'); return; }
+    if (bms.some(x => Math.abs(x - t) < 0.5)) { toast('There is already a bookmark here'); return; }
     bms.push(t); bms.sort((a, b) => a - b); store.set('gc-bm', bms); renderBM();
-    toast(`Segnalibro a ${fmt(t)}`, 'Annulla', () => { bms = bms.filter(x => x !== t); store.set('gc-bm', bms); renderBM(); });
+    toast(`Bookmark at ${fmt(t)}`, 'Undo', () => { bms = bms.filter(x => x !== t); store.set('gc-bm', bms); renderBM(); });
   }
   $('bmBtn').onclick = addBM;
 
@@ -1090,7 +1161,7 @@
     if (!m) return;
     const go = () => {
       clipView = true; setRange(+m[1], +m[2]); setLoop(true, false);
-      toast(`Clip condivisa ${fmtP(inT)}–${fmtP(outT)}: premi play`, 'Guarda tutto', () => {
+      toast(`Shared clip ${fmtP(inT)}–${fmtP(outT)}: press play`, 'Watch all', () => {
         clipView = false; setLoop(false); history.replaceState(null, '', location.pathname);
       }, 9000);
     };
@@ -1124,7 +1195,7 @@
     else if (k === 'ArrowDown' && !onBtn) { v.volume = clamp(v.volume - 0.1, 0, 1); toast(`Volume ${Math.round(v.volume * 100)}%`); }
     else if (/^[0-9]$/.test(k)) seekTo(dur() * +k / 10);
     else if (key === 'x') openCrea(!creaOpen, true);
-    else if (key === 'c') setCC(!ccOn);
+    else if (key === 'c') setCC(ccLang === 'off' ? ccLast : 'off');
     else if (key === 'b') addBM();
     else if (k === 'Escape' && menuOpen) openMenu(false);
     else if (k === 'Escape' && helpOpen) openHelp(false);

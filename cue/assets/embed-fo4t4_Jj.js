@@ -1,1 +1,0 @@
-import"./modulepreload-polyfill-P2Xu9kJm.js";import{t as e}from"./player-DwuNbsjm.js";var t=document.createElement(`media-i18n`);t.append(e()),document.getElementById(`player`).append(t);
